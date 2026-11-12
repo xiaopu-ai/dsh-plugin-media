@@ -1,20 +1,23 @@
-# @xiaopuai/dsh-media · 自媒体
+# 自媒体
 
-DeepSeek Harness（DSH）插件：一个页面看抖音、小红书、微信公众号、视频号多个账号的数据（照抖音创作者中心「数据中心」排版），右边是读得到这些数据的 AI 助手。
+**抖音、小红书、公众号、视频号的数据，一个页面看完。**
 
-要求 DSH 0.2.x（0.2.2-rc.1 起）；扫码登录和抓数据要用本机的 Google Chrome。
+DeepSeek Harness 插件：扫码登录、每日 AI 简报、全网数据合计、会看数据的 AI 助手。账号和数据只存在你自己的电脑上。
 
-安装：DSH 里「插件 → 添加插件」，填包名 `@xiaopuai/dsh-media`（之后在插件页面能检查更新、一键更新）。也可以填 `github:xiaopu-ai/dsh-plugin-media#path:/dsh-media`，或者 [Releases](https://github.com/xiaopu-ai/dsh-plugin-media/releases) 里压缩包的路径。用本地文件夹装之前，先在这个文件夹里运行 `npm install --omit=dev --legacy-peer-deps`。
+![总览：今日简报、全网数据和走势（演示数据）](https://raw.githubusercontent.com/xiaopu-ai/dsh-plugin-media/main/docs/screenshots/overview.png)
 
-包里有什么：
+## 安装
 
-- `lib/` —— 后台，已编译好（源码在上一层的 `backend/`）
-- `client.js` —— 页面：左边一列（平台 logo + 账号）、看板（雷达图、作品数据、粉丝数据、作品列表，都带导出）、作品弹窗、右边的 AI 助手
-- `ui.js` —— 替页面接住登录小浏览器的画面；给 AI 助手建工作区（默认 `~/Documents/自媒体`）
-- `cordis.patch.yml` —— 装好后挂上的两行：`media-suite`（后台）、`media-ui`（画面转接和 AI 助手工作区）
+在 DeepSeek Harness 0.2.x（0.2.2-rc.1 起）里：**插件 → 添加插件**，填 `@xiaopuai/dsh-media`，点 **安装**，再点 **立即启用**。电脑上要装好 Google Chrome。
 
-第一次打开是空的，只让你添加账号；演示数据只在开发时打开（`localStorage.setItem('dsh-media.dev', '1')`）。
+## 装好以后
 
-更多说明见仓库首页：https://github.com/xiaopu-ai/dsh-plugin-media
+1. 点左边的 **自媒体**，选一个平台
+2. 用手机上对应的 App 扫窗口里的二维码，再点 **添加为我的账号**
+3. 在 **总览** 看今日简报和全网数据；右边缘的 **AI 助手** 可以直接问
 
-许可：MIT © 2026 xiaopu-ai
+**升级**：在 **插件 → 自媒体** 页面下方的 **版本** 一栏点 **更新**，账号和数据都会保留。
+
+更多截图、常见问题和详细说明：https://github.com/xiaopu-ai/dsh-plugin-media
+
+MIT © 2026 xiaopu-ai
