@@ -1,0 +1,76 @@
+{
+  "name": "dsh-media",
+  "version": "0.4.0",
+  "description": "自媒体：抖音、小红书、公众号、视频号多账号数据看板（照抖音数据中心排版），右边是读得到这些数据的 AI 助手。",
+  "license": "MIT",
+  "author": "xiaopu-ai",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xiaopu-ai/dsh-plugin-media.git",
+    "directory": "dsh-media"
+  },
+  "homepage": "https://github.com/xiaopu-ai/dsh-plugin-media#readme",
+  "bugs": "https://github.com/xiaopu-ai/dsh-plugin-media/issues",
+  "keywords": [
+    "deepseek-harness",
+    "dsh-plugin",
+    "douyin",
+    "xiaohongshu",
+    "wechat",
+    "creator-analytics"
+  ],
+  "type": "module",
+  "main": "lib/index.js",
+  "icon": "./icon.svg",
+  "exports": {
+    ".": "./lib/index.js",
+    "./typert": "./lib/typert.host.js",
+    "./ui": "./ui.js",
+    "./client": "./client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "ui.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-workspace"
+      ]
+    }
+  },
+  "engines": {
+    "dsh": ">=0.2.2-rc.2 <0.3.0"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "*",
+    "@deepseek-ai/schemastery": "*",
+    "@deepseek-ai/dsh-brand": ">=0.2.2-rc.2 <0.3.0",
+    "@deepseek-ai/dsh-llm": ">=0.2.2-rc.2 <0.3.0",
+    "@deepseek-ai/dsh-tools": ">=0.2.2-rc.2 <0.3.0",
+    "@deepseek-ai/dsh-typert-protocol": ">=0.2.2-rc.2 <0.3.0"
+  },
+  "dependencies": {
+    "playwright-core": "1.61.1"
+  }
+}

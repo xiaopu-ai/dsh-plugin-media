@@ -1,0 +1,9 @@
+# 自媒体：安装后左侧栏出现「自媒体」。两行都在这个包里：
+#   media-suite —— 后台：账号、抓数据、定时监控、AI 选题和诊断、登录用的小浏览器（lib/index.js）
+#   media-ui    —— 替页面接住小浏览器画面的转接、给右边的 AI 助手建工作区（ui.js，默认 ~/Documents/自媒体）；页面本身是 client.js
+# 想改后台配置（例如数据放哪、Chrome 在哪），在 DSH profile 自己的 cordis.patch.yml 里按 id: media-suite 覆盖。
+- insert:
+    - id: media-suite
+      name: dsh-media
+    - id: media-ui
+      name: dsh-media/ui
