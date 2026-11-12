@@ -1,8 +1,8 @@
 {
-  "name": "dsh-media",
+  "name": "@xiaopuai/dsh-media",
   "private": true,
   "description": "自媒体插件的后台源码（只在 DSH 源码树里编译，用 build.sh；装的是 ../dsh-media）",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/types/index.d.ts",

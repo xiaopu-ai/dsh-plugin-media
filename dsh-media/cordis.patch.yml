@@ -4,6 +4,6 @@
 # 想改后台配置（例如数据放哪、Chrome 在哪），在 DSH profile 自己的 cordis.patch.yml 里按 id: media-suite 覆盖。
 - insert:
     - id: media-suite
-      name: dsh-media
+      name: "@xiaopuai/dsh-media"
     - id: media-ui
-      name: dsh-media/ui
+      name: "@xiaopuai/dsh-media/ui"

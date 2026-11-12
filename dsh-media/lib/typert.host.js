@@ -626,8 +626,8 @@ var external_exports = /* @__PURE__ */ __exportAll({
 config(en_default());
 //#endregion
 //#region lib/typert.host.js
-let dsh_media_mediaSuite_accounts_result$schema$value;
-const dsh_media_mediaSuite_accounts_result$schema = () => dsh_media_mediaSuite_accounts_result$schema$value ??= array(object({
+let _xiaopuai_dsh_media_mediaSuite_accounts_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_accounts_result$schema = () => _xiaopuai_dsh_media_mediaSuite_accounts_result$schema$value ??= array(object({
 	"id": string$1().readonly(),
 	"demo": union([_undefined(), literal(true)]).readonly().optional().describe("Set on the sample accounts `loadDemo` creates; they hold made-up data and are never fetched."),
 	"loginProfile": union([_undefined(), string$1()]).readonly().optional().describe("Browser profile that keeps this own account's login, set when the account is connected by scanning. Without it the account uses the platform's shared profile, which holds one login at a time."),
@@ -645,10 +645,10 @@ const dsh_media_mediaSuite_accounts_result$schema = () => dsh_media_mediaSuite_a
 	}).readonly(),
 	"avatarUrl": union([_undefined(), string$1()]).readonly().optional().describe("The account's avatar image on the platform (an https URL), read when scanning in and refreshed by each update.")
 }));
-let dsh_media_mediaSuite_analysisReports_parameter_0$schema$value;
-const dsh_media_mediaSuite_analysisReports_parameter_0$schema = () => dsh_media_mediaSuite_analysisReports_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_analysisReports_result$schema$value;
-const dsh_media_mediaSuite_analysisReports_result$schema = () => dsh_media_mediaSuite_analysisReports_result$schema$value ??= array(object({
+let _xiaopuai_dsh_media_mediaSuite_analysisReports_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_analysisReports_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_analysisReports_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_analysisReports_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_analysisReports_result$schema = () => _xiaopuai_dsh_media_mediaSuite_analysisReports_result$schema$value ??= array(object({
 	"id": string$1().readonly(),
 	"accountId": string$1().readonly(),
 	"createdAt": string$1().readonly(),
@@ -667,10 +667,10 @@ const dsh_media_mediaSuite_analysisReports_result$schema = () => dsh_media_media
 		]).readonly()
 	})).readonly()
 }));
-let dsh_media_mediaSuite_analyze_parameter_0$schema$value;
-const dsh_media_mediaSuite_analyze_parameter_0$schema = () => dsh_media_mediaSuite_analyze_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_analyze_result$schema$value;
-const dsh_media_mediaSuite_analyze_result$schema = () => dsh_media_mediaSuite_analyze_result$schema$value ??= object({
+let _xiaopuai_dsh_media_mediaSuite_analyze_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_analyze_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_analyze_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_analyze_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_analyze_result$schema = () => _xiaopuai_dsh_media_mediaSuite_analyze_result$schema$value ??= object({
 	"id": string$1().readonly(),
 	"accountId": string$1().readonly(),
 	"createdAt": string$1().readonly(),
@@ -689,8 +689,8 @@ const dsh_media_mediaSuite_analyze_result$schema = () => dsh_media_mediaSuite_an
 		]).readonly()
 	})).readonly()
 });
-let dsh_media_mediaSuite_brief_result$schema$value;
-const dsh_media_mediaSuite_brief_result$schema = () => dsh_media_mediaSuite_brief_result$schema$value ??= object({
+let _xiaopuai_dsh_media_mediaSuite_brief_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_brief_result$schema = () => _xiaopuai_dsh_media_mediaSuite_brief_result$schema$value ??= object({
 	"brief": union([_undefined(), object({
 		"id": string$1().readonly(),
 		"day": string$1().readonly().describe("China day the brief is for."),
@@ -754,14 +754,14 @@ const dsh_media_mediaSuite_brief_result$schema = () => dsh_media_mediaSuite_brie
 	"problem": union([_undefined(), string$1()]).readonly().optional().describe("Why the last attempt failed, until the next one starts."),
 	"scheduleAt": string$1().readonly().describe("China time the daily brief is written at, such as `09:00`.")
 });
-let dsh_media_mediaSuite_browserClose_parameter_0$schema$value;
-const dsh_media_mediaSuite_browserClose_parameter_0$schema = () => dsh_media_mediaSuite_browserClose_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_browserClose_result$schema$value;
-const dsh_media_mediaSuite_browserClose_result$schema = () => dsh_media_mediaSuite_browserClose_result$schema$value ??= _void();
-let dsh_media_mediaSuite_browserFrames_parameter_0$schema$value;
-const dsh_media_mediaSuite_browserFrames_parameter_0$schema = () => dsh_media_mediaSuite_browserFrames_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_browserFrames_result$schema$value;
-const dsh_media_mediaSuite_browserFrames_result$schema = () => dsh_media_mediaSuite_browserFrames_result$schema$value ??= union([
+let _xiaopuai_dsh_media_mediaSuite_browserClose_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_browserClose_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_browserClose_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_browserClose_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_browserClose_result$schema = () => _xiaopuai_dsh_media_mediaSuite_browserClose_result$schema$value ??= _void();
+let _xiaopuai_dsh_media_mediaSuite_browserFrames_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_browserFrames_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_browserFrames_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_browserFrames_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_browserFrames_result$schema = () => _xiaopuai_dsh_media_mediaSuite_browserFrames_result$schema$value ??= union([
 	object({
 		"kind": literal("frame").readonly(),
 		"data": string$1().readonly(),
@@ -804,10 +804,10 @@ const dsh_media_mediaSuite_browserFrames_result$schema = () => dsh_media_mediaSu
 		"reason": string$1().readonly()
 	})
 ]);
-let dsh_media_mediaSuite_browserInput_parameter_0$schema$value;
-const dsh_media_mediaSuite_browserInput_parameter_0$schema = () => dsh_media_mediaSuite_browserInput_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_browserInput_parameter_1$schema$value;
-const dsh_media_mediaSuite_browserInput_parameter_1$schema = () => dsh_media_mediaSuite_browserInput_parameter_1$schema$value ??= union([
+let _xiaopuai_dsh_media_mediaSuite_browserInput_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_browserInput_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_browserInput_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_browserInput_parameter_1$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_browserInput_parameter_1$schema = () => _xiaopuai_dsh_media_mediaSuite_browserInput_parameter_1$schema$value ??= union([
 	object({
 		"kind": literal("click").readonly(),
 		"x": number$1().readonly(),
@@ -853,35 +853,35 @@ const dsh_media_mediaSuite_browserInput_parameter_1$schema = () => dsh_media_med
 	object({ "kind": literal("back").readonly() }),
 	object({ "kind": literal("reload").readonly() })
 ]);
-let dsh_media_mediaSuite_browserInput_result$schema$value;
-const dsh_media_mediaSuite_browserInput_result$schema = () => dsh_media_mediaSuite_browserInput_result$schema$value ??= _void();
-let dsh_media_mediaSuite_browserOpen_parameter_0$schema$value;
-const dsh_media_mediaSuite_browserOpen_parameter_0$schema = () => dsh_media_mediaSuite_browserOpen_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_browserOpen_parameter_1$schema$value;
-const dsh_media_mediaSuite_browserOpen_parameter_1$schema = () => dsh_media_mediaSuite_browserOpen_parameter_1$schema$value ??= union([_undefined(), string$1()]);
-let dsh_media_mediaSuite_browserOpen_parameter_2$schema$value;
-const dsh_media_mediaSuite_browserOpen_parameter_2$schema = () => dsh_media_mediaSuite_browserOpen_parameter_2$schema$value ??= union([_undefined(), string$1()]);
-let dsh_media_mediaSuite_browserOpen_parameter_3$schema$value;
-const dsh_media_mediaSuite_browserOpen_parameter_3$schema = () => dsh_media_mediaSuite_browserOpen_parameter_3$schema$value ??= union([
+let _xiaopuai_dsh_media_mediaSuite_browserInput_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_browserInput_result$schema = () => _xiaopuai_dsh_media_mediaSuite_browserInput_result$schema$value ??= _void();
+let _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_1$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_1$schema = () => _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_1$schema$value ??= union([_undefined(), string$1()]);
+let _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_2$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_2$schema = () => _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_2$schema$value ??= union([_undefined(), string$1()]);
+let _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_3$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_3$schema = () => _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_3$schema$value ??= union([
 	_undefined(),
 	literal(false),
 	literal(true)
 ]);
-let dsh_media_mediaSuite_browserOpen_result$schema$value;
-const dsh_media_mediaSuite_browserOpen_result$schema = () => dsh_media_mediaSuite_browserOpen_result$schema$value ??= object({
+let _xiaopuai_dsh_media_mediaSuite_browserOpen_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_browserOpen_result$schema = () => _xiaopuai_dsh_media_mediaSuite_browserOpen_result$schema$value ??= object({
 	"id": string$1().readonly(),
 	"platform": string$1().readonly(),
 	"width": number$1().readonly(),
 	"height": number$1().readonly()
 });
-let dsh_media_mediaSuite_clearDemo_result$schema$value;
-const dsh_media_mediaSuite_clearDemo_result$schema = () => dsh_media_mediaSuite_clearDemo_result$schema$value ??= number$1();
-let dsh_media_mediaSuite_dashboard_parameter_0$schema$value;
-const dsh_media_mediaSuite_dashboard_parameter_0$schema = () => dsh_media_mediaSuite_dashboard_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_dashboard_parameter_1$schema$value;
-const dsh_media_mediaSuite_dashboard_parameter_1$schema = () => dsh_media_mediaSuite_dashboard_parameter_1$schema$value ??= number$1();
-let dsh_media_mediaSuite_dashboard_result$schema$value;
-const dsh_media_mediaSuite_dashboard_result$schema = () => dsh_media_mediaSuite_dashboard_result$schema$value ??= object({
+let _xiaopuai_dsh_media_mediaSuite_clearDemo_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_clearDemo_result$schema = () => _xiaopuai_dsh_media_mediaSuite_clearDemo_result$schema$value ??= number$1();
+let _xiaopuai_dsh_media_mediaSuite_dashboard_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_dashboard_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_dashboard_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_dashboard_parameter_1$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_dashboard_parameter_1$schema = () => _xiaopuai_dsh_media_mediaSuite_dashboard_parameter_1$schema$value ??= number$1();
+let _xiaopuai_dsh_media_mediaSuite_dashboard_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_dashboard_result$schema = () => _xiaopuai_dsh_media_mediaSuite_dashboard_result$schema$value ??= object({
 	"account": object({
 		"id": string$1().readonly(),
 		"demo": union([_undefined(), literal(true)]).readonly().optional().describe("Set on the sample accounts `loadDemo` creates; they hold made-up data and are never fetched."),
@@ -1041,12 +1041,12 @@ const dsh_media_mediaSuite_dashboard_result$schema = () => dsh_media_mediaSuite_
 		"updatedAt": string$1().readonly().describe("ISO-8601 instant of the last write.")
 	})).readonly().describe("Newest posts with their latest counters.")
 });
-let dsh_media_mediaSuite_deleteAccount_parameter_0$schema$value;
-const dsh_media_mediaSuite_deleteAccount_parameter_0$schema = () => dsh_media_mediaSuite_deleteAccount_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_deleteAccount_result$schema$value;
-const dsh_media_mediaSuite_deleteAccount_result$schema = () => dsh_media_mediaSuite_deleteAccount_result$schema$value ??= _void();
-let dsh_media_mediaSuite_drafts_result$schema$value;
-const dsh_media_mediaSuite_drafts_result$schema = () => dsh_media_mediaSuite_drafts_result$schema$value ??= array(object({
+let _xiaopuai_dsh_media_mediaSuite_deleteAccount_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_deleteAccount_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_deleteAccount_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_deleteAccount_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_deleteAccount_result$schema = () => _xiaopuai_dsh_media_mediaSuite_deleteAccount_result$schema$value ??= _void();
+let _xiaopuai_dsh_media_mediaSuite_drafts_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_drafts_result$schema = () => _xiaopuai_dsh_media_mediaSuite_drafts_result$schema$value ??= array(object({
 	"id": string$1().readonly(),
 	"createdAt": string$1().readonly(),
 	"publishedUrl": union([_undefined(), string$1()]).readonly().optional().describe("Address of the published post; its counters come from the fetched posts with the same address."),
@@ -1064,10 +1064,10 @@ const dsh_media_mediaSuite_drafts_result$schema = () => dsh_media_mediaSuite_dra
 	"note": union([_undefined(), string$1()]).readonly().optional().describe("One line about the content, such as its ratio and length."),
 	"studioProject": union([_undefined(), string$1()]).readonly().optional().describe("Creation-workbench project id of an article or card set.")
 }));
-let dsh_media_mediaSuite_findRelated_parameter_0$schema$value;
-const dsh_media_mediaSuite_findRelated_parameter_0$schema = () => dsh_media_mediaSuite_findRelated_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_findRelated_result$schema$value;
-const dsh_media_mediaSuite_findRelated_result$schema = () => dsh_media_mediaSuite_findRelated_result$schema$value ??= object({
+let _xiaopuai_dsh_media_mediaSuite_findRelated_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_findRelated_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_findRelated_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_findRelated_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_findRelated_result$schema = () => _xiaopuai_dsh_media_mediaSuite_findRelated_result$schema$value ??= object({
 	"id": string$1().readonly(),
 	"accountId": string$1().readonly(),
 	"createdAt": string$1().readonly(),
@@ -1155,10 +1155,10 @@ const dsh_media_mediaSuite_findRelated_result$schema = () => dsh_media_mediaSuit
 	})]).readonly().optional().describe("Material gathered before generation; absent in reports generated before research existed."),
 	"direction": union([_undefined(), string$1()]).readonly().optional().describe("What the user asked this report to be about; absent when no direction was given.")
 });
-let dsh_media_mediaSuite_generateTopics_parameter_0$schema$value;
-const dsh_media_mediaSuite_generateTopics_parameter_0$schema = () => dsh_media_mediaSuite_generateTopics_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_generateTopics_result$schema$value;
-const dsh_media_mediaSuite_generateTopics_result$schema = () => dsh_media_mediaSuite_generateTopics_result$schema$value ??= object({
+let _xiaopuai_dsh_media_mediaSuite_generateTopics_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_generateTopics_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_generateTopics_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_generateTopics_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_generateTopics_result$schema = () => _xiaopuai_dsh_media_mediaSuite_generateTopics_result$schema$value ??= object({
 	"id": string$1().readonly(),
 	"accountId": string$1().readonly(),
 	"createdAt": string$1().readonly(),
@@ -1246,12 +1246,12 @@ const dsh_media_mediaSuite_generateTopics_result$schema = () => dsh_media_mediaS
 	})]).readonly().optional().describe("Material gathered before generation; absent in reports generated before research existed."),
 	"direction": union([_undefined(), string$1()]).readonly().optional().describe("What the user asked this report to be about; absent when no direction was given.")
 });
-let dsh_media_mediaSuite_generateTopicsAbout_parameter_0$schema$value;
-const dsh_media_mediaSuite_generateTopicsAbout_parameter_0$schema = () => dsh_media_mediaSuite_generateTopicsAbout_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_generateTopicsAbout_parameter_1$schema$value;
-const dsh_media_mediaSuite_generateTopicsAbout_parameter_1$schema = () => dsh_media_mediaSuite_generateTopicsAbout_parameter_1$schema$value ??= string$1();
-let dsh_media_mediaSuite_generateTopicsAbout_result$schema$value;
-const dsh_media_mediaSuite_generateTopicsAbout_result$schema = () => dsh_media_mediaSuite_generateTopicsAbout_result$schema$value ??= object({
+let _xiaopuai_dsh_media_mediaSuite_generateTopicsAbout_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_generateTopicsAbout_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_generateTopicsAbout_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_generateTopicsAbout_parameter_1$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_generateTopicsAbout_parameter_1$schema = () => _xiaopuai_dsh_media_mediaSuite_generateTopicsAbout_parameter_1$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_generateTopicsAbout_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_generateTopicsAbout_result$schema = () => _xiaopuai_dsh_media_mediaSuite_generateTopicsAbout_result$schema$value ??= object({
 	"id": string$1().readonly(),
 	"accountId": string$1().readonly(),
 	"createdAt": string$1().readonly(),
@@ -1339,30 +1339,30 @@ const dsh_media_mediaSuite_generateTopicsAbout_result$schema = () => dsh_media_m
 	})]).readonly().optional().describe("Material gathered before generation; absent in reports generated before research existed."),
 	"direction": union([_undefined(), string$1()]).readonly().optional().describe("What the user asked this report to be about; absent when no direction was given.")
 });
-let dsh_media_mediaSuite_identify_parameter_0$schema$value;
-const dsh_media_mediaSuite_identify_parameter_0$schema = () => dsh_media_mediaSuite_identify_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_identify_result$schema$value;
-const dsh_media_mediaSuite_identify_result$schema = () => dsh_media_mediaSuite_identify_result$schema$value ??= object({
+let _xiaopuai_dsh_media_mediaSuite_identify_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_identify_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_identify_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_identify_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_identify_result$schema = () => _xiaopuai_dsh_media_mediaSuite_identify_result$schema$value ??= object({
 	"platform": string$1().readonly(),
 	"name": string$1().readonly().describe("Platform nickname."),
 	"profileUrl": string$1().readonly().describe("Canonical profile URL usable as MediaAccountDraft.profileUrl."),
 	"avatarUrl": union([_undefined(), string$1()]).readonly().optional().describe("Avatar image URL, when the platform showed one."),
 	"existingAccountId": union([_undefined(), string$1()]).readonly().optional().describe("Existing own account with the same platform and profile URL, if any.")
 });
-let dsh_media_mediaSuite_importFile_parameter_0$schema$value;
-const dsh_media_mediaSuite_importFile_parameter_0$schema = () => dsh_media_mediaSuite_importFile_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_importFile_parameter_1$schema$value;
-const dsh_media_mediaSuite_importFile_parameter_1$schema = () => dsh_media_mediaSuite_importFile_parameter_1$schema$value ??= string$1();
-let dsh_media_mediaSuite_importFile_parameter_2$schema$value;
-const dsh_media_mediaSuite_importFile_parameter_2$schema = () => dsh_media_mediaSuite_importFile_parameter_2$schema$value ??= string$1();
-let dsh_media_mediaSuite_importFile_result$schema$value;
-const dsh_media_mediaSuite_importFile_result$schema = () => dsh_media_mediaSuite_importFile_result$schema$value ??= object({
+let _xiaopuai_dsh_media_mediaSuite_importFile_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_importFile_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_importFile_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_importFile_parameter_1$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_importFile_parameter_1$schema = () => _xiaopuai_dsh_media_mediaSuite_importFile_parameter_1$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_importFile_parameter_2$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_importFile_parameter_2$schema = () => _xiaopuai_dsh_media_mediaSuite_importFile_parameter_2$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_importFile_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_importFile_result$schema = () => _xiaopuai_dsh_media_mediaSuite_importFile_result$schema$value ??= object({
 	"snapshotWritten": boolean$1().readonly(),
 	"postsWritten": number$1().readonly(),
 	"unmappedColumns": array(string$1()).readonly().describe("Header names that matched no known column.")
 });
-let dsh_media_mediaSuite_loadDemo_result$schema$value;
-const dsh_media_mediaSuite_loadDemo_result$schema = () => dsh_media_mediaSuite_loadDemo_result$schema$value ??= object({
+let _xiaopuai_dsh_media_mediaSuite_loadDemo_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_loadDemo_result$schema = () => _xiaopuai_dsh_media_mediaSuite_loadDemo_result$schema$value ??= object({
 	"id": string$1().readonly(),
 	"demo": union([_undefined(), literal(true)]).readonly().optional().describe("Set on the sample accounts `loadDemo` creates; they hold made-up data and are never fetched."),
 	"loginProfile": union([_undefined(), string$1()]).readonly().optional().describe("Browser profile that keeps this own account's login, set when the account is connected by scanning. Without it the account uses the platform's shared profile, which holds one login at a time."),
@@ -1380,22 +1380,22 @@ const dsh_media_mediaSuite_loadDemo_result$schema = () => dsh_media_mediaSuite_l
 	}).readonly(),
 	"avatarUrl": union([_undefined(), string$1()]).readonly().optional().describe("The account's avatar image on the platform (an https URL), read when scanning in and refreshed by each update.")
 });
-let dsh_media_mediaSuite_loginState_parameter_0$schema$value;
-const dsh_media_mediaSuite_loginState_parameter_0$schema = () => dsh_media_mediaSuite_loginState_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_loginState_parameter_1$schema$value;
-const dsh_media_mediaSuite_loginState_parameter_1$schema = () => dsh_media_mediaSuite_loginState_parameter_1$schema$value ??= union([_undefined(), string$1()]);
-let dsh_media_mediaSuite_loginState_result$schema$value;
-const dsh_media_mediaSuite_loginState_result$schema = () => dsh_media_mediaSuite_loginState_result$schema$value ??= union([
+let _xiaopuai_dsh_media_mediaSuite_loginState_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_loginState_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_loginState_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_loginState_parameter_1$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_loginState_parameter_1$schema = () => _xiaopuai_dsh_media_mediaSuite_loginState_parameter_1$schema$value ??= union([_undefined(), string$1()]);
+let _xiaopuai_dsh_media_mediaSuite_loginState_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_loginState_result$schema = () => _xiaopuai_dsh_media_mediaSuite_loginState_result$schema$value ??= union([
 	literal("unknown"),
 	literal("logged-in"),
 	literal("logged-out")
 ]);
-let dsh_media_mediaSuite_markDraftPublished_parameter_0$schema$value;
-const dsh_media_mediaSuite_markDraftPublished_parameter_0$schema = () => dsh_media_mediaSuite_markDraftPublished_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_markDraftPublished_parameter_1$schema$value;
-const dsh_media_mediaSuite_markDraftPublished_parameter_1$schema = () => dsh_media_mediaSuite_markDraftPublished_parameter_1$schema$value ??= string$1();
-let dsh_media_mediaSuite_markDraftPublished_result$schema$value;
-const dsh_media_mediaSuite_markDraftPublished_result$schema = () => dsh_media_mediaSuite_markDraftPublished_result$schema$value ??= object({
+let _xiaopuai_dsh_media_mediaSuite_markDraftPublished_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_markDraftPublished_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_markDraftPublished_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_markDraftPublished_parameter_1$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_markDraftPublished_parameter_1$schema = () => _xiaopuai_dsh_media_mediaSuite_markDraftPublished_parameter_1$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_markDraftPublished_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_markDraftPublished_result$schema = () => _xiaopuai_dsh_media_mediaSuite_markDraftPublished_result$schema$value ??= object({
 	"id": string$1().readonly(),
 	"createdAt": string$1().readonly(),
 	"publishedUrl": union([_undefined(), string$1()]).readonly().optional().describe("Address of the published post; its counters come from the fetched posts with the same address."),
@@ -1413,10 +1413,10 @@ const dsh_media_mediaSuite_markDraftPublished_result$schema = () => dsh_media_me
 	"note": union([_undefined(), string$1()]).readonly().optional().describe("One line about the content, such as its ratio and length."),
 	"studioProject": union([_undefined(), string$1()]).readonly().optional().describe("Creation-workbench project id of an article or card set.")
 });
-let dsh_media_mediaSuite_network_parameter_0$schema$value;
-const dsh_media_mediaSuite_network_parameter_0$schema = () => dsh_media_mediaSuite_network_parameter_0$schema$value ??= number$1();
-let dsh_media_mediaSuite_network_result$schema$value;
-const dsh_media_mediaSuite_network_result$schema = () => dsh_media_mediaSuite_network_result$schema$value ??= object({
+let _xiaopuai_dsh_media_mediaSuite_network_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_network_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_network_parameter_0$schema$value ??= number$1();
+let _xiaopuai_dsh_media_mediaSuite_network_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_network_result$schema = () => _xiaopuai_dsh_media_mediaSuite_network_result$schema$value ??= object({
 	"days": number$1().readonly(),
 	"accounts": array(object({
 		"account": object({
@@ -1582,12 +1582,12 @@ const dsh_media_mediaSuite_network_result$schema = () => dsh_media_mediaSuite_ne
 		"updatedAt": string$1().readonly().describe("ISO-8601 instant of the last write.")
 	})).readonly().describe("Newest posts of every own account, newest first.")
 });
-let dsh_media_mediaSuite_overview_parameter_0$schema$value;
-const dsh_media_mediaSuite_overview_parameter_0$schema = () => dsh_media_mediaSuite_overview_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_overview_parameter_1$schema$value;
-const dsh_media_mediaSuite_overview_parameter_1$schema = () => dsh_media_mediaSuite_overview_parameter_1$schema$value ??= number$1();
-let dsh_media_mediaSuite_overview_result$schema$value;
-const dsh_media_mediaSuite_overview_result$schema = () => dsh_media_mediaSuite_overview_result$schema$value ??= object({
+let _xiaopuai_dsh_media_mediaSuite_overview_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_overview_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_overview_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_overview_parameter_1$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_overview_parameter_1$schema = () => _xiaopuai_dsh_media_mediaSuite_overview_parameter_1$schema$value ??= number$1();
+let _xiaopuai_dsh_media_mediaSuite_overview_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_overview_result$schema = () => _xiaopuai_dsh_media_mediaSuite_overview_result$schema$value ??= object({
 	"account": object({
 		"id": string$1().readonly(),
 		"demo": union([_undefined(), literal(true)]).readonly().optional().describe("Set on the sample accounts `loadDemo` creates; they hold made-up data and are never fetched."),
@@ -1655,8 +1655,8 @@ const dsh_media_mediaSuite_overview_result$schema = () => dsh_media_mediaSuite_o
 	]).readonly(),
 	"nextRunAt": union([_undefined(), string$1()]).readonly().optional().describe("ISO-8601 instant of the next automatic scrape, when monitoring is enabled.")
 });
-let dsh_media_mediaSuite_platforms_result$schema$value;
-const dsh_media_mediaSuite_platforms_result$schema = () => dsh_media_mediaSuite_platforms_result$schema$value ??= array(object({
+let _xiaopuai_dsh_media_mediaSuite_platforms_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_platforms_result$schema = () => _xiaopuai_dsh_media_mediaSuite_platforms_result$schema$value ??= array(object({
 	"search": boolean$1().readonly().optional().describe("Whether the platform can search posts, filled in by the registry from the adapter; adapters omit it."),
 	"id": string$1().readonly(),
 	"displayName": string$1().readonly().describe("Display name in the platform's own language, such as `小红书`."),
@@ -1680,12 +1680,12 @@ const dsh_media_mediaSuite_platforms_result$schema = () => dsh_media_mediaSuite_
 		literal(true)
 	]).readonly().optional().describe("Set while the adapter has not been checked against a real logged-in account; the page marks the platform as a trial.")
 }));
-let dsh_media_mediaSuite_postDetail_parameter_0$schema$value;
-const dsh_media_mediaSuite_postDetail_parameter_0$schema = () => dsh_media_mediaSuite_postDetail_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_postDetail_parameter_1$schema$value;
-const dsh_media_mediaSuite_postDetail_parameter_1$schema = () => dsh_media_mediaSuite_postDetail_parameter_1$schema$value ??= string$1();
-let dsh_media_mediaSuite_postDetail_result$schema$value;
-const dsh_media_mediaSuite_postDetail_result$schema = () => dsh_media_mediaSuite_postDetail_result$schema$value ??= object({
+let _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_1$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_1$schema = () => _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_1$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_postDetail_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_postDetail_result$schema = () => _xiaopuai_dsh_media_mediaSuite_postDetail_result$schema$value ??= object({
 	"account": object({
 		"id": string$1().readonly(),
 		"demo": union([_undefined(), literal(true)]).readonly().optional().describe("Set on the sample accounts `loadDemo` creates; they hold made-up data and are never fetched."),
@@ -1775,12 +1775,12 @@ const dsh_media_mediaSuite_postDetail_result$schema = () => dsh_media_mediaSuite
 		"of": number$1().readonly()
 	})]).readonly().optional().describe("Rank of the post among the account's recent posts by views, or by likes when views are unknown; 1 is best.")
 });
-let dsh_media_mediaSuite_posts_parameter_0$schema$value;
-const dsh_media_mediaSuite_posts_parameter_0$schema = () => dsh_media_mediaSuite_posts_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_posts_parameter_1$schema$value;
-const dsh_media_mediaSuite_posts_parameter_1$schema = () => dsh_media_mediaSuite_posts_parameter_1$schema$value ??= number$1();
-let dsh_media_mediaSuite_posts_result$schema$value;
-const dsh_media_mediaSuite_posts_result$schema = () => dsh_media_mediaSuite_posts_result$schema$value ??= array(object({
+let _xiaopuai_dsh_media_mediaSuite_posts_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_posts_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_posts_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_posts_parameter_1$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_posts_parameter_1$schema = () => _xiaopuai_dsh_media_mediaSuite_posts_parameter_1$schema$value ??= number$1();
+let _xiaopuai_dsh_media_mediaSuite_posts_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_posts_result$schema = () => _xiaopuai_dsh_media_mediaSuite_posts_result$schema$value ??= array(object({
 	"accountId": string$1().readonly(),
 	"postId": string$1().readonly().describe("Platform post id, or a stable hash of the URL/title when the platform exposes none."),
 	"title": string$1().readonly(),
@@ -1802,10 +1802,10 @@ const dsh_media_mediaSuite_posts_result$schema = () => dsh_media_mediaSuite_post
 	"source": union([literal("scrape"), literal("import")]).readonly(),
 	"updatedAt": string$1().readonly().describe("ISO-8601 instant of the last write.")
 }));
-let dsh_media_mediaSuite_refresh_parameter_0$schema$value;
-const dsh_media_mediaSuite_refresh_parameter_0$schema = () => dsh_media_mediaSuite_refresh_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_refresh_result$schema$value;
-const dsh_media_mediaSuite_refresh_result$schema = () => dsh_media_mediaSuite_refresh_result$schema$value ??= object({
+let _xiaopuai_dsh_media_mediaSuite_refresh_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_refresh_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_refresh_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_refresh_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_refresh_result$schema = () => _xiaopuai_dsh_media_mediaSuite_refresh_result$schema$value ??= object({
 	"accountId": string$1().readonly(),
 	"kind": union([literal("scrape"), literal("import")]).readonly(),
 	"startedAt": string$1().readonly().describe("ISO-8601 instants."),
@@ -1815,16 +1815,16 @@ const dsh_media_mediaSuite_refresh_result$schema = () => dsh_media_mediaSuite_re
 	"message": union([_undefined(), string$1()]).readonly().optional(),
 	"postsWritten": number$1().readonly()
 });
-let dsh_media_mediaSuite_removeDraft_parameter_0$schema$value;
-const dsh_media_mediaSuite_removeDraft_parameter_0$schema = () => dsh_media_mediaSuite_removeDraft_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_removeDraft_result$schema$value;
-const dsh_media_mediaSuite_removeDraft_result$schema = () => dsh_media_mediaSuite_removeDraft_result$schema$value ??= _void();
-let dsh_media_mediaSuite_revealDraft_parameter_0$schema$value;
-const dsh_media_mediaSuite_revealDraft_parameter_0$schema = () => dsh_media_mediaSuite_revealDraft_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_revealDraft_result$schema$value;
-const dsh_media_mediaSuite_revealDraft_result$schema = () => dsh_media_mediaSuite_revealDraft_result$schema$value ??= _void();
-let dsh_media_mediaSuite_saveAccount_parameter_0$schema$value;
-const dsh_media_mediaSuite_saveAccount_parameter_0$schema = () => dsh_media_mediaSuite_saveAccount_parameter_0$schema$value ??= object({
+let _xiaopuai_dsh_media_mediaSuite_removeDraft_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_removeDraft_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_removeDraft_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_removeDraft_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_removeDraft_result$schema = () => _xiaopuai_dsh_media_mediaSuite_removeDraft_result$schema$value ??= _void();
+let _xiaopuai_dsh_media_mediaSuite_revealDraft_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_revealDraft_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_revealDraft_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_revealDraft_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_revealDraft_result$schema = () => _xiaopuai_dsh_media_mediaSuite_revealDraft_result$schema$value ??= _void();
+let _xiaopuai_dsh_media_mediaSuite_saveAccount_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_saveAccount_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_saveAccount_parameter_0$schema$value ??= object({
 	"id": union([_undefined(), string$1()]).readonly().optional(),
 	"platform": string$1().readonly(),
 	"role": union([literal("own"), literal("benchmark")]).readonly(),
@@ -1838,10 +1838,10 @@ const dsh_media_mediaSuite_saveAccount_parameter_0$schema = () => dsh_media_medi
 	}).readonly(),
 	"avatarUrl": union([_undefined(), string$1()]).readonly().optional().describe("The account's avatar image on the platform (an https URL), read when scanning in and refreshed by each update.")
 });
-let dsh_media_mediaSuite_saveAccount_parameter_1$schema$value;
-const dsh_media_mediaSuite_saveAccount_parameter_1$schema = () => dsh_media_mediaSuite_saveAccount_parameter_1$schema$value ??= union([_undefined(), string$1()]);
-let dsh_media_mediaSuite_saveAccount_result$schema$value;
-const dsh_media_mediaSuite_saveAccount_result$schema = () => dsh_media_mediaSuite_saveAccount_result$schema$value ??= object({
+let _xiaopuai_dsh_media_mediaSuite_saveAccount_parameter_1$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_saveAccount_parameter_1$schema = () => _xiaopuai_dsh_media_mediaSuite_saveAccount_parameter_1$schema$value ??= union([_undefined(), string$1()]);
+let _xiaopuai_dsh_media_mediaSuite_saveAccount_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_saveAccount_result$schema = () => _xiaopuai_dsh_media_mediaSuite_saveAccount_result$schema$value ??= object({
 	"id": string$1().readonly(),
 	"demo": union([_undefined(), literal(true)]).readonly().optional().describe("Set on the sample accounts `loadDemo` creates; they hold made-up data and are never fetched."),
 	"loginProfile": union([_undefined(), string$1()]).readonly().optional().describe("Browser profile that keeps this own account's login, set when the account is connected by scanning. Without it the account uses the platform's shared profile, which holds one login at a time."),
@@ -1859,8 +1859,8 @@ const dsh_media_mediaSuite_saveAccount_result$schema = () => dsh_media_mediaSuit
 	}).readonly(),
 	"avatarUrl": union([_undefined(), string$1()]).readonly().optional().describe("The account's avatar image on the platform (an https URL), read when scanning in and refreshed by each update.")
 });
-let dsh_media_mediaSuite_startBrief_result$schema$value;
-const dsh_media_mediaSuite_startBrief_result$schema = () => dsh_media_mediaSuite_startBrief_result$schema$value ??= object({
+let _xiaopuai_dsh_media_mediaSuite_startBrief_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_startBrief_result$schema = () => _xiaopuai_dsh_media_mediaSuite_startBrief_result$schema$value ??= object({
 	"brief": union([_undefined(), object({
 		"id": string$1().readonly(),
 		"day": string$1().readonly().describe("China day the brief is for."),
@@ -1924,16 +1924,16 @@ const dsh_media_mediaSuite_startBrief_result$schema = () => dsh_media_mediaSuite
 	"problem": union([_undefined(), string$1()]).readonly().optional().describe("Why the last attempt failed, until the next one starts."),
 	"scheduleAt": string$1().readonly().describe("China time the daily brief is written at, such as `09:00`.")
 });
-let dsh_media_mediaSuite_studioOpen_result$schema$value;
-const dsh_media_mediaSuite_studioOpen_result$schema = () => dsh_media_mediaSuite_studioOpen_result$schema$value ??= union([_undefined(), string$1()]);
-let dsh_media_mediaSuite_studioWriteArticle_parameter_0$schema$value;
-const dsh_media_mediaSuite_studioWriteArticle_parameter_0$schema = () => dsh_media_mediaSuite_studioWriteArticle_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_studioWriteArticle_parameter_1$schema$value;
-const dsh_media_mediaSuite_studioWriteArticle_parameter_1$schema = () => dsh_media_mediaSuite_studioWriteArticle_parameter_1$schema$value ??= number$1();
-let dsh_media_mediaSuite_studioWriteArticle_result$schema$value;
-const dsh_media_mediaSuite_studioWriteArticle_result$schema = () => dsh_media_mediaSuite_studioWriteArticle_result$schema$value ??= string$1();
-let dsh_media_mediaSuite_summary_result$schema$value;
-const dsh_media_mediaSuite_summary_result$schema = () => dsh_media_mediaSuite_summary_result$schema$value ??= object({
+let _xiaopuai_dsh_media_mediaSuite_studioOpen_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_studioOpen_result$schema = () => _xiaopuai_dsh_media_mediaSuite_studioOpen_result$schema$value ??= union([_undefined(), string$1()]);
+let _xiaopuai_dsh_media_mediaSuite_studioWriteArticle_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_studioWriteArticle_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_studioWriteArticle_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_studioWriteArticle_parameter_1$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_studioWriteArticle_parameter_1$schema = () => _xiaopuai_dsh_media_mediaSuite_studioWriteArticle_parameter_1$schema$value ??= number$1();
+let _xiaopuai_dsh_media_mediaSuite_studioWriteArticle_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_studioWriteArticle_result$schema = () => _xiaopuai_dsh_media_mediaSuite_studioWriteArticle_result$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_summary_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_summary_result$schema = () => _xiaopuai_dsh_media_mediaSuite_summary_result$schema$value ??= object({
 	"accounts": array(object({
 		"account": object({
 			"id": string$1().readonly(),
@@ -2055,10 +2055,10 @@ const dsh_media_mediaSuite_summary_result$schema = () => dsh_media_mediaSuite_su
 		"updatedAt": string$1().readonly().describe("ISO-8601 instant of the last write.")
 	})).readonly().describe("Newest posts of all own accounts, newest first.")
 });
-let dsh_media_mediaSuite_topicReports_parameter_0$schema$value;
-const dsh_media_mediaSuite_topicReports_parameter_0$schema = () => dsh_media_mediaSuite_topicReports_parameter_0$schema$value ??= string$1();
-let dsh_media_mediaSuite_topicReports_result$schema$value;
-const dsh_media_mediaSuite_topicReports_result$schema = () => dsh_media_mediaSuite_topicReports_result$schema$value ??= array(object({
+let _xiaopuai_dsh_media_mediaSuite_topicReports_parameter_0$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_topicReports_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_topicReports_parameter_0$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_topicReports_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_topicReports_result$schema = () => _xiaopuai_dsh_media_mediaSuite_topicReports_result$schema$value ??= array(object({
 	"id": string$1().readonly(),
 	"accountId": string$1().readonly(),
 	"createdAt": string$1().readonly(),
@@ -2146,8 +2146,8 @@ const dsh_media_mediaSuite_topicReports_result$schema = () => dsh_media_mediaSui
 	})]).readonly().optional().describe("Material gathered before generation; absent in reports generated before research existed."),
 	"direction": union([_undefined(), string$1()]).readonly().optional().describe("What the user asked this report to be about; absent when no direction was given.")
 }));
-let dsh_media_mediaSuite_uiSettings_result$schema$value;
-const dsh_media_mediaSuite_uiSettings_result$schema = () => dsh_media_mediaSuite_uiSettings_result$schema$value ??= object({
+let _xiaopuai_dsh_media_mediaSuite_uiSettings_result$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_uiSettings_result$schema = () => _xiaopuai_dsh_media_mediaSuite_uiSettings_result$schema$value ??= object({
 	"title": union([_undefined(), string$1()]).readonly().optional(),
 	"accent": union([_undefined(), string$1()]).readonly().optional().describe("Accent color as `#rgb` or `#rrggbb`."),
 	"labels": object({
@@ -2181,18 +2181,18 @@ const dsh_media_mediaSuite_uiSettings_result$schema = () => dsh_media_mediaSuite
 		literal(true)
 	]).readonly().optional().describe("Whether a creation workbench is configured; without one the page leaves out 写作 and its actions.")
 });
-let dsh_media_mediaSuite_analysisReports_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_analysisReports_parameter_0_strict$schema = () => dsh_media_mediaSuite_analysisReports_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_analyze_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_analyze_parameter_0_strict$schema = () => dsh_media_mediaSuite_analyze_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_browserClose_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_browserClose_parameter_0_strict$schema = () => dsh_media_mediaSuite_browserClose_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_browserFrames_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_browserFrames_parameter_0_strict$schema = () => dsh_media_mediaSuite_browserFrames_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_browserInput_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_browserInput_parameter_0_strict$schema = () => dsh_media_mediaSuite_browserInput_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_browserInput_parameter_1_strict$schema$value;
-const dsh_media_mediaSuite_browserInput_parameter_1_strict$schema = () => dsh_media_mediaSuite_browserInput_parameter_1_strict$schema$value ??= union([
+let _xiaopuai_dsh_media_mediaSuite_analysisReports_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_analysisReports_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_analysisReports_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_analyze_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_analyze_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_analyze_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_browserClose_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_browserClose_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_browserClose_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_browserFrames_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_browserFrames_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_browserFrames_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_browserInput_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_browserInput_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_browserInput_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_browserInput_parameter_1_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_browserInput_parameter_1_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_browserInput_parameter_1_strict$schema$value ??= union([
 	strictObject({
 		"kind": literal("click").readonly(),
 		"x": number$1().readonly(),
@@ -2238,70 +2238,70 @@ const dsh_media_mediaSuite_browserInput_parameter_1_strict$schema = () => dsh_me
 	strictObject({ "kind": literal("back").readonly() }),
 	strictObject({ "kind": literal("reload").readonly() })
 ]);
-let dsh_media_mediaSuite_browserOpen_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_browserOpen_parameter_0_strict$schema = () => dsh_media_mediaSuite_browserOpen_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_browserOpen_parameter_1_strict$schema$value;
-const dsh_media_mediaSuite_browserOpen_parameter_1_strict$schema = () => dsh_media_mediaSuite_browserOpen_parameter_1_strict$schema$value ??= union([_undefined(), string$1()]);
-let dsh_media_mediaSuite_browserOpen_parameter_2_strict$schema$value;
-const dsh_media_mediaSuite_browserOpen_parameter_2_strict$schema = () => dsh_media_mediaSuite_browserOpen_parameter_2_strict$schema$value ??= union([_undefined(), string$1()]);
-let dsh_media_mediaSuite_browserOpen_parameter_3_strict$schema$value;
-const dsh_media_mediaSuite_browserOpen_parameter_3_strict$schema = () => dsh_media_mediaSuite_browserOpen_parameter_3_strict$schema$value ??= union([
+let _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_1_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_1_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_1_strict$schema$value ??= union([_undefined(), string$1()]);
+let _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_2_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_2_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_2_strict$schema$value ??= union([_undefined(), string$1()]);
+let _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_3_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_3_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_3_strict$schema$value ??= union([
 	_undefined(),
 	literal(false),
 	literal(true)
 ]);
-let dsh_media_mediaSuite_dashboard_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_dashboard_parameter_0_strict$schema = () => dsh_media_mediaSuite_dashboard_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_dashboard_parameter_1_strict$schema$value;
-const dsh_media_mediaSuite_dashboard_parameter_1_strict$schema = () => dsh_media_mediaSuite_dashboard_parameter_1_strict$schema$value ??= number$1();
-let dsh_media_mediaSuite_deleteAccount_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_deleteAccount_parameter_0_strict$schema = () => dsh_media_mediaSuite_deleteAccount_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_findRelated_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_findRelated_parameter_0_strict$schema = () => dsh_media_mediaSuite_findRelated_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_generateTopics_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_generateTopics_parameter_0_strict$schema = () => dsh_media_mediaSuite_generateTopics_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_generateTopicsAbout_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_generateTopicsAbout_parameter_0_strict$schema = () => dsh_media_mediaSuite_generateTopicsAbout_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_generateTopicsAbout_parameter_1_strict$schema$value;
-const dsh_media_mediaSuite_generateTopicsAbout_parameter_1_strict$schema = () => dsh_media_mediaSuite_generateTopicsAbout_parameter_1_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_identify_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_identify_parameter_0_strict$schema = () => dsh_media_mediaSuite_identify_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_importFile_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_importFile_parameter_0_strict$schema = () => dsh_media_mediaSuite_importFile_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_importFile_parameter_1_strict$schema$value;
-const dsh_media_mediaSuite_importFile_parameter_1_strict$schema = () => dsh_media_mediaSuite_importFile_parameter_1_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_importFile_parameter_2_strict$schema$value;
-const dsh_media_mediaSuite_importFile_parameter_2_strict$schema = () => dsh_media_mediaSuite_importFile_parameter_2_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_loginState_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_loginState_parameter_0_strict$schema = () => dsh_media_mediaSuite_loginState_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_loginState_parameter_1_strict$schema$value;
-const dsh_media_mediaSuite_loginState_parameter_1_strict$schema = () => dsh_media_mediaSuite_loginState_parameter_1_strict$schema$value ??= union([_undefined(), string$1()]);
-let dsh_media_mediaSuite_markDraftPublished_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_markDraftPublished_parameter_0_strict$schema = () => dsh_media_mediaSuite_markDraftPublished_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_markDraftPublished_parameter_1_strict$schema$value;
-const dsh_media_mediaSuite_markDraftPublished_parameter_1_strict$schema = () => dsh_media_mediaSuite_markDraftPublished_parameter_1_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_network_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_network_parameter_0_strict$schema = () => dsh_media_mediaSuite_network_parameter_0_strict$schema$value ??= number$1();
-let dsh_media_mediaSuite_overview_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_overview_parameter_0_strict$schema = () => dsh_media_mediaSuite_overview_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_overview_parameter_1_strict$schema$value;
-const dsh_media_mediaSuite_overview_parameter_1_strict$schema = () => dsh_media_mediaSuite_overview_parameter_1_strict$schema$value ??= number$1();
-let dsh_media_mediaSuite_postDetail_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_postDetail_parameter_0_strict$schema = () => dsh_media_mediaSuite_postDetail_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_postDetail_parameter_1_strict$schema$value;
-const dsh_media_mediaSuite_postDetail_parameter_1_strict$schema = () => dsh_media_mediaSuite_postDetail_parameter_1_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_posts_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_posts_parameter_0_strict$schema = () => dsh_media_mediaSuite_posts_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_posts_parameter_1_strict$schema$value;
-const dsh_media_mediaSuite_posts_parameter_1_strict$schema = () => dsh_media_mediaSuite_posts_parameter_1_strict$schema$value ??= number$1();
-let dsh_media_mediaSuite_refresh_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_refresh_parameter_0_strict$schema = () => dsh_media_mediaSuite_refresh_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_removeDraft_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_removeDraft_parameter_0_strict$schema = () => dsh_media_mediaSuite_removeDraft_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_revealDraft_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_revealDraft_parameter_0_strict$schema = () => dsh_media_mediaSuite_revealDraft_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_saveAccount_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_saveAccount_parameter_0_strict$schema = () => dsh_media_mediaSuite_saveAccount_parameter_0_strict$schema$value ??= strictObject({
+let _xiaopuai_dsh_media_mediaSuite_dashboard_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_dashboard_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_dashboard_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_dashboard_parameter_1_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_dashboard_parameter_1_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_dashboard_parameter_1_strict$schema$value ??= number$1();
+let _xiaopuai_dsh_media_mediaSuite_deleteAccount_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_deleteAccount_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_deleteAccount_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_findRelated_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_findRelated_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_findRelated_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_generateTopics_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_generateTopics_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_generateTopics_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_generateTopicsAbout_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_generateTopicsAbout_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_generateTopicsAbout_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_generateTopicsAbout_parameter_1_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_generateTopicsAbout_parameter_1_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_generateTopicsAbout_parameter_1_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_identify_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_identify_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_identify_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_importFile_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_importFile_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_importFile_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_importFile_parameter_1_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_importFile_parameter_1_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_importFile_parameter_1_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_importFile_parameter_2_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_importFile_parameter_2_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_importFile_parameter_2_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_loginState_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_loginState_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_loginState_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_loginState_parameter_1_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_loginState_parameter_1_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_loginState_parameter_1_strict$schema$value ??= union([_undefined(), string$1()]);
+let _xiaopuai_dsh_media_mediaSuite_markDraftPublished_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_markDraftPublished_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_markDraftPublished_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_markDraftPublished_parameter_1_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_markDraftPublished_parameter_1_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_markDraftPublished_parameter_1_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_network_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_network_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_network_parameter_0_strict$schema$value ??= number$1();
+let _xiaopuai_dsh_media_mediaSuite_overview_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_overview_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_overview_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_overview_parameter_1_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_overview_parameter_1_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_overview_parameter_1_strict$schema$value ??= number$1();
+let _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_1_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_1_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_1_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_posts_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_posts_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_posts_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_posts_parameter_1_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_posts_parameter_1_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_posts_parameter_1_strict$schema$value ??= number$1();
+let _xiaopuai_dsh_media_mediaSuite_refresh_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_refresh_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_refresh_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_removeDraft_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_removeDraft_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_removeDraft_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_revealDraft_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_revealDraft_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_revealDraft_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_saveAccount_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_saveAccount_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_saveAccount_parameter_0_strict$schema$value ??= strictObject({
 	"id": union([_undefined(), string$1()]).readonly().optional(),
 	"platform": string$1().readonly(),
 	"role": union([literal("own"), literal("benchmark")]).readonly(),
@@ -2315,16 +2315,16 @@ const dsh_media_mediaSuite_saveAccount_parameter_0_strict$schema = () => dsh_med
 	}).readonly(),
 	"avatarUrl": union([_undefined(), string$1()]).readonly().optional().describe("The account's avatar image on the platform (an https URL), read when scanning in and refreshed by each update.")
 });
-let dsh_media_mediaSuite_saveAccount_parameter_1_strict$schema$value;
-const dsh_media_mediaSuite_saveAccount_parameter_1_strict$schema = () => dsh_media_mediaSuite_saveAccount_parameter_1_strict$schema$value ??= union([_undefined(), string$1()]);
-let dsh_media_mediaSuite_studioWriteArticle_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_studioWriteArticle_parameter_0_strict$schema = () => dsh_media_mediaSuite_studioWriteArticle_parameter_0_strict$schema$value ??= string$1();
-let dsh_media_mediaSuite_studioWriteArticle_parameter_1_strict$schema$value;
-const dsh_media_mediaSuite_studioWriteArticle_parameter_1_strict$schema = () => dsh_media_mediaSuite_studioWriteArticle_parameter_1_strict$schema$value ??= number$1();
-let dsh_media_mediaSuite_topicReports_parameter_0_strict$schema$value;
-const dsh_media_mediaSuite_topicReports_parameter_0_strict$schema = () => dsh_media_mediaSuite_topicReports_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_saveAccount_parameter_1_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_saveAccount_parameter_1_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_saveAccount_parameter_1_strict$schema$value ??= union([_undefined(), string$1()]);
+let _xiaopuai_dsh_media_mediaSuite_studioWriteArticle_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_studioWriteArticle_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_studioWriteArticle_parameter_0_strict$schema$value ??= string$1();
+let _xiaopuai_dsh_media_mediaSuite_studioWriteArticle_parameter_1_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_studioWriteArticle_parameter_1_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_studioWriteArticle_parameter_1_strict$schema$value ??= number$1();
+let _xiaopuai_dsh_media_mediaSuite_topicReports_parameter_0_strict$schema$value;
+const _xiaopuai_dsh_media_mediaSuite_topicReports_parameter_0_strict$schema = () => _xiaopuai_dsh_media_mediaSuite_topicReports_parameter_0_strict$schema$value ??= string$1();
 const $remote = createTypertRemoteInfo({
-	package: "dsh-media",
+	package: "@xiaopuai/dsh-media",
 	methods: {
 		"mediaSuite/accounts": {
 			service: "mediaSuite",
@@ -2333,8 +2333,8 @@ const $remote = createTypertRemoteInfo({
 			parameters: [],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media#mediaSuite/accounts:result",
-				create: dsh_media_mediaSuite_accounts_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media#mediaSuite/accounts:result",
+				create: _xiaopuai_dsh_media_mediaSuite_accounts_result$schema,
 				description: "accounts in creation order.",
 				jsonSchema: {
 					"type": "array",
@@ -2426,21 +2426,21 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_analysisReports_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_analysisReports_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_analysisReports_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_analysisReports_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media#mediaSuite/analysisReports:result",
-				create: dsh_media_mediaSuite_analysisReports_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media#mediaSuite/analysisReports:result",
+				create: _xiaopuai_dsh_media_mediaSuite_analysisReports_result$schema,
 				description: "reports, newest first.",
 				jsonSchema: {
 					"type": "array",
@@ -2523,22 +2523,22 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_analyze_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_analyze_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_analyze_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_analyze_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}],
 			cancellation: { parameter: "signal" },
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaAnalysisReport",
-				create: dsh_media_mediaSuite_analyze_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaAnalysisReport",
+				create: _xiaopuai_dsh_media_mediaSuite_analyze_result$schema,
 				description: "the stored report.",
 				jsonSchema: {
 					"type": "object",
@@ -2615,8 +2615,8 @@ const $remote = createTypertRemoteInfo({
 			parameters: [],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaBriefState",
-				create: dsh_media_mediaSuite_brief_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaBriefState",
+				create: _xiaopuai_dsh_media_mediaSuite_brief_result$schema,
 				description: "the state.",
 				jsonSchema: {
 					"type": "object",
@@ -2795,21 +2795,21 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaBrowserId",
-					create: dsh_media_mediaSuite_browserClose_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaBrowserId",
+					create: _xiaopuai_dsh_media_mediaSuite_browserClose_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaBrowserId",
-					create: dsh_media_mediaSuite_browserClose_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaBrowserId",
+					create: _xiaopuai_dsh_media_mediaSuite_browserClose_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media#mediaSuite/browserClose:result",
-				create: dsh_media_mediaSuite_browserClose_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media#mediaSuite/browserClose:result",
+				create: _xiaopuai_dsh_media_mediaSuite_browserClose_result$schema,
 				description: "after the page closed.",
 				jsonSchemaError: "typert tool schema: unsupported void value"
 			},
@@ -2830,22 +2830,22 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaBrowserId",
-					create: dsh_media_mediaSuite_browserFrames_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaBrowserId",
+					create: _xiaopuai_dsh_media_mediaSuite_browserFrames_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaBrowserId",
-					create: dsh_media_mediaSuite_browserFrames_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaBrowserId",
+					create: _xiaopuai_dsh_media_mediaSuite_browserFrames_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}],
 			cancellation: { parameter: "signal" },
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaBrowserFrame",
-				create: dsh_media_mediaSuite_browserFrames_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaBrowserFrame",
+				create: _xiaopuai_dsh_media_mediaSuite_browserFrames_result$schema,
 				description: "the frame stream.",
 				jsonSchema: { "oneOf": [
 					{
@@ -2982,14 +2982,14 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaBrowserId",
-					create: dsh_media_mediaSuite_browserInput_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaBrowserId",
+					create: _xiaopuai_dsh_media_mediaSuite_browserInput_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaBrowserId",
-					create: dsh_media_mediaSuite_browserInput_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaBrowserId",
+					create: _xiaopuai_dsh_media_mediaSuite_browserInput_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}, {
@@ -2998,8 +2998,8 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaBrowserInput",
-					create: dsh_media_mediaSuite_browserInput_parameter_1$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaBrowserInput",
+					create: _xiaopuai_dsh_media_mediaSuite_browserInput_parameter_1$schema,
 					jsonSchema: { "oneOf": [
 						{
 							"type": "object",
@@ -3163,8 +3163,8 @@ const $remote = createTypertRemoteInfo({
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaBrowserInput",
-					create: dsh_media_mediaSuite_browserInput_parameter_1_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaBrowserInput",
+					create: _xiaopuai_dsh_media_mediaSuite_browserInput_parameter_1_strict$schema,
 					jsonSchema: { "oneOf": [
 						{
 							"type": "object",
@@ -3329,8 +3329,8 @@ const $remote = createTypertRemoteInfo({
 			}],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media#mediaSuite/browserInput:result",
-				create: dsh_media_mediaSuite_browserInput_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media#mediaSuite/browserInput:result",
+				create: _xiaopuai_dsh_media_mediaSuite_browserInput_result$schema,
 				description: "after the input is dispatched.",
 				jsonSchemaError: "typert tool schema: unsupported void value"
 			},
@@ -3351,14 +3351,14 @@ const $remote = createTypertRemoteInfo({
 					source: "json",
 					codec: {
 						mode: "strict",
-						typeSymbol: "dsh-media/types#MediaPlatformId",
-						create: dsh_media_mediaSuite_browserOpen_parameter_0$schema,
+						typeSymbol: "@xiaopuai/dsh-media/types#MediaPlatformId",
+						create: _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_0$schema,
 						jsonSchema: { "type": "string" }
 					},
 					strictCodec: {
 						mode: "strict",
-						typeSymbol: "dsh-media/types#MediaPlatformId",
-						create: dsh_media_mediaSuite_browserOpen_parameter_0_strict$schema,
+						typeSymbol: "@xiaopuai/dsh-media/types#MediaPlatformId",
+						create: _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_0_strict$schema,
 						jsonSchema: { "type": "string" }
 					}
 				},
@@ -3369,14 +3369,14 @@ const $remote = createTypertRemoteInfo({
 					acceptsUndefined: true,
 					codec: {
 						mode: "strict",
-						typeSymbol: "dsh-media#mediaSuite/browserOpen:url",
-						create: dsh_media_mediaSuite_browserOpen_parameter_1$schema,
+						typeSymbol: "@xiaopuai/dsh-media#mediaSuite/browserOpen:url",
+						create: _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_1$schema,
 						jsonSchema: { "type": "string" }
 					},
 					strictCodec: {
 						mode: "strict",
-						typeSymbol: "dsh-media#mediaSuite/browserOpen:url",
-						create: dsh_media_mediaSuite_browserOpen_parameter_1_strict$schema,
+						typeSymbol: "@xiaopuai/dsh-media#mediaSuite/browserOpen:url",
+						create: _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_1_strict$schema,
 						jsonSchema: { "type": "string" }
 					}
 				},
@@ -3387,14 +3387,14 @@ const $remote = createTypertRemoteInfo({
 					acceptsUndefined: true,
 					codec: {
 						mode: "strict",
-						typeSymbol: "dsh-media/types#MediaAccountId",
-						create: dsh_media_mediaSuite_browserOpen_parameter_2$schema,
+						typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+						create: _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_2$schema,
 						jsonSchema: { "type": "string" }
 					},
 					strictCodec: {
 						mode: "strict",
-						typeSymbol: "dsh-media/types#MediaAccountId",
-						create: dsh_media_mediaSuite_browserOpen_parameter_2_strict$schema,
+						typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+						create: _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_2_strict$schema,
 						jsonSchema: { "type": "string" }
 					}
 				},
@@ -3405,8 +3405,8 @@ const $remote = createTypertRemoteInfo({
 					acceptsUndefined: true,
 					codec: {
 						mode: "strict",
-						typeSymbol: "dsh-media#mediaSuite/browserOpen:fresh",
-						create: dsh_media_mediaSuite_browserOpen_parameter_3$schema,
+						typeSymbol: "@xiaopuai/dsh-media#mediaSuite/browserOpen:fresh",
+						create: _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_3$schema,
 						jsonSchema: {
 							"type": "boolean",
 							"enum": [false, true]
@@ -3414,8 +3414,8 @@ const $remote = createTypertRemoteInfo({
 					},
 					strictCodec: {
 						mode: "strict",
-						typeSymbol: "dsh-media#mediaSuite/browserOpen:fresh",
-						create: dsh_media_mediaSuite_browserOpen_parameter_3_strict$schema,
+						typeSymbol: "@xiaopuai/dsh-media#mediaSuite/browserOpen:fresh",
+						create: _xiaopuai_dsh_media_mediaSuite_browserOpen_parameter_3_strict$schema,
 						jsonSchema: {
 							"type": "boolean",
 							"enum": [false, true]
@@ -3425,8 +3425,8 @@ const $remote = createTypertRemoteInfo({
 			],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaBrowserView",
-				create: dsh_media_mediaSuite_browserOpen_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaBrowserView",
+				create: _xiaopuai_dsh_media_mediaSuite_browserOpen_result$schema,
 				description: "the view id and viewport size.",
 				jsonSchema: {
 					"type": "object",
@@ -3458,8 +3458,8 @@ const $remote = createTypertRemoteInfo({
 			parameters: [],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media#mediaSuite/clearDemo:result",
-				create: dsh_media_mediaSuite_clearDemo_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media#mediaSuite/clearDemo:result",
+				create: _xiaopuai_dsh_media_mediaSuite_clearDemo_result$schema,
 				description: "how many sample accounts were deleted.",
 				jsonSchema: { "type": "number" }
 			},
@@ -3479,14 +3479,14 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_dashboard_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_dashboard_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_dashboard_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_dashboard_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}, {
@@ -3495,21 +3495,21 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media#mediaSuite/dashboard:days",
-					create: dsh_media_mediaSuite_dashboard_parameter_1$schema,
+					typeSymbol: "@xiaopuai/dsh-media#mediaSuite/dashboard:days",
+					create: _xiaopuai_dsh_media_mediaSuite_dashboard_parameter_1$schema,
 					jsonSchema: { "type": "number" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media#mediaSuite/dashboard:days",
-					create: dsh_media_mediaSuite_dashboard_parameter_1_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media#mediaSuite/dashboard:days",
+					create: _xiaopuai_dsh_media_mediaSuite_dashboard_parameter_1_strict$schema,
 					jsonSchema: { "type": "number" }
 				}
 			}],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaDashboard",
-				create: dsh_media_mediaSuite_dashboard_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaDashboard",
+				create: _xiaopuai_dsh_media_mediaSuite_dashboard_result$schema,
 				description: "health, the 7-day headline, the works and fans counters over the window, top posts and newest posts.",
 				jsonSchemaError: "typert tool schema: selected dictionaries require string keys and unconstrained JSON values"
 			},
@@ -3529,21 +3529,21 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_deleteAccount_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_deleteAccount_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_deleteAccount_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_deleteAccount_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media#mediaSuite/deleteAccount:result",
-				create: dsh_media_mediaSuite_deleteAccount_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media#mediaSuite/deleteAccount:result",
+				create: _xiaopuai_dsh_media_mediaSuite_deleteAccount_result$schema,
 				jsonSchemaError: "typert tool schema: unsupported void value"
 			},
 			sourceLocation: {
@@ -3559,8 +3559,8 @@ const $remote = createTypertRemoteInfo({
 			parameters: [],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media#mediaSuite/drafts:result",
-				create: dsh_media_mediaSuite_drafts_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media#mediaSuite/drafts:result",
+				create: _xiaopuai_dsh_media_mediaSuite_drafts_result$schema,
 				description: "drafts waiting to be published and published ones.",
 				jsonSchema: {
 					"type": "array",
@@ -3636,22 +3636,22 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaReportId",
-					create: dsh_media_mediaSuite_findRelated_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaReportId",
+					create: _xiaopuai_dsh_media_mediaSuite_findRelated_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaReportId",
-					create: dsh_media_mediaSuite_findRelated_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaReportId",
+					create: _xiaopuai_dsh_media_mediaSuite_findRelated_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}],
 			cancellation: { parameter: "signal" },
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaTopicReport",
-				create: dsh_media_mediaSuite_findRelated_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaTopicReport",
+				create: _xiaopuai_dsh_media_mediaSuite_findRelated_result$schema,
 				description: "the updated report.",
 				jsonSchema: {
 					"type": "object",
@@ -3949,22 +3949,22 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_generateTopics_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_generateTopics_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_generateTopics_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_generateTopics_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}],
 			cancellation: { parameter: "signal" },
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaTopicReport",
-				create: dsh_media_mediaSuite_generateTopics_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaTopicReport",
+				create: _xiaopuai_dsh_media_mediaSuite_generateTopics_result$schema,
 				description: "the stored report.",
 				jsonSchema: {
 					"type": "object",
@@ -4262,14 +4262,14 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_generateTopicsAbout_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_generateTopicsAbout_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_generateTopicsAbout_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_generateTopicsAbout_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}, {
@@ -4278,22 +4278,22 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media#mediaSuite/generateTopicsAbout:direction",
-					create: dsh_media_mediaSuite_generateTopicsAbout_parameter_1$schema,
+					typeSymbol: "@xiaopuai/dsh-media#mediaSuite/generateTopicsAbout:direction",
+					create: _xiaopuai_dsh_media_mediaSuite_generateTopicsAbout_parameter_1$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media#mediaSuite/generateTopicsAbout:direction",
-					create: dsh_media_mediaSuite_generateTopicsAbout_parameter_1_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media#mediaSuite/generateTopicsAbout:direction",
+					create: _xiaopuai_dsh_media_mediaSuite_generateTopicsAbout_parameter_1_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}],
 			cancellation: { parameter: "signal" },
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaTopicReport",
-				create: dsh_media_mediaSuite_generateTopicsAbout_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaTopicReport",
+				create: _xiaopuai_dsh_media_mediaSuite_generateTopicsAbout_result$schema,
 				description: "the stored report, which records the direction.",
 				jsonSchema: {
 					"type": "object",
@@ -4591,22 +4591,22 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaBrowserId",
-					create: dsh_media_mediaSuite_identify_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaBrowserId",
+					create: _xiaopuai_dsh_media_mediaSuite_identify_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaBrowserId",
-					create: dsh_media_mediaSuite_identify_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaBrowserId",
+					create: _xiaopuai_dsh_media_mediaSuite_identify_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}],
 			cancellation: { parameter: "signal" },
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaAccountIdentity",
-				create: dsh_media_mediaSuite_identify_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountIdentity",
+				create: _xiaopuai_dsh_media_mediaSuite_identify_result$schema,
 				description: "nickname, canonical profile URL and the matching stored own account, if any.",
 				jsonSchema: {
 					"type": "object",
@@ -4654,14 +4654,14 @@ const $remote = createTypertRemoteInfo({
 					source: "json",
 					codec: {
 						mode: "strict",
-						typeSymbol: "dsh-media/types#MediaAccountId",
-						create: dsh_media_mediaSuite_importFile_parameter_0$schema,
+						typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+						create: _xiaopuai_dsh_media_mediaSuite_importFile_parameter_0$schema,
 						jsonSchema: { "type": "string" }
 					},
 					strictCodec: {
 						mode: "strict",
-						typeSymbol: "dsh-media/types#MediaAccountId",
-						create: dsh_media_mediaSuite_importFile_parameter_0_strict$schema,
+						typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+						create: _xiaopuai_dsh_media_mediaSuite_importFile_parameter_0_strict$schema,
 						jsonSchema: { "type": "string" }
 					}
 				},
@@ -4671,14 +4671,14 @@ const $remote = createTypertRemoteInfo({
 					source: "json",
 					codec: {
 						mode: "strict",
-						typeSymbol: "dsh-media#mediaSuite/importFile:fileName",
-						create: dsh_media_mediaSuite_importFile_parameter_1$schema,
+						typeSymbol: "@xiaopuai/dsh-media#mediaSuite/importFile:fileName",
+						create: _xiaopuai_dsh_media_mediaSuite_importFile_parameter_1$schema,
 						jsonSchema: { "type": "string" }
 					},
 					strictCodec: {
 						mode: "strict",
-						typeSymbol: "dsh-media#mediaSuite/importFile:fileName",
-						create: dsh_media_mediaSuite_importFile_parameter_1_strict$schema,
+						typeSymbol: "@xiaopuai/dsh-media#mediaSuite/importFile:fileName",
+						create: _xiaopuai_dsh_media_mediaSuite_importFile_parameter_1_strict$schema,
 						jsonSchema: { "type": "string" }
 					}
 				},
@@ -4688,22 +4688,22 @@ const $remote = createTypertRemoteInfo({
 					source: "json",
 					codec: {
 						mode: "strict",
-						typeSymbol: "dsh-media#mediaSuite/importFile:base64",
-						create: dsh_media_mediaSuite_importFile_parameter_2$schema,
+						typeSymbol: "@xiaopuai/dsh-media#mediaSuite/importFile:base64",
+						create: _xiaopuai_dsh_media_mediaSuite_importFile_parameter_2$schema,
 						jsonSchema: { "type": "string" }
 					},
 					strictCodec: {
 						mode: "strict",
-						typeSymbol: "dsh-media#mediaSuite/importFile:base64",
-						create: dsh_media_mediaSuite_importFile_parameter_2_strict$schema,
+						typeSymbol: "@xiaopuai/dsh-media#mediaSuite/importFile:base64",
+						create: _xiaopuai_dsh_media_mediaSuite_importFile_parameter_2_strict$schema,
 						jsonSchema: { "type": "string" }
 					}
 				}
 			],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaImportResult",
-				create: dsh_media_mediaSuite_importFile_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaImportResult",
+				create: _xiaopuai_dsh_media_mediaSuite_importFile_result$schema,
 				description: "what was written and which headers were not recognized.",
 				jsonSchema: {
 					"type": "object",
@@ -4737,8 +4737,8 @@ const $remote = createTypertRemoteInfo({
 			parameters: [],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaAccount",
-				create: dsh_media_mediaSuite_loadDemo_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaAccount",
+				create: _xiaopuai_dsh_media_mediaSuite_loadDemo_result$schema,
 				description: "the sample own account.",
 				jsonSchema: {
 					"type": "object",
@@ -4827,14 +4827,14 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaPlatformId",
-					create: dsh_media_mediaSuite_loginState_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaPlatformId",
+					create: _xiaopuai_dsh_media_mediaSuite_loginState_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaPlatformId",
-					create: dsh_media_mediaSuite_loginState_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaPlatformId",
+					create: _xiaopuai_dsh_media_mediaSuite_loginState_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}, {
@@ -4844,21 +4844,21 @@ const $remote = createTypertRemoteInfo({
 				acceptsUndefined: true,
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_loginState_parameter_1$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_loginState_parameter_1$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_loginState_parameter_1_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_loginState_parameter_1_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaLoginState",
-				create: dsh_media_mediaSuite_loginState_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaLoginState",
+				create: _xiaopuai_dsh_media_mediaSuite_loginState_result$schema,
 				description: "the state, or `unknown` when never detected.",
 				jsonSchema: {
 					"type": "string",
@@ -4885,14 +4885,14 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaDraftId",
-					create: dsh_media_mediaSuite_markDraftPublished_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaDraftId",
+					create: _xiaopuai_dsh_media_mediaSuite_markDraftPublished_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaDraftId",
-					create: dsh_media_mediaSuite_markDraftPublished_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaDraftId",
+					create: _xiaopuai_dsh_media_mediaSuite_markDraftPublished_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}, {
@@ -4901,21 +4901,21 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media#mediaSuite/markDraftPublished:url",
-					create: dsh_media_mediaSuite_markDraftPublished_parameter_1$schema,
+					typeSymbol: "@xiaopuai/dsh-media#mediaSuite/markDraftPublished:url",
+					create: _xiaopuai_dsh_media_mediaSuite_markDraftPublished_parameter_1$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media#mediaSuite/markDraftPublished:url",
-					create: dsh_media_mediaSuite_markDraftPublished_parameter_1_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media#mediaSuite/markDraftPublished:url",
+					create: _xiaopuai_dsh_media_mediaSuite_markDraftPublished_parameter_1_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaDraft",
-				create: dsh_media_mediaSuite_markDraftPublished_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaDraft",
+				create: _xiaopuai_dsh_media_mediaSuite_markDraftPublished_result$schema,
 				description: "the updated draft.",
 				jsonSchema: {
 					"type": "object",
@@ -4988,21 +4988,21 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media#mediaSuite/network:days",
-					create: dsh_media_mediaSuite_network_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media#mediaSuite/network:days",
+					create: _xiaopuai_dsh_media_mediaSuite_network_parameter_0$schema,
 					jsonSchema: { "type": "number" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media#mediaSuite/network:days",
-					create: dsh_media_mediaSuite_network_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media#mediaSuite/network:days",
+					create: _xiaopuai_dsh_media_mediaSuite_network_parameter_0_strict$schema,
 					jsonSchema: { "type": "number" }
 				}
 			}],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaNetwork",
-				create: dsh_media_mediaSuite_network_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaNetwork",
+				create: _xiaopuai_dsh_media_mediaSuite_network_result$schema,
 				description: "the network.",
 				jsonSchemaError: "typert tool schema: selected dictionaries require string keys and unconstrained JSON values"
 			},
@@ -5022,14 +5022,14 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_overview_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_overview_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_overview_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_overview_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}, {
@@ -5038,21 +5038,21 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media#mediaSuite/overview:days",
-					create: dsh_media_mediaSuite_overview_parameter_1$schema,
+					typeSymbol: "@xiaopuai/dsh-media#mediaSuite/overview:days",
+					create: _xiaopuai_dsh_media_mediaSuite_overview_parameter_1$schema,
 					jsonSchema: { "type": "number" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media#mediaSuite/overview:days",
-					create: dsh_media_mediaSuite_overview_parameter_1_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media#mediaSuite/overview:days",
+					create: _xiaopuai_dsh_media_mediaSuite_overview_parameter_1_strict$schema,
 					jsonSchema: { "type": "number" }
 				}
 			}],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaAccountOverview",
-				create: dsh_media_mediaSuite_overview_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountOverview",
+				create: _xiaopuai_dsh_media_mediaSuite_overview_result$schema,
 				description: "counters, series, deltas, engagement, last run, login state and next scheduled scrape.",
 				jsonSchemaError: "typert tool schema: selected dictionaries require string keys and unconstrained JSON values"
 			},
@@ -5069,8 +5069,8 @@ const $remote = createTypertRemoteInfo({
 			parameters: [],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media#mediaSuite/platforms:result",
-				create: dsh_media_mediaSuite_platforms_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media#mediaSuite/platforms:result",
+				create: _xiaopuai_dsh_media_mediaSuite_platforms_result$schema,
 				description: "descriptors in registration order.",
 				jsonSchema: {
 					"type": "array",
@@ -5162,14 +5162,14 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_postDetail_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_postDetail_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}, {
@@ -5178,21 +5178,21 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media#mediaSuite/postDetail:postId",
-					create: dsh_media_mediaSuite_postDetail_parameter_1$schema,
+					typeSymbol: "@xiaopuai/dsh-media#mediaSuite/postDetail:postId",
+					create: _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_1$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media#mediaSuite/postDetail:postId",
-					create: dsh_media_mediaSuite_postDetail_parameter_1_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media#mediaSuite/postDetail:postId",
+					create: _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_1_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaPostDetail",
-				create: dsh_media_mediaSuite_postDetail_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaPostDetail",
+				create: _xiaopuai_dsh_media_mediaSuite_postDetail_result$schema,
 				description: "the detail.",
 				jsonSchemaError: "typert tool schema: selected dictionaries require string keys and unconstrained JSON values"
 			},
@@ -5212,14 +5212,14 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_posts_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_posts_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_posts_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_posts_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}, {
@@ -5228,21 +5228,21 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media#mediaSuite/posts:limit",
-					create: dsh_media_mediaSuite_posts_parameter_1$schema,
+					typeSymbol: "@xiaopuai/dsh-media#mediaSuite/posts:limit",
+					create: _xiaopuai_dsh_media_mediaSuite_posts_parameter_1$schema,
 					jsonSchema: { "type": "number" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media#mediaSuite/posts:limit",
-					create: dsh_media_mediaSuite_posts_parameter_1_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media#mediaSuite/posts:limit",
+					create: _xiaopuai_dsh_media_mediaSuite_posts_parameter_1_strict$schema,
 					jsonSchema: { "type": "number" }
 				}
 			}],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media#mediaSuite/posts:result",
-				create: dsh_media_mediaSuite_posts_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media#mediaSuite/posts:result",
+				create: _xiaopuai_dsh_media_mediaSuite_posts_result$schema,
 				description: "posts, newest first.",
 				jsonSchemaError: "typert tool schema: selected dictionaries require string keys and unconstrained JSON values"
 			},
@@ -5262,22 +5262,22 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_refresh_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_refresh_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_refresh_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_refresh_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}],
 			cancellation: { parameter: "signal" },
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaRunRecord",
-				create: dsh_media_mediaSuite_refresh_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaRunRecord",
+				create: _xiaopuai_dsh_media_mediaSuite_refresh_result$schema,
 				description: "the recorded run; failures carry `ok: false` and an error code.",
 				jsonSchema: {
 					"type": "object",
@@ -5327,21 +5327,21 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaDraftId",
-					create: dsh_media_mediaSuite_removeDraft_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaDraftId",
+					create: _xiaopuai_dsh_media_mediaSuite_removeDraft_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaDraftId",
-					create: dsh_media_mediaSuite_removeDraft_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaDraftId",
+					create: _xiaopuai_dsh_media_mediaSuite_removeDraft_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media#mediaSuite/removeDraft:result",
-				create: dsh_media_mediaSuite_removeDraft_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media#mediaSuite/removeDraft:result",
+				create: _xiaopuai_dsh_media_mediaSuite_removeDraft_result$schema,
 				jsonSchemaError: "typert tool schema: unsupported void value"
 			},
 			sourceLocation: {
@@ -5360,21 +5360,21 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaDraftId",
-					create: dsh_media_mediaSuite_revealDraft_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaDraftId",
+					create: _xiaopuai_dsh_media_mediaSuite_revealDraft_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaDraftId",
-					create: dsh_media_mediaSuite_revealDraft_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaDraftId",
+					create: _xiaopuai_dsh_media_mediaSuite_revealDraft_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media#mediaSuite/revealDraft:result",
-				create: dsh_media_mediaSuite_revealDraft_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media#mediaSuite/revealDraft:result",
+				create: _xiaopuai_dsh_media_mediaSuite_revealDraft_result$schema,
 				jsonSchemaError: "typert tool schema: unsupported void value"
 			},
 			sourceLocation: {
@@ -5393,8 +5393,8 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountDraft",
-					create: dsh_media_mediaSuite_saveAccount_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountDraft",
+					create: _xiaopuai_dsh_media_mediaSuite_saveAccount_parameter_0$schema,
 					jsonSchema: {
 						"type": "object",
 						"properties": {
@@ -5451,8 +5451,8 @@ const $remote = createTypertRemoteInfo({
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountDraft",
-					create: dsh_media_mediaSuite_saveAccount_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountDraft",
+					create: _xiaopuai_dsh_media_mediaSuite_saveAccount_parameter_0_strict$schema,
 					jsonSchema: {
 						"type": "object",
 						"properties": {
@@ -5514,21 +5514,21 @@ const $remote = createTypertRemoteInfo({
 				acceptsUndefined: true,
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaBrowserId",
-					create: dsh_media_mediaSuite_saveAccount_parameter_1$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaBrowserId",
+					create: _xiaopuai_dsh_media_mediaSuite_saveAccount_parameter_1$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaBrowserId",
-					create: dsh_media_mediaSuite_saveAccount_parameter_1_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaBrowserId",
+					create: _xiaopuai_dsh_media_mediaSuite_saveAccount_parameter_1_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaAccount",
-				create: dsh_media_mediaSuite_saveAccount_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaAccount",
+				create: _xiaopuai_dsh_media_mediaSuite_saveAccount_result$schema,
 				description: "the stored account.",
 				jsonSchema: {
 					"type": "object",
@@ -5614,8 +5614,8 @@ const $remote = createTypertRemoteInfo({
 			parameters: [],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaBriefState",
-				create: dsh_media_mediaSuite_startBrief_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaBriefState",
+				create: _xiaopuai_dsh_media_mediaSuite_startBrief_result$schema,
 				description: "the state right after starting.",
 				jsonSchema: {
 					"type": "object",
@@ -5792,8 +5792,8 @@ const $remote = createTypertRemoteInfo({
 			cancellation: { parameter: "signal" },
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media#mediaSuite/studioOpen:result",
-				create: dsh_media_mediaSuite_studioOpen_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media#mediaSuite/studioOpen:result",
+				create: _xiaopuai_dsh_media_mediaSuite_studioOpen_result$schema,
 				description: "the URL, or undefined when no workbench folder is configured.",
 				jsonSchemaError: "typert tool schema: unsupported undefined value"
 			},
@@ -5813,14 +5813,14 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaReportId",
-					create: dsh_media_mediaSuite_studioWriteArticle_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaReportId",
+					create: _xiaopuai_dsh_media_mediaSuite_studioWriteArticle_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaReportId",
-					create: dsh_media_mediaSuite_studioWriteArticle_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaReportId",
+					create: _xiaopuai_dsh_media_mediaSuite_studioWriteArticle_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}, {
@@ -5829,22 +5829,22 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media#mediaSuite/studioWriteArticle:index",
-					create: dsh_media_mediaSuite_studioWriteArticle_parameter_1$schema,
+					typeSymbol: "@xiaopuai/dsh-media#mediaSuite/studioWriteArticle:index",
+					create: _xiaopuai_dsh_media_mediaSuite_studioWriteArticle_parameter_1$schema,
 					jsonSchema: { "type": "number" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media#mediaSuite/studioWriteArticle:index",
-					create: dsh_media_mediaSuite_studioWriteArticle_parameter_1_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media#mediaSuite/studioWriteArticle:index",
+					create: _xiaopuai_dsh_media_mediaSuite_studioWriteArticle_parameter_1_strict$schema,
 					jsonSchema: { "type": "number" }
 				}
 			}],
 			cancellation: { parameter: "signal" },
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media#mediaSuite/studioWriteArticle:result",
-				create: dsh_media_mediaSuite_studioWriteArticle_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media#mediaSuite/studioWriteArticle:result",
+				create: _xiaopuai_dsh_media_mediaSuite_studioWriteArticle_result$schema,
 				description: "the workbench URL that opens the new article's research step or the new script's writing step.",
 				jsonSchema: { "type": "string" }
 			},
@@ -5861,8 +5861,8 @@ const $remote = createTypertRemoteInfo({
 			parameters: [],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaSummary",
-				create: dsh_media_mediaSuite_summary_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaSummary",
+				create: _xiaopuai_dsh_media_mediaSuite_summary_result$schema,
 				description: "own accounts in creation order and up to twelve newest posts.",
 				jsonSchemaError: "typert tool schema: selected dictionaries require string keys and unconstrained JSON values"
 			},
@@ -5882,21 +5882,21 @@ const $remote = createTypertRemoteInfo({
 				source: "json",
 				codec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_topicReports_parameter_0$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_topicReports_parameter_0$schema,
 					jsonSchema: { "type": "string" }
 				},
 				strictCodec: {
 					mode: "strict",
-					typeSymbol: "dsh-media/types#MediaAccountId",
-					create: dsh_media_mediaSuite_topicReports_parameter_0_strict$schema,
+					typeSymbol: "@xiaopuai/dsh-media/types#MediaAccountId",
+					create: _xiaopuai_dsh_media_mediaSuite_topicReports_parameter_0_strict$schema,
 					jsonSchema: { "type": "string" }
 				}
 			}],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media#mediaSuite/topicReports:result",
-				create: dsh_media_mediaSuite_topicReports_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media#mediaSuite/topicReports:result",
+				create: _xiaopuai_dsh_media_mediaSuite_topicReports_result$schema,
 				description: "reports, newest first.",
 				jsonSchema: {
 					"type": "array",
@@ -6194,8 +6194,8 @@ const $remote = createTypertRemoteInfo({
 			parameters: [],
 			result: {
 				mode: "strict",
-				typeSymbol: "dsh-media/types#MediaUiSettings",
-				create: dsh_media_mediaSuite_uiSettings_result$schema,
+				typeSymbol: "@xiaopuai/dsh-media/types#MediaUiSettings",
+				create: _xiaopuai_dsh_media_mediaSuite_uiSettings_result$schema,
 				description: "the settings, with what could not be understood.",
 				jsonSchema: {
 					"type": "object",
@@ -6284,7 +6284,7 @@ const $remote = createTypertRemoteInfo({
 	}
 }, external_exports);
 const TYPERT = {
-	package: "dsh-media",
+	package: "@xiaopuai/dsh-media",
 	face: "host",
 	schemas: [],
 	get invocations() {

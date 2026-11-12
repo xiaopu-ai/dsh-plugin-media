@@ -26,7 +26,7 @@
  * 旁边的 ui.js 做两件事：替页面接住登录小浏览器的画面，给右边的 AI 助手准备工作区。
  */
 window.__ModuleLoader__.load({
-  id: 'dsh-media',
+  id: '@xiaopuai/dsh-media',
   factory(require) {
     const React = require('react')
     const h = React.createElement

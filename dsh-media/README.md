@@ -1,10 +1,10 @@
-# dsh-media · 自媒体
+# @xiaopuai/dsh-media · 自媒体
 
 DeepSeek Harness（DSH）插件：一个页面看抖音、小红书、微信公众号、视频号多个账号的数据（照抖音创作者中心「数据中心」排版），右边是读得到这些数据的 AI 助手。
 
 要求 DSH 0.2.x（0.2.2-rc.1 起）；扫码登录和抓数据要用本机的 Google Chrome。
 
-安装：DSH 里「插件 → 添加插件」，填 `github:xiaopu-ai/dsh-plugin-media#path:/dsh-media`，或者 [Releases](https://github.com/xiaopu-ai/dsh-plugin-media/releases) 里压缩包的路径。用本地文件夹装之前，先在这个文件夹里运行 `npm install --omit=dev --legacy-peer-deps`。
+安装：DSH 里「插件 → 添加插件」，填包名 `@xiaopuai/dsh-media`（之后在插件页面能检查更新、一键更新）。也可以填 `github:xiaopu-ai/dsh-plugin-media#path:/dsh-media`，或者 [Releases](https://github.com/xiaopu-ai/dsh-plugin-media/releases) 里压缩包的路径。用本地文件夹装之前，先在这个文件夹里运行 `npm install --omit=dev --legacy-peer-deps`。
 
 包里有什么：
 

@@ -17,15 +17,21 @@
 
 | 方式 | 填什么 |
 |---|---|
-| GitHub（推荐） | `github:xiaopu-ai/dsh-plugin-media#path:/dsh-media` |
-| 压缩包 | 从 [Releases](https://github.com/xiaopu-ai/dsh-plugin-media/releases) 下载 `dsh-media-<版本>.tgz`，填它的绝对路径 |
+| **包名（推荐）** | `@xiaopuai/dsh-media`：从 npm 官方源安装，连不上时 DSH 会自动改用中国大陆镜像源。之后插件页面里能检查更新、一键更新 |
+| GitHub | `github:xiaopu-ai/dsh-plugin-media#path:/dsh-media` |
+| 压缩包 | 从 [Releases](https://github.com/xiaopu-ai/dsh-plugin-media/releases) 下载 `xiaopuai-dsh-media-<版本>.tgz`（0.4.x 叫 `dsh-media-<版本>.tgz`），填它的绝对路径 |
 | 本地文件夹（改代码用） | 克隆仓库后，先在 `dsh-media/` 里运行 `npm install --omit=dev --legacy-peer-deps`，再填 `dsh-media` 文件夹的绝对路径 |
 
-命令行也一样：`dsh plugin --profile desktop add github:xiaopu-ai/dsh-plugin-media#path:/dsh-media`（`desktop` 换成你的 profile）。
+命令行也一样：`dsh plugin --profile desktop add @xiaopuai/dsh-media`（`desktop` 换成你的 profile）。
 
 装好后左侧栏出现「自媒体」（英文界面叫 Media）。第一次打开只有「添加你的第一个账号」：选平台 → 用手机 App 扫窗口里的二维码 → 插件认出是哪个账号 → 确认添加。每个平台最多 3 个账号。之后后台每隔几个小时自动更新一次，也可以随时点「立即更新」。
 
-升级：用同样的方式再装一次新版本。同一个版本号重复安装不会生效，要装更高的版本。
+升级：
+
+- **按包名装的**：在 DSH「插件」里打开「自媒体」，下面的「版本」一栏会检查新版本，有新版本时点「更新」。DSH 只会列出和你当前 DSH 兼容的版本。
+- **从 GitHub 或压缩包装的**：不会自动更新，也没有「更新」按钮。用同样的方式再装一次，或者运行 `dsh plugin --profile desktop update @xiaopuai/dsh-media`。
+- 升级后重启 DSH。账号、登录状态和数据存在 DSH 的 profile 里，升级、重装都不会丢。
+- 0.5.0 起包名从 `dsh-media` 改成了 `@xiaopuai/dsh-media`（为了发到 npm）。装过 0.4.x 的，在「插件」里先删除旧的「dsh-media」，再按包名装新的；数据还在。
 
 **和 DSH 版本的关系**：插件声明支持 DSH `>=0.2.2-rc.1 <0.3.0-0`（0.2.2-rc.1 到所有 0.2.x，不含 0.3 的预览版）（`dsh-media/package.json` 的 `engines.dsh`），DSH 安装和启动时都会核对。DSH 之后的 0.2 版本（0.2.2 正式版、0.2.3……）照常能装；DSH 升到 0.3 时插件 API 可能变，DSH 会拒绝安装并提示「不兼容」，那时请装本仓库对应的新版本。装不上、提示「不兼容」时：DSH 太旧就先升级 DSH（左下角「新版本」）；DSH 已经是 0.3 或更新而这里还没出新版本，请提 [issue](https://github.com/xiaopu-ai/dsh-plugin-media/issues)。
 
