@@ -1,6 +1,6 @@
 {
   "name": "dsh-media",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "自媒体：抖音、小红书、公众号、视频号多账号数据看板（照抖音数据中心排版），右边是读得到这些数据的 AI 助手。",
   "license": "MIT",
   "author": "xiaopu-ai",
@@ -60,15 +60,15 @@
     }
   },
   "engines": {
-    "dsh": ">=0.2.2-rc.2 <0.3.0"
+    "dsh": ">=0.2.2-rc.1 <0.3.0-0"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "*",
     "@deepseek-ai/schemastery": "*",
-    "@deepseek-ai/dsh-brand": ">=0.2.2-rc.2 <0.3.0",
-    "@deepseek-ai/dsh-llm": ">=0.2.2-rc.2 <0.3.0",
-    "@deepseek-ai/dsh-tools": ">=0.2.2-rc.2 <0.3.0",
-    "@deepseek-ai/dsh-typert-protocol": ">=0.2.2-rc.2 <0.3.0"
+    "@deepseek-ai/dsh-brand": ">=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-llm": ">=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-tools": ">=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-typert-protocol": ">=0.2.2-rc.1 <0.3.0-0"
   },
   "dependencies": {
     "playwright-core": "1.61.1"
