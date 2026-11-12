@@ -4,6 +4,8 @@
 
 > **English** — A DeepSeek Harness plugin that puts the creator data of your Douyin, Xiaohongshu (RED), WeChat Official Account and WeChat Channels accounts on one dashboard, with a daily AI brief and an AI assistant that can read the numbers. You log in by scanning a QR code in a built-in headless Chrome; all data stays on your machine. The UI is Chinese with an English fallback.
 
+![总览：今日简报、全网数据和走势（演示数据）](docs/screenshots/overview.png)
+
 ## 安装
 
 要求：
@@ -41,6 +43,16 @@
 ｜   账号B ●             ④ 全部作品：封面 + 标题 + 各项数字，可排序、可导出，点一条弹出作品详情         找选题 · 最新作品分析 · 导出数据
 ｜[+ 添加平台]
 ```
+
+以下截图都是插件自带的演示数据（`演示 · …` 账号），不是真实账号。
+
+| 今日简报：点一条就地展开 | 全网数据：合计、占比和可拖动的走势 |
+|---|---|
+| ![今日简报展开](docs/screenshots/brief.png) | ![全网数据](docs/screenshots/network.png) |
+| **账号看板**：数据总览雷达图、作品数据 | **最新作品**：列表，可排序、筛平台、导出 |
+| ![账号看板](docs/screenshots/account.png) | ![最新作品](docs/screenshots/works.png) |
+
+![夜间模式](docs/screenshots/dark.png)
 
 - **总览**（从上往下）：
   - **今日简报**：每天早上 9 点（北京时间）后台按各平台的数自动写一份，没赶上的话第一次打开总览时当场写，一行一行流出来。只有 5–8 行，每行一句不超过 28 个字、带数字，前面一个标签：提醒（停更、掉粉、数据异常）、数据（值得知道的变化）、建议（下一步具体做什么）、选题（下一条写什么）。点一行就在卡片里展开，不跳走：左边是这一条的详细说明（依据哪些数 + 具体怎么做，60–120 字）、依据的数（说到的账号近 7 天的主数、走势和几个次要的数，全是平台报的；没指名账号的看全网合计）、说到的那条作品（点开是作品详情弹窗），底下「让 AI 展开」/「让 AI 写成脚本」（带上这条的说明送进右边的 AI 助手）和「打开某账号的看板」；右边是其余几条，点哪条换哪条，↑↓ 也能换，Esc 或「收起」回到列表。展开的框大小固定（宽:高 = 2:1，高度在 420–560 之间），换哪一条页面都不跳：说明长了在框里上下滑，两个按钮一直钉在底下。窄的时候上下排，上面说明 440 高、下面列表 220 高，也是固定的。可以随时「重新生成」。存在后台，换设备、刷新都还在；之前生成的简报没有详细说明，会提示重新生成。
