@@ -1,6 +1,6 @@
 {
   "name": "@xiaopuai/dsh-media",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "自媒体：抖音、小红书、公众号、视频号多账号数据看板（照抖音数据中心排版），右边是读得到这些数据的 AI 助手。",
   "license": "MIT",
   "author": "xiaopu-ai",
