@@ -2412,7 +2412,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 415,
+				"line": 425,
 				"column": 3
 			}
 		},
@@ -2509,7 +2509,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1357,
+				"line": 1367,
 				"column": 3
 			}
 		},
@@ -2604,7 +2604,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1331,
+				"line": 1341,
 				"column": 9
 			}
 		},
@@ -2781,7 +2781,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 763,
+				"line": 773,
 				"column": 3
 			}
 		},
@@ -2815,7 +2815,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1550,
+				"line": 1560,
 				"column": 9
 			}
 		},
@@ -2968,7 +2968,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1466,
+				"line": 1476,
 				"column": 10
 			}
 		},
@@ -3336,7 +3336,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1479,
+				"line": 1489,
 				"column": 9
 			}
 		},
@@ -3447,7 +3447,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1440,
+				"line": 1450,
 				"column": 9
 			}
 		},
@@ -3465,7 +3465,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 623,
+				"line": 633,
 				"column": 3
 			}
 		},
@@ -3515,7 +3515,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 842,
+				"line": 852,
 				"column": 3
 			}
 		},
@@ -3548,7 +3548,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 509,
+				"line": 519,
 				"column": 3
 			}
 		},
@@ -3622,7 +3622,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 551,
+				"line": 561,
 				"column": 3
 			}
 		},
@@ -3935,7 +3935,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1184,
+				"line": 1194,
 				"column": 9
 			}
 		},
@@ -4248,7 +4248,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1015,
+				"line": 1025,
 				"column": 9
 			}
 		},
@@ -4577,7 +4577,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1030,
+				"line": 1040,
 				"column": 9
 			}
 		},
@@ -4639,7 +4639,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1504,
+				"line": 1514,
 				"column": 9
 			}
 		},
@@ -4726,7 +4726,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 964,
+				"line": 974,
 				"column": 9
 			}
 		},
@@ -4813,7 +4813,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 603,
+				"line": 613,
 				"column": 3
 			}
 		},
@@ -4871,7 +4871,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1422,
+				"line": 1432,
 				"column": 3
 			}
 		},
@@ -4974,7 +4974,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 562,
+				"line": 572,
 				"column": 3
 			}
 		},
@@ -5008,7 +5008,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 735,
+				"line": 745,
 				"column": 3
 			}
 		},
@@ -5058,7 +5058,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 638,
+				"line": 648,
 				"column": 3
 			}
 		},
@@ -5148,7 +5148,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 406,
+				"line": 416,
 				"column": 3
 			}
 		},
@@ -5198,7 +5198,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 863,
+				"line": 873,
 				"column": 3
 			}
 		},
@@ -5248,7 +5248,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 664,
+				"line": 674,
 				"column": 3
 			}
 		},
@@ -5313,7 +5313,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 878,
+				"line": 888,
 				"column": 9
 			}
 		},
@@ -5346,7 +5346,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 579,
+				"line": 589,
 				"column": 3
 			}
 		},
@@ -5379,7 +5379,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 588,
+				"line": 598,
 				"column": 3
 			}
 		},
@@ -5603,7 +5603,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 428,
+				"line": 438,
 				"column": 3
 			}
 		},
@@ -5780,7 +5780,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 778,
+				"line": 788,
 				"column": 3
 			}
 		},
@@ -5799,7 +5799,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1270,
+				"line": 1280,
 				"column": 9
 			}
 		},
@@ -5850,7 +5850,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1292,
+				"line": 1302,
 				"column": 9
 			}
 		},
@@ -5868,7 +5868,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 712,
+				"line": 722,
 				"column": 3
 			}
 		},
@@ -6183,7 +6183,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1318,
+				"line": 1328,
 				"column": 3
 			}
 		},
@@ -6277,7 +6277,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 520,
+				"line": 530,
 				"column": 3
 			}
 		}
@@ -6793,7 +6793,7 @@ const TYPERT = {
 				},
 				{
 					"name": "MediaPlatformAdapter",
-					"declaration": "export interface MediaPlatformAdapter {\n    readonly descriptor: MediaPlatformDescriptor;\n    readonly importProfile: MediaImportProfile;\n    readonly scrapableRoles?: readonly MediaAccountRole[];\n    readonly detectLogin: (page: Page) => Promise<MediaLoginState>;\n    readonly scrape?: (page: Page, account: MediaAccount, limits: MediaScrapeLimits) => Promise<MediaScrapeResult>;\n    readonly identify?: (page: Page, signal: AbortSignal) => Promise<MediaIdentityFields | undefined>;\n    readonly identityMatch?: 'profile-url' | 'platform';\n    readonly history?: (page: Page, account: MediaAccount, limits: MediaHistoryLimits) => Promise<readonly MediaHistoryDay[]>;\n    readonly search?: (page: Page, keyword: string, limits: MediaSearchLimits) => Promise<readonly MediaRelatedPost[]>;\n    readonly trending?: (page: Page, signal: AbortSignal) => Promise<readonly MediaTrendingTopic[]>;\n    readonly qrSelectors?: readonly string[];\n    readonly qrExpired?: string;\n}"
+					"declaration": "export interface MediaPlatformAdapter {\n    readonly descriptor: MediaPlatformDescriptor;\n    readonly importProfile: MediaImportProfile;\n    readonly scrapableRoles?: readonly MediaAccountRole[];\n    readonly detectLogin: (page: Page) => Promise<MediaLoginState>;\n    readonly scrape?: (page: Page, account: MediaAccount, limits: MediaScrapeLimits) => Promise<MediaScrapeResult>;\n    readonly identify?: (page: Page, signal: AbortSignal) => Promise<MediaIdentityFields | undefined>;\n    readonly identityMatch?: 'profile-url' | 'platform';\n    readonly history?: (page: Page, account: MediaAccount, limits: MediaHistoryLimits) => Promise<readonly MediaHistoryDay[]>;\n    readonly search?: (page: Page, keyword: string, limits: MediaSearchLimits) => Promise<readonly MediaRelatedPost[]>;\n    readonly trending?: (page: Page, signal: AbortSignal) => Promise<readonly MediaTrendingTopic[]>;\n    readonly qrSelectors?: readonly string[];\n    readonly qrExpired?: string;\n    readonly keepAlive?: { readonly url: string; readonly everyMinutes: number; };\n}"
 				},
 				{
 					"name": "MediaPlatformDescriptor",

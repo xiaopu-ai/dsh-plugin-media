@@ -58,6 +58,7 @@
   - `staleHours`：多少小时没更新算数据过期，默认 30。
   - `historyDays`：每次更新后补多少天的历史，默认 30（各平台后台最多给 30 天：抖音要 90 天时粉丝接口回「参数不合法」）。补过的日子一直留着，总览的 90 天走势图靠每天的更新攒起来。
   - `briefHour`：今日简报每天几点（北京时间）自动写，默认 9。
+  - `keepLoginsAlive`：DSH 开着时给视频号（每 30 分钟）和公众号（每天）做保活访问，默认 `true`。见[功能详解里的「登录能保持多久」](FEATURES.md#登录能保持多久)。
   - `defaultIntervalMinutes`：自动更新的间隔。
 
 `backend/README.zh.md` 是后台原来的详细说明（接口、配置、行为），里面的包名还是改名前的 `@deepseek-ai/dsh-media-suite`，现在叫 `dsh-media`。

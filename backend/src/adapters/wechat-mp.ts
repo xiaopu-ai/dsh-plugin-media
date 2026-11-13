@@ -343,6 +343,8 @@ export const wechatMpAdapter: MediaPlatformAdapter = {
   detectLogin,
   scrape,
   history,
+  // The 公众号 login lasts 4 days from the last visit; a daily visit keeps it even when updates are rare.
+  keepAlive: { url: 'https://mp.weixin.qq.com/', everyMinutes: 24 * 60 },
   qrSelectors: ['img.login__type__container__scan__qrcode', '.login__type__container__scan img'],
   qrExpired: expiredQrScript(/二维码已?(失效|过期)/),
   identify,

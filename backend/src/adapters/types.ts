@@ -141,4 +141,12 @@ export interface MediaPlatformAdapter {
    * a phone that scans it only says the code has expired.
    */
   readonly qrExpired?: string
+  /**
+   * Visits that keep the login alive between updates, for platforms whose web sessions end when idle. 视频号 ends an
+   * idle session within hours although its cookie lasts more than a year (an update every 30 minutes kept one alive
+   * for 14 hours; with no visit it was gone within 10); 公众号 renews its 4-day login on every visit. While DSH runs,
+   * a logged-in account of such a platform is visited at `url` once `everyMinutes` have passed since its last
+   * successful update or visit. A visit reads nothing; one that finds the account logged out marks the login lost at once.
+   */
+  readonly keepAlive?: { readonly url: string; readonly everyMinutes: number }
 }

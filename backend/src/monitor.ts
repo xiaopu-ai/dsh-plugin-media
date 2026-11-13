@@ -45,6 +45,29 @@ export function nextRunAt(
  * @param retryMinutes - delay after a failure that may pass on its own; omitted waits the whole interval.
  * @returns the due accounts.
  */
+/**
+ * Whether a keep-alive visit is due: the login is held, nothing else runs for the account, and `everyMinutes` have
+ * passed since its last successful update or visit.
+ * @param input - the account's state.
+ * @returns whether to visit now.
+ */
+export function keepAliveDue(input: {
+  readonly everyMinutes: number
+  readonly loggedIn: boolean
+  readonly busy: boolean
+  /** The account's last update run, if any. */
+  readonly lastRun: MediaRunRecord | undefined
+  /** The last successful keep-alive visit in this process, in epoch milliseconds. */
+  readonly lastVisit: number | undefined
+  readonly now: number
+}): boolean {
+  if (!input.loggedIn || input.busy) return false
+  const run = input.lastRun
+  const updated = run?.ok === true ? Date.parse(run.finishedAt) : 0
+  const last = Math.max(input.lastVisit ?? 0, Number.isFinite(updated) ? updated : 0)
+  return input.now - last >= input.everyMinutes * 60_000
+}
+
 export function dueAccounts(
   accounts: readonly MediaAccount[], lastScrape: (account: MediaAccount) => MediaRunRecord | undefined, minMinutes: number, now: number,
   retryMinutes?: number,

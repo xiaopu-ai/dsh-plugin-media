@@ -1616,6 +1616,10 @@ const wechatMpAdapter = {
 	detectLogin: detectLogin$2,
 	scrape: scrape$2,
 	history: history$2,
+	keepAlive: {
+		url: "https://mp.weixin.qq.com/",
+		everyMinutes: 1440
+	},
 	qrSelectors: ["img.login__type__container__scan__qrcode", ".login__type__container__scan img"],
 	qrExpired: expiredQrScript(/二维码已?(失效|过期)/),
 	identify: identify$2
@@ -39874,6 +39878,19 @@ function nextRunAt(account, lastScrape, minMinutes, now, retryMinutes) {
 * @param retryMinutes - delay after a failure that may pass on its own; omitted waits the whole interval.
 * @returns the due accounts.
 */
+/**
+* Whether a keep-alive visit is due: the login is held, nothing else runs for the account, and `everyMinutes` have
+* passed since its last successful update or visit.
+* @param input - the account's state.
+* @returns whether to visit now.
+*/
+function keepAliveDue(input) {
+	if (!input.loggedIn || input.busy) return false;
+	const run = input.lastRun;
+	const updated = run?.ok === true ? Date.parse(run.finishedAt) : 0;
+	const last = Math.max(input.lastVisit ?? 0, Number.isFinite(updated) ? updated : 0);
+	return input.now - last >= input.everyMinutes * 6e4;
+}
 function dueAccounts(accounts, lastScrape, minMinutes, now, retryMinutes) {
 	return accounts.map((account) => ({
 		account,
@@ -41816,6 +41833,10 @@ const wechatChannelsAdapter = {
 	detectLogin,
 	scrape,
 	history,
+	keepAlive: {
+		url: "https://channels.weixin.qq.com/platform",
+		everyMinutes: 30
+	},
 	qrSelectors: [
 		".qrcode img",
 		"img.qrcode",
@@ -43846,6 +43867,10 @@ var __esDecorate = function(ctor, descriptorIn, decorators, contextIn, initializ
 const NETWORK_POSTS_PER_ACCOUNT = 30;
 const NETWORK_FEED = 60;
 /** Days of the 全网 trend chart. */
+/** Longest a keep-alive visit may take, slow login pages included. */
+const KEEP_ALIVE_TIMEOUT_MS = 9e4;
+/** How long a keep-alive visit waits for the backend page to show a login. */
+const KEEP_ALIVE_SETTLE_MS = 3e4;
 const NETWORK_TREND_DAYS = 90;
 /** An avatar URL worth storing: https only, at most 2000 characters. */
 function avatarOf(url) {
@@ -43874,6 +43899,7 @@ const Config = z.object({
 	minIntervalMinutes: z.number().min(5).default(30),
 	defaultIntervalMinutes: z.number().min(5).default(360),
 	monitorTickSeconds: z.number().min(5).default(60),
+	keepLoginsAlive: z.boolean().default(true),
 	retryMinutes: z.number().min(5).default(30),
 	analysisWindowDays: z.natural().min(1).max(365).default(30),
 	topicCount: z.natural().min(1).max(30).default(12),
@@ -44395,6 +44421,8 @@ let MediaSuite = (() => {
 		/** In-flight work keys: `<account>:data` for scrapes and imports, `<account>:ai` for reports. */
 		busy = /* @__PURE__ */ new Set();
 		monitoring = false;
+		/** Last successful keep-alive visit of each account in this process, in epoch milliseconds. */
+		lastVisit = /* @__PURE__ */ new Map();
 		/** The 今日简报 being written, with its finished lines. */
 		briefRun;
 		/** Why the last 今日简报 failed, until the next attempt. */
@@ -45839,9 +45867,56 @@ let MediaSuite = (() => {
 						this.ctx.logger.warn("media-suite: monitor run of %s failed: %s", account.id, messageOf(error));
 					});
 				}
+				if (this.config.keepLoginsAlive) await this.keepLoginsAlive(Date.now());
 			} finally {
 				this.monitoring = false;
 			}
+		}
+		/**
+		* Visit the logged-in accounts whose platform ends idle web sessions (adapter `keepAlive`), once their interval has
+		* passed since the last successful update or visit. Automatic updates must be on for the account.
+		* @param now - epoch milliseconds.
+		*/
+		async keepLoginsAlive(now) {
+			for (const account of this.store.accounts()) {
+				if (account.role !== "own" || account.demo === true || !account.monitor.enabled) continue;
+				const adapter = this.registry.get(account.platform);
+				const keep = adapter?.keepAlive;
+				if (adapter === void 0 || keep === void 0) continue;
+				if (!keepAliveDue({
+					everyMinutes: keep.everyMinutes,
+					loggedIn: this.store.login(this.profileFor(account).key) === "logged-in",
+					busy: this.busy.has(`${account.id}:data`),
+					lastRun: this.store.lastRun(account.id, "scrape"),
+					lastVisit: this.lastVisit.get(account.id),
+					now
+				})) continue;
+				await this.exclusive(account.id, "data", () => this.keepAlive(account, adapter, keep.url)).catch((error) => {
+					this.ctx.logger.warn("media-suite: keep-alive visit of %s failed: %s", account.id, messageOf(error));
+				});
+			}
+		}
+		/**
+		* Open the platform's backend page in the account's profile and read whether it is still logged in. A login that is
+		* gone is recorded at once, so the account shows 需要重新扫码 without waiting for its next update.
+		*/
+		async keepAlive(account, adapter, url) {
+			const profile = this.profileFor(account);
+			const signal = AbortSignal.timeout(KEEP_ALIVE_TIMEOUT_MS);
+			const state = await this.browser.withPage(profile, signal, async (page) => {
+				await gotoPage(page, url, signal);
+				let found = "unknown";
+				for (let waited = 0; waited < KEEP_ALIVE_SETTLE_MS; waited += 2e3) {
+					await sleep(2e3, signal);
+					found = await adapter.detectLogin(page).catch(() => "unknown");
+					if (found === "logged-in") break;
+				}
+				return found;
+			});
+			if (state === "unknown") return;
+			this.store.setLogin(profile.key, state, (/* @__PURE__ */ new Date()).toISOString());
+			if (state === "logged-in") this.lastVisit.set(account.id, Date.now());
+			else this.ctx.logger.warn("media-suite: %s (%s) is logged out; it needs a new scan", account.id, account.platform);
 		}
 		/**
 		* Effective monitoring interval of an account.

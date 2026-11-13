@@ -373,6 +373,8 @@ export const wechatChannelsAdapter: MediaPlatformAdapter = {
   detectLogin,
   scrape,
   history,
+  // 视频号助手 ends idle sessions within hours; a light visit every 30 minutes kept one alive for 14 hours.
+  keepAlive: { url: 'https://channels.weixin.qq.com/platform', everyMinutes: 30 },
   qrSelectors: ['.qrcode img', 'img.qrcode', '.login-qrcode img'],
   qrExpired: expiredQrScript(/二维码已?(失效|过期)/),
   identify,

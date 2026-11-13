@@ -34,7 +34,8 @@ import {
 import { invalid, MediaScrapeError, messageOf, notFound } from './errors.ts'
 import { matchOwnAccount } from './identity.ts'
 import { MediaImportError, parseImportFile, type ParsedImport } from './import.ts'
-import { dueAccounts, intervalOf, nextRunAt } from './monitor.ts'
+import { dueAccounts, intervalOf, keepAliveDue, nextRunAt } from './monitor.ts'
+import { gotoPage, sleep } from './adapters/page.ts'
 import { chinaDay, historySnapshots } from './history.ts'
 import { demoData } from './demo.ts'
 import { readUiSettings } from './ui-settings.ts'
@@ -62,6 +63,10 @@ import type {
 const NETWORK_POSTS_PER_ACCOUNT = 30
 const NETWORK_FEED = 60
 /** Days of the 全网 trend chart. */
+/** Longest a keep-alive visit may take, slow login pages included. */
+const KEEP_ALIVE_TIMEOUT_MS = 90_000
+/** How long a keep-alive visit waits for the backend page to show a login. */
+const KEEP_ALIVE_SETTLE_MS = 30_000
 const NETWORK_TREND_DAYS = 90
 
 /** An avatar URL worth storing: https only, at most 2000 characters. */
@@ -130,6 +135,8 @@ export interface Config {
   defaultIntervalMinutes: number
   /** How often the monitor looks for due accounts, in seconds. */
   monitorTickSeconds: number
+  /** Visit logged-in accounts of platforms whose web sessions end when idle (视频号, 公众号) between updates, while DSH runs. */
+  keepLoginsAlive: boolean
   /** Delay before an automatic scrape is tried again after a failure that may pass on its own, in minutes. */
   retryMinutes: number
   /** Window of the diagnosis report, in days. */
@@ -205,6 +212,7 @@ export const Config: z<Partial<Config>, Config> = z.object({
   minIntervalMinutes: z.number().min(5).default(30),
   defaultIntervalMinutes: z.number().min(5).default(360),
   monitorTickSeconds: z.number().min(5).default(60),
+  keepLoginsAlive: z.boolean().default(true),
   retryMinutes: z.number().min(5).default(30),
   analysisWindowDays: z.natural().min(1).max(365).default(30),
   topicCount: z.natural().min(1).max(30).default(12),
@@ -257,6 +265,8 @@ export class MediaSuite extends TypertRemoteService {
   /** In-flight work keys: `<account>:data` for scrapes and imports, `<account>:ai` for reports. */
   private readonly busy = new Set<string>()
   private monitoring = false
+  /** Last successful keep-alive visit of each account in this process, in epoch milliseconds. */
+  private readonly lastVisit = new Map<MediaAccountId, number>()
   /** The 今日简报 being written, with its finished lines. */
   private briefRun: { partial: MediaBriefItem[] } | undefined
   /** Why the last 今日简报 failed, until the next attempt. */
@@ -1570,9 +1580,55 @@ export class MediaSuite extends TypertRemoteService {
         await this.exclusive(account.id, 'data', () => this.scrape(account, AbortSignal.timeout(this.config.scrapeTimeoutSeconds * 2000)))
           .catch((error: unknown) => { this.ctx.logger.warn('media-suite: monitor run of %s failed: %s', account.id, messageOf(error)) })
       }
+      if (this.config.keepLoginsAlive) await this.keepLoginsAlive(Date.now())
     } finally {
       this.monitoring = false
     }
+  }
+
+  /**
+   * Visit the logged-in accounts whose platform ends idle web sessions (adapter `keepAlive`), once their interval has
+   * passed since the last successful update or visit. Automatic updates must be on for the account.
+   * @param now - epoch milliseconds.
+   */
+  private async keepLoginsAlive(now: number): Promise<void> {
+    for (const account of this.store.accounts()) {
+      if (account.role !== 'own' || account.demo === true || !account.monitor.enabled) continue
+      const adapter = this.registry.get(account.platform)
+      const keep = adapter?.keepAlive
+      if (adapter === undefined || keep === undefined) continue
+      const due = keepAliveDue({
+        everyMinutes: keep.everyMinutes, loggedIn: this.store.login(this.profileFor(account).key) === 'logged-in',
+        busy: this.busy.has(`${account.id}:data`), lastRun: this.store.lastRun(account.id, 'scrape'), lastVisit: this.lastVisit.get(account.id), now,
+      })
+      if (!due) continue
+      await this.exclusive(account.id, 'data', () => this.keepAlive(account, adapter, keep.url))
+        .catch((error: unknown) => { this.ctx.logger.warn('media-suite: keep-alive visit of %s failed: %s', account.id, messageOf(error)) })
+    }
+  }
+
+  /**
+   * Open the platform's backend page in the account's profile and read whether it is still logged in. A login that is
+   * gone is recorded at once, so the account shows 需要重新扫码 without waiting for its next update.
+   */
+  private async keepAlive(account: MediaAccount, adapter: MediaPlatformAdapter, url: string): Promise<void> {
+    const profile = this.profileFor(account)
+    const signal = AbortSignal.timeout(KEEP_ALIVE_TIMEOUT_MS)
+    const state = await this.browser.withPage(profile, signal, async (page) => {
+      await gotoPage(page, url, signal)
+      // A backend page may show its login prompt for a moment before it renders: wait for a login, else take the last reading.
+      let found: MediaLoginState = 'unknown'
+      for (let waited = 0; waited < KEEP_ALIVE_SETTLE_MS; waited += 2000) {
+        await sleep(2000, signal)
+        found = await adapter.detectLogin(page).catch((): MediaLoginState => 'unknown')
+        if (found === 'logged-in') break
+      }
+      return found
+    })
+    if (state === 'unknown') return
+    this.store.setLogin(profile.key, state, new Date().toISOString())
+    if (state === 'logged-in') this.lastVisit.set(account.id, Date.now())
+    else this.ctx.logger.warn('media-suite: %s (%s) is logged out; it needs a new scan', account.id, account.platform)
   }
 
   /**
