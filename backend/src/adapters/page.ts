@@ -153,11 +153,6 @@ export async function hasCookie(page: Page, url: string, names: readonly string[
 }
 
 /**
- * Narrow a JSON value to an object record.
- * @param value - any value.
- * @returns the record, or undefined.
- */
-/**
  * Script for an adapter's `qrExpired`: the center of the page's refresh control when a visible short text matching
  * `notice` (the platform's "QR code expired" line) is shown. The control is the nearest ancestor, up to four levels,
  * whose text also offers a refresh, else the notice itself.
@@ -188,6 +183,50 @@ export function expiredQrScript(notice: RegExp): string {
   })()`
 }
 
+/** Where a site's own 登录 control is: a CSS selector, or the exact short text the control shows. */
+export type LoginControl = { readonly selector: string } | { readonly text: RegExp }
+
+/**
+ * Script for an adapter's `openLogin`: the center of the site's own 登录 control, unless the login dialog already shows:
+ * a visible short text matching `dialog`, or a visible element matching its selector (a dialog drawn in an iframe has
+ * its text in another document, so it is recognized by the iframe).
+ * @param control - the control to click, or several in order of preference (the first one shown is clicked).
+ * @param dialog - text the open login dialog shows, such as `/请使用微信扫描二维码登录/`, or `{ selector }` of it.
+ * @returns a JavaScript expression evaluating to `{ x, y }` or null.
+ */
+export function openLoginScript(control: LoginControl | readonly LoginControl[], dialog: RegExp | { readonly selector: string }): string {
+  const one = (item: LoginControl): string => 'selector' in item
+    ? `[...document.querySelectorAll(${JSON.stringify(item.selector)})]`
+    : `[...document.querySelectorAll('body *')].filter(el => (el.innerText || '').trim().length <= 12 && ${item.text.toString()}.test((el.innerText || '').trim())).filter((el, _, all) => !all.some(other => other !== el && el.contains(other)))`
+  // Controls in order of preference: the first one shown is clicked.
+  const find = `[${(Array.isArray(control) ? control : [control]).map(item => `...${one(item)}`).join(', ')}]`
+  return `(() => {
+    const shown = el => {
+      const box = el.getBoundingClientRect()
+      if (box.width === 0 || box.height === 0) return false
+      return typeof el.checkVisibility === 'function' ? el.checkVisibility({ opacityProperty: true, visibilityProperty: true }) : true
+    }
+    // A click lands only inside the window: a control scrolled out of view is passed over.
+    const inView = el => {
+      const box = el.getBoundingClientRect()
+      return box.bottom > 0 && box.right > 0 && box.top < innerHeight && box.left < innerWidth
+    }
+    const open = ${dialog instanceof RegExp
+    ? `[...document.querySelectorAll('body *')].some(el => (el.innerText || '').trim().length <= 40 && ${dialog.toString()}.test((el.innerText || '').trim()) && shown(el))`
+    : `[...document.querySelectorAll(${JSON.stringify(dialog.selector)})].some(shown)`}
+    if (open) return null
+    const target = ${find}.find(el => shown(el) && inView(el))
+    if (!target) return null
+    const box = target.getBoundingClientRect()
+    return { x: box.left + box.width / 2, y: box.top + box.height / 2 }
+  })()`
+}
+
+/**
+ * Narrow a JSON value to an object record.
+ * @param value - any value.
+ * @returns the record, or undefined.
+ */
 export function asRecord(value: unknown): Readonly<Record<string, unknown>> | undefined {
   return value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : undefined
 }

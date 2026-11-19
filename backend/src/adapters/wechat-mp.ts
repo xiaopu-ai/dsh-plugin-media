@@ -319,6 +319,8 @@ export const wechatMpAdapter: MediaPlatformAdapter = {
     metrics: { views: '阅读', likes: '点赞', comments: '留言', shares: '分享', collects: '收藏' },
     noun: '文章',
     color: '#07C160',
+    // Both log in through WeChat: there is no 视频号 or 公众号 App to scan with.
+    scanApp: '微信',
   },
   importProfile: {
     defaultFormat: 'article',

@@ -342,11 +342,6 @@ async function hasCookie(page, url, names) {
 	return (await page.context().cookies(url)).some((cookie) => names.includes(cookie.name) && cookie.value !== "");
 }
 /**
-* Narrow a JSON value to an object record.
-* @param value - any value.
-* @returns the record, or undefined.
-*/
-/**
 * Script for an adapter's `qrExpired`: the center of the page's refresh control when a visible short text matching
 * `notice` (the platform's "QR code expired" line) is shown. The control is the nearest ancestor, up to four levels,
 * whose text also offers a refresh, else the notice itself.
@@ -376,6 +371,41 @@ function expiredQrScript(notice) {
     return { x: box.left + box.width / 2, y: box.top + box.height / 2 }
   })()`;
 }
+/**
+* Script for an adapter's `openLogin`: the center of the site's own 登录 control, unless the login dialog already shows:
+* a visible short text matching `dialog`, or a visible element matching its selector (a dialog drawn in an iframe has
+* its text in another document, so it is recognized by the iframe).
+* @param control - the control to click, or several in order of preference (the first one shown is clicked).
+* @param dialog - text the open login dialog shows, such as `/请使用微信扫描二维码登录/`, or `{ selector }` of it.
+* @returns a JavaScript expression evaluating to `{ x, y }` or null.
+*/
+function openLoginScript(control, dialog) {
+	const one = (item) => "selector" in item ? `[...document.querySelectorAll(${JSON.stringify(item.selector)})]` : `[...document.querySelectorAll('body *')].filter(el => (el.innerText || '').trim().length <= 12 && ${item.text.toString()}.test((el.innerText || '').trim())).filter((el, _, all) => !all.some(other => other !== el && el.contains(other)))`;
+	const find = `[${(Array.isArray(control) ? control : [control]).map((item) => `...${one(item)}`).join(", ")}]`;
+	return `(() => {
+    const shown = el => {
+      const box = el.getBoundingClientRect()
+      if (box.width === 0 || box.height === 0) return false
+      return typeof el.checkVisibility === 'function' ? el.checkVisibility({ opacityProperty: true, visibilityProperty: true }) : true
+    }
+    // A click lands only inside the window: a control scrolled out of view is passed over.
+    const inView = el => {
+      const box = el.getBoundingClientRect()
+      return box.bottom > 0 && box.right > 0 && box.top < innerHeight && box.left < innerWidth
+    }
+    const open = ${dialog instanceof RegExp ? `[...document.querySelectorAll('body *')].some(el => (el.innerText || '').trim().length <= 40 && ${dialog.toString()}.test((el.innerText || '').trim()) && shown(el))` : `[...document.querySelectorAll(${JSON.stringify(dialog.selector)})].some(shown)`}
+    if (open) return null
+    const target = ${find}.find(el => shown(el) && inView(el))
+    if (!target) return null
+    const box = target.getBoundingClientRect()
+    return { x: box.left + box.width / 2, y: box.top + box.height / 2 }
+  })()`;
+}
+/**
+* Narrow a JSON value to an object record.
+* @param value - any value.
+* @returns the record, or undefined.
+*/
 function asRecord(value) {
 	return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
 }
@@ -550,10 +580,10 @@ async function trendingDouyin(page, signal) {
 }
 //#endregion
 //#region lib/types/adapters/douyin.js
-const PROFILE_URL$1 = /^https:\/\/www\.douyin\.com\/user\/([^/?#]+)/;
+const PROFILE_URL$5 = /^https:\/\/www\.douyin\.com\/user\/([^/?#]+)/;
 const PROFILE_API = "/aweme/v1/web/user/profile/";
 const POSTS_API = "/aweme/v1/web/aweme/post/";
-const SESSION_COOKIES = ["sessionid", "sessionid_ss"];
+const SESSION_COOKIES$2 = ["sessionid", "sessionid_ss"];
 /**
 * Read account counters from a `/aweme/v1/web/user/profile/{self,other}/` response.
 * @param json - response body.
@@ -673,20 +703,20 @@ const DOM_SCRIPT$1 = `(() => ['user-info-follow', 'user-info-fans', 'user-info-l
 */
 function douyinLoginFrom(url, cookies) {
 	if (url.startsWith("https://creator.douyin.com/creator-micro/")) return "logged-in";
-	return cookies.some((cookie) => SESSION_COOKIES.includes(cookie.name) && cookie.value !== "" && /(^|\.)douyin\.com$/.test(cookie.domain.replace(/^\./, ""))) ? "logged-in" : "logged-out";
+	return cookies.some((cookie) => SESSION_COOKIES$2.includes(cookie.name) && cookie.value !== "" && /(^|\.)douyin\.com$/.test(cookie.domain.replace(/^\./, ""))) ? "logged-in" : "logged-out";
 }
-async function detectLogin$3(page) {
+async function detectLogin$7(page) {
 	return douyinLoginFrom(page.url(), await page.context().cookies());
 }
 function profileUrlOf(account) {
 	const url = account.profileUrl.trim();
 	if (url === "" && account.role === "own") return "https://www.douyin.com/user/self";
-	if (!PROFILE_URL$1.test(url)) throw new MediaScrapeError("invalid-profile", "抖音主页链接应形如 https://www.douyin.com/user/<sec_uid>；自有账号可留空以读取当前登录账号。");
+	if (!PROFILE_URL$5.test(url)) throw new MediaScrapeError("invalid-profile", "抖音主页链接应形如 https://www.douyin.com/user/<sec_uid>；自有账号可留空以读取当前登录账号。");
 	return url;
 }
-async function scrape$3(page, account, limits) {
+async function scrape$7(page, account, limits) {
 	const url = profileUrlOf(account);
-	if (await detectLogin$3(page) === "logged-out") throw new MediaScrapeError("login-required", "抖音未登录，请在内嵌浏览器中扫码登录后重试。");
+	if (await detectLogin$7(page) === "logged-out") throw new MediaScrapeError("login-required", "抖音未登录，请在内嵌浏览器中扫码登录后重试。");
 	let snapshot;
 	let avatarUrl;
 	const posts = /* @__PURE__ */ new Map();
@@ -813,7 +843,7 @@ async function captureIdentity(page, url, accept, parse, waitSeconds, signal) {
 * The `www` self profile is tried first, which also carries the creator-center login over to `www`; the creator
 * center's user info is the fallback.
 */
-async function identify$3(page, signal) {
+async function identify$7(page, signal) {
 	return await captureIdentity(page, "https://www.douyin.com/user/self", (target) => target.includes("/aweme/v1/web/user/profile/self/"), parseDouyinSelf, 15, signal) ?? await captureIdentity(page, "https://creator.douyin.com/creator-micro/home", (target) => target.startsWith("https://creator.douyin.com/") && /user\/info|user_info|userinfo/i.test(target), parseDouyinCreatorInfo, 40, signal);
 }
 /** Metrics reported as ratios (0 to 1) or seconds: kept with their decimals instead of rounded like counts. */
@@ -1149,14 +1179,14 @@ const douyinAdapter = {
 			}
 		]
 	},
-	detectLogin: detectLogin$3,
-	scrape: scrape$3,
+	detectLogin: detectLogin$7,
+	scrape: scrape$7,
 	history: history$3,
 	search: searchDouyin,
 	trending: trendingDouyin,
 	qrSelectors: ["#douyin_login_comp_scan_code_qrcode img"],
 	qrExpired: expiredQrScript(/二维码已?(失效|过期)/),
-	identify: identify$3
+	identify: identify$7
 };
 //#endregion
 //#region lib/types/adapters/registry.js
@@ -1201,8 +1231,8 @@ var MediaAdapterRegistry = class {
 };
 //#endregion
 //#region lib/types/adapters/wechat-mp.js
-const HOME$1 = "https://mp.weixin.qq.com/";
-const PAGE_SIZE = 10;
+const HOME$5 = "https://mp.weixin.qq.com/";
+const PAGE_SIZE$1 = 10;
 /** `base_resp.ret` values the backend returns for an expired or missing login. */
 const LOGIN_RETS = [
 	200003,
@@ -1233,7 +1263,7 @@ const NUMBER_FIELDS = {
 	share_num: "shares",
 	collect_num: "collects"
 };
-function formatOf$1(showType) {
+function formatOf$2(showType) {
 	if (showType === 5) return "video";
 	if (showType === 8) return "image";
 	return "article";
@@ -1280,7 +1310,7 @@ function parseWechatPublishPage(json) {
 				url: link,
 				...cover?.startsWith("https://") === true ? { coverUrl: cover } : {},
 				publishedAt: parseDate(article.create_time ?? article.update_time),
-				format: formatOf$1(article.item_show_type),
+				format: formatOf$2(article.item_show_type),
 				...fields,
 				extra
 			});
@@ -1367,8 +1397,8 @@ function wechatAvatarOf(json) {
 	const head = stringField(asRecord(asRecord(json)?.user_info), "head_img")?.replace(/^http:\/\//, "https://");
 	return head?.startsWith("https://") === true ? head : void 0;
 }
-const CONTENT_ANALYSIS = (token) => `${HOME$1}misc/appmsganalysis?action=report&type=daily_v2&token=${token}&lang=zh_CN`;
-const USER_ANALYSIS = (token) => `${HOME$1}misc/useranalysis?&token=${token}&lang=zh_CN`;
+const CONTENT_ANALYSIS = (token) => `${HOME$5}misc/appmsganalysis?action=report&type=daily_v2&token=${token}&lang=zh_CN`;
+const USER_ANALYSIS = (token) => `${HOME$5}misc/useranalysis?&token=${token}&lang=zh_CN`;
 /** Open a backend page and keep the JSON answers whose URL `accept`s, until `done` holds for them or 20 s pass. */
 async function collect(page, url, signal, accept, done) {
 	const bodies = [];
@@ -1389,13 +1419,13 @@ async function collect(page, url, signal, accept, done) {
 }
 /** Open the backend home and wait for the session token it puts in the address. */
 async function backendToken(page, signal) {
-	await gotoPage(page, HOME$1, signal);
+	await gotoPage(page, HOME$5, signal);
 	let token = null;
 	for (let waited = 0; waited < 10 && token === null; waited++) {
 		token = new URL(page.url()).searchParams.get("token");
 		if (token === null) await sleep(1e3, signal);
 	}
-	if (token === null) throw loginRequired$1();
+	if (token === null) throw loginRequired$5();
 	return token;
 }
 async function history$2(page, _account, limits) {
@@ -1421,15 +1451,15 @@ async function history$2(page, _account, limits) {
 		};
 	});
 }
-async function detectLogin$2(page) {
+async function detectLogin$6(page) {
 	const url = page.url();
-	if (url.startsWith(HOME$1) && new URL(url).searchParams.has("token")) return "logged-in";
-	return await hasCookie(page, HOME$1, ["slave_sid"]) ? "logged-in" : "logged-out";
+	if (url.startsWith(HOME$5) && new URL(url).searchParams.has("token")) return "logged-in";
+	return await hasCookie(page, HOME$5, ["slave_sid"]) ? "logged-in" : "logged-out";
 }
-function loginRequired$1() {
+function loginRequired$5() {
 	return new MediaScrapeError("login-required", "公众号后台未登录或登录已过期，请在内嵌浏览器中用管理员微信扫码登录后重试。");
 }
-async function scrape$2(page, account, limits) {
+async function scrape$6(page, account, limits) {
 	if (account.role !== "own") throw new MediaScrapeError("unsupported", "对标公众号的数据无法从后台读取，请导入数据文件。");
 	const token = await backendToken(page, limits.signal);
 	await sleep(2e3, limits.signal);
@@ -1437,12 +1467,12 @@ async function scrape$2(page, account, limits) {
 	const followers = parseWechatHomeText(typeof homeText === "string" ? homeText : "");
 	const posts = [];
 	let publishes;
-	for (let begin = 0; posts.length < limits.maxPosts; begin += PAGE_SIZE) {
+	for (let begin = 0; posts.length < limits.maxPosts; begin += PAGE_SIZE$1) {
 		const query = new URLSearchParams({
 			sub: "list",
 			search_field: "null",
 			begin: String(begin),
-			count: String(PAGE_SIZE),
+			count: String(PAGE_SIZE$1),
 			query: "",
 			type: "101_1",
 			free_publish_type: "1",
@@ -1453,11 +1483,11 @@ async function scrape$2(page, account, limits) {
 			ajax: "1"
 		});
 		const result = parseWechatPublishPage(await evaluateScript(page, `fetch(${JSON.stringify(`/cgi-bin/appmsgpublish?${query.toString()}`)}, { credentials: 'include' }).then(r => r.json())`));
-		if (LOGIN_RETS.includes(result.ret)) throw loginRequired$1();
+		if (LOGIN_RETS.includes(result.ret)) throw loginRequired$5();
 		if (result.ret !== 0) throw new MediaScrapeError("scrape-failed", `公众号后台返回错误码 ${result.ret}，无法读取已发表文章。`);
 		posts.push(...result.posts);
 		publishes = result.total;
-		if (result.posts.length === 0 || begin + PAGE_SIZE >= result.total) break;
+		if (result.posts.length === 0 || begin + PAGE_SIZE$1 >= result.total) break;
 		await sleep(800, limits.signal);
 	}
 	if (followers === void 0 && posts.length === 0) throw new MediaScrapeError("scrape-failed", "公众号后台页面中没有读到总用户数和文章，页面结构可能已变化，可改用数据分析导出文件导入。");
@@ -1491,21 +1521,21 @@ const NAME_SCRIPT = `(() => ({
   common: (window.wx && window.wx.commonData && window.wx.commonData.data && window.wx.commonData.data.nick_name) || '',
   dom: (document.querySelector('.weui-desktop-account__nickname, .weui-desktop-account__info .weui-desktop-account__nickname, .account_setting_name, .weui-desktop-person_info .weui-desktop-name')?.textContent || '').trim(),
 }))()`;
-async function identify$2(page, signal) {
-	await gotoPage(page, HOME$1, signal);
+async function identify$6(page, signal) {
+	await gotoPage(page, HOME$5, signal);
 	for (let waited = 0; waited < 10 && !new URL(page.url()).searchParams.has("token"); waited++) await sleep(1e3, signal);
 	if (!new URL(page.url()).searchParams.has("token")) return void 0;
 	for (let waited = 0; waited < 6; waited++) {
 		const name = parseWechatName(await evaluateScript(page, NAME_SCRIPT));
 		if (name !== void 0) return {
 			name,
-			profileUrl: HOME$1
+			profileUrl: HOME$5
 		};
 		await sleep(1e3, signal);
 	}
 	return {
 		name: "微信公众号",
-		profileUrl: HOME$1
+		profileUrl: HOME$5
 	};
 }
 /** Built-in 微信公众号 adapter. */
@@ -1513,7 +1543,7 @@ const wechatMpAdapter = {
 	descriptor: {
 		id: "wechat-mp",
 		displayName: "微信公众号",
-		loginUrl: HOME$1,
+		loginUrl: HOME$5,
 		scrape: true,
 		import: true,
 		importHint: "公众号后台 → 数据分析 → 内容分析（单篇群发）或用户分析 → 下载表格；对标公众号只能导入。",
@@ -1526,7 +1556,8 @@ const wechatMpAdapter = {
 			collects: "收藏"
 		},
 		noun: "文章",
-		color: "#07C160"
+		color: "#07C160",
+		scanApp: "微信"
 	},
 	importProfile: {
 		defaultFormat: "article",
@@ -1613,8 +1644,8 @@ const wechatMpAdapter = {
 	},
 	scrapableRoles: ["own"],
 	identityMatch: "platform",
-	detectLogin: detectLogin$2,
-	scrape: scrape$2,
+	detectLogin: detectLogin$6,
+	scrape: scrape$6,
 	history: history$2,
 	keepAlive: {
 		url: "https://mp.weixin.qq.com/",
@@ -1622,11 +1653,11 @@ const wechatMpAdapter = {
 	},
 	qrSelectors: ["img.login__type__container__scan__qrcode", ".login__type__container__scan img"],
 	qrExpired: expiredQrScript(/二维码已?(失效|过期)/),
-	identify: identify$2
+	identify: identify$6
 };
 //#endregion
 //#region lib/types/adapters/xiaohongshu.js
-const PROFILE_URL = /^https:\/\/www\.(?:xiaohongshu|rednote)\.com\/user\/profile\/([0-9a-zA-Z]+)/;
+const PROFILE_URL$4 = /^https:\/\/www\.(?:xiaohongshu|rednote)\.com\/user\/profile\/([0-9a-zA-Z]+)/;
 /** Outside mainland China the site redirects to its international domain, which serves the same pages. */
 const SITE = /^https:\/\/www\.(?:xiaohongshu|rednote)\.com\//;
 /** The login page shows the QR code; the site leaves it once a login succeeds. */
@@ -1801,7 +1832,7 @@ function toDomCapture(value) {
 		})
 	};
 }
-async function detectLogin$1(page) {
+async function detectLogin$5(page) {
 	const byUrl = xhsLoginFromUrl(page.url());
 	if (byUrl !== void 0) return byUrl;
 	const state = asRecord(asRecord(await readPageGlobal(page, "__INITIAL_STATE__"))?.user);
@@ -1809,12 +1840,12 @@ async function detectLogin$1(page) {
 	const dom = await evaluateScript(page, LOGIN_SCRIPT);
 	return dom === "logged-in" || dom === "logged-out" ? dom : "unknown";
 }
-async function scrape$1(page, account, limits) {
+async function scrape$5(page, account, limits) {
 	const url = account.profileUrl.trim();
-	if (!PROFILE_URL.test(url)) throw new MediaScrapeError("invalid-profile", "小红书主页链接应形如 https://www.xiaohongshu.com/user/profile/<用户ID>（rednote.com 链接同样可用）。");
+	if (!PROFILE_URL$4.test(url)) throw new MediaScrapeError("invalid-profile", "小红书主页链接应形如 https://www.xiaohongshu.com/user/profile/<用户ID>（rednote.com 链接同样可用）。");
 	await gotoPage(page, url, limits.signal);
 	await sleep(2500, limits.signal);
-	if (await detectLogin$1(page) === "logged-out") throw new MediaScrapeError("login-required", "小红书未登录，请在内嵌浏览器中扫码登录后重试。");
+	if (await detectLogin$5(page) === "logged-out") throw new MediaScrapeError("login-required", "小红书未登录，请在内嵌浏览器中扫码登录后重试。");
 	for (let round = 0; round < 3; round++) {
 		const state = parseXhsState(await readPageGlobal(page, "__INITIAL_STATE__"), limits.maxPosts);
 		if (state !== void 0 && (state.posts.length >= limits.maxPosts || round === 2)) return state;
@@ -1874,7 +1905,7 @@ const SIDEBAR_SCRIPT = "(() => document.querySelector('.side-bar a[href*=\"/user
 function xhsProfileUrl(userId) {
 	return `https://www.xiaohongshu.com/user/profile/${userId}`;
 }
-async function identify$1(page, signal) {
+async function identify$5(page, signal) {
 	await gotoPage(page, "https://www.xiaohongshu.com/explore", signal);
 	await sleep(2500, signal);
 	if (xhsLoginFromUrl(page.url()) === "logged-out") return void 0;
@@ -2057,12 +2088,12 @@ const xiaohongshuAdapter = {
 			}
 		]
 	},
-	detectLogin: detectLogin$1,
-	scrape: scrape$1,
+	detectLogin: detectLogin$5,
+	scrape: scrape$5,
 	history: history$1,
 	qrSelectors: [".login-container .qrcode:has(img.qrcode-img)", "img.qrcode-img"],
 	qrExpired: expiredQrScript(/二维码已?(失效|过期)/),
-	identify: identify$1
+	identify: identify$5
 };
 //#endregion
 //#region lib/types/schemas.js
@@ -2160,23 +2191,23 @@ const runSchema = object({
 	message: string().optional(),
 	postsWritten: number()
 });
-const text$1 = string().catch("");
+const text$2 = string().catch("");
 const texts = array(string()).catch([]);
 /** One topic suggestion as the model writes it; unknown enum values fall back instead of failing the report. */
 const modelTopicSuggestionSchema = object({
 	title: string().min(1),
-	angle: text$1,
-	reason: text$1,
+	angle: text$2,
+	reason: text$2,
 	format: format.catch("other"),
 	headlines: texts,
 	references: texts,
 	priority: priority.catch("medium"),
 	keywords: texts.default([]),
 	video: object({
-		hook: text$1,
+		hook: text$2,
 		outline: texts,
 		seconds: number().nonnegative().catch(0),
-		cover: text$1
+		cover: text$2
 	}).optional().catch(void 0)
 });
 /** A platform post found outside the configured accounts. */
@@ -2217,20 +2248,20 @@ const topicResearchSchema = object({
 });
 /** One model improvement item. */
 const improvementSchema = object({
-	area: text$1,
+	area: text$2,
 	finding: string().min(1),
-	evidence: text$1,
-	action: text$1,
+	evidence: text$2,
+	action: text$2,
 	priority: priority.catch("medium")
 });
 /** Model output requested by the topic prompt. */
 const topicOutputSchema = object({
-	summary: text$1,
+	summary: text$2,
 	suggestions: array(modelTopicSuggestionSchema).min(1)
 });
 /** Model output requested by the analysis prompt. */
 const analysisOutputSchema = object({
-	summary: text$1,
+	summary: text$2,
 	strengths: texts,
 	items: array(improvementSchema).min(1)
 });
@@ -3304,6 +3335,23 @@ async function defaultAgent(context) {
 	}
 }
 /** Viewport position of a child frame's element in the page, or undefined when it is detached or not rendered. */
+/** Longest wait for one child frame during a QR or login poll: a frame still loading has no script context yet and would hold the poll. */
+const FRAME_EVAL_MS = 1500;
+/**
+* Evaluate a script in a child frame, giving up after {@link FRAME_EVAL_MS}.
+* @returns the value, or undefined when the frame failed or did not answer in time.
+*/
+async function evaluateFrame(frame, script) {
+	let timer;
+	const late = new Promise((resolve) => {
+		timer = setTimeout(() => resolve(void 0), FRAME_EVAL_MS);
+	});
+	try {
+		return await Promise.race([frame.evaluate(script).catch(() => void 0), late]);
+	} finally {
+		clearTimeout(timer);
+	}
+}
 async function frameOrigin(frame) {
 	const element = await frame.frameElement().catch(() => void 0);
 	if (element === void 0) return void 0;
@@ -3321,6 +3369,9 @@ async function frameOrigin(frame) {
 }
 /** Shortest gap between two clicks on an expired QR code's refresh control. */
 const QR_REFRESH_GAP_MS = 5e3;
+/** Shortest gap between two clicks on a site's own 登录 control, and how many a view makes at most. */
+const OPEN_LOGIN_GAP_MS = 6e3;
+const OPEN_LOGIN_TRIES = 5;
 /** How often a view looks for its QR code until the first one shows. */
 const FIRST_QR_POLL_MS = 300;
 /** File in the profiles directory remembering the user agent of the installed Chrome, so a launch needs no second start. */
@@ -3572,6 +3623,8 @@ var BrowserManager = class {
 				qrTimer: void 0,
 				qrBusy: false,
 				qrRefreshedAt: 0,
+				loginOpenedAt: 0,
+				loginOpens: 0,
 				loggedInSince: void 0,
 				lastFrame: void 0,
 				title: "",
@@ -3682,6 +3735,7 @@ var BrowserManager = class {
 		try {
 			const adapter = this.options.adapter(view.platform);
 			if (view.login !== "logged-in" && adapter?.qrExpired !== void 0 && await this.refreshExpiredQr(view, adapter.qrExpired)) return;
+			if (view.login !== "logged-in" && view.qr.key === void 0 && adapter?.openLogin !== void 0 && await this.openLoginDialog(view, adapter.openLogin)) return;
 			const selectors = adapter?.qrSelectors ?? [];
 			const poll = view.login === "logged-in" ? { kind: "none" } : await snapshotQr({
 				evaluate: (script) => this.findQrInFrames(view, script, selectors.length === 0),
@@ -3716,10 +3770,12 @@ var BrowserManager = class {
 		const scroll = asRecord(await page.evaluate("({ x: scrollX, y: scrollY })"));
 		for (const frame of page.frames()) {
 			if (frame === page.mainFrame()) continue;
+			const raw = await evaluateFrame(frame, script);
+			if (pickQrRect(parseQrCapture(raw), largestFallback) === void 0) continue;
 			const at = await frameOrigin(frame);
 			if (at === void 0) continue;
-			const inner = asRecord(await frame.evaluate("({ x: scrollX, y: scrollY })").catch(() => void 0));
-			const found = offsetQrCapture(await frame.evaluate(script).catch(() => void 0), at.x + numberOr0(scroll?.x) - numberOr0(inner?.x), at.y + numberOr0(scroll?.y) - numberOr0(inner?.y));
+			const inner = asRecord(await evaluateFrame(frame, "({ x: scrollX, y: scrollY })"));
+			const found = offsetQrCapture(raw, at.x + numberOr0(scroll?.x) - numberOr0(inner?.x), at.y + numberOr0(scroll?.y) - numberOr0(inner?.y));
 			if (pickQrRect(found, largestFallback) !== void 0) return found;
 		}
 		return main;
@@ -3734,7 +3790,7 @@ var BrowserManager = class {
 		let found = pointOf(await view.page.evaluate(script));
 		for (const frame of found === void 0 ? view.page.frames() : []) {
 			if (frame === view.page.mainFrame()) continue;
-			const inFrame = pointOf(await frame.evaluate(script).catch(() => void 0));
+			const inFrame = pointOf(await evaluateFrame(frame, script));
 			const at = inFrame === void 0 ? void 0 : await frameOrigin(frame);
 			if (inFrame !== void 0 && at !== void 0) {
 				found = {
@@ -3756,6 +3812,28 @@ var BrowserManager = class {
 			button: "left",
 			x,
 			y
+		}, this.options.dragStepPixels));
+		return true;
+	}
+	/**
+	* On a site whose QR login is a dialog, click the site's own 登录 control as a user would, once it shows and while
+	* the page shows no code and is not logged in; at most {@link OPEN_LOGIN_TRIES} times per view, {@link OPEN_LOGIN_GAP_MS}
+	* apart. The page need not have finished loading: on a slow network a site's trackers keep it loading for minutes
+	* after the header is usable, and a click that comes before the site's scripts is simply tried again.
+	* @returns whether it clicked.
+	*/
+	async openLoginDialog(view, script) {
+		if (view.loginOpens >= OPEN_LOGIN_TRIES || Date.now() - view.loginOpenedAt < OPEN_LOGIN_GAP_MS) return false;
+		const found = pointOf(await view.page.evaluate(script));
+		if (found === void 0) return false;
+		view.loginOpenedAt = Date.now();
+		view.loginOpens++;
+		noteLogin(view.platform, `login control seen at ${Math.round(found.x)},${Math.round(found.y)}, clicking (${view.loginOpens}/${OPEN_LOGIN_TRIES})`);
+		await view.inputs.task(() => applyPointer(view.page.mouse, view.pointer, {
+			kind: "click",
+			button: "left",
+			x: found.x,
+			y: found.y
 		}, this.options.dragStepPixels));
 		return true;
 	}
@@ -4027,8 +4105,8 @@ var BrowserManager = class {
 //#endregion
 //#region lib/types/identity.js
 /**
-* Normalize a profile URL for comparison: lower-case host, `rednote.com` read as `xiaohongshu.com`, no query,
-* fragment or trailing slash.
+* Normalize a profile URL for comparison: lower-case host, `rednote.com` read as `xiaohongshu.com`, `twitter.com` as
+* `x.com` (whose handles ignore case), no query, fragment or trailing slash.
 * @param url - profile URL as entered or identified.
 * @returns the comparable form, or an empty string for a blank URL.
 */
@@ -4041,8 +4119,9 @@ function normalizeProfileUrl(url) {
 	} catch {
 		return trimmed.toLowerCase();
 	}
-	const host = parsed.host.toLowerCase().replace(/(^|\.)rednote\.com$/, "$1xiaohongshu.com");
-	return `${parsed.protocol}//${host}${parsed.pathname.replace(/\/+$/, "")}`;
+	const host = parsed.host.toLowerCase().replace(/(^|\.)rednote\.com$/, "$1xiaohongshu.com").replace(/^(?:www\.|mobile\.)?(?:twitter|x)\.com$/, "x.com");
+	const path = parsed.pathname.replace(/\/+$/, "");
+	return `${parsed.protocol}//${host}${host === "x.com" ? path.toLowerCase() : path}`;
 }
 /**
 * Find the stored own account an identity or draft refers to. In `profile-url` mode that is the own account with the
@@ -39723,7 +39802,7 @@ function mapHeader(headers, columns) {
 	assign((header, synonym) => synonym.length >= 2 && header.includes(synonym), [...synonyms].sort((a, b) => b.synonym.length - a.synonym.length));
 	return mapping;
 }
-function formatOf(text, fallback) {
+function formatOf$1(text, fallback) {
 	if (/视频|video/i.test(text)) return "video";
 	if (/图文|笔记|图集|image/i.test(text)) return "image";
 	if (/文章|article/i.test(text)) return "article";
@@ -39766,7 +39845,7 @@ function postOf(values, profile) {
 		title,
 		url: url !== void 0 && /^https?:\/\//.test(url) ? url : void 0,
 		publishedAt,
-		format: formatOf(cellText(values.get("format")), profile.defaultFormat),
+		format: formatOf$1(cellText(values.get("format")), profile.defaultFormat),
 		views: count("views"),
 		likes: count("likes"),
 		comments: count("comments"),
@@ -39900,8 +39979,9 @@ function dueAccounts(accounts, lastScrape, minMinutes, now, retryMinutes) {
 //#endregion
 //#region lib/types/demo.js
 /**
-* Sample data for testing the page: two 抖音 accounts (one whose login expired), a 小红书, a 公众号 and a 视频号 account.
-* Each has sixty days of the daily values its platform's creator backend reports, posts with drawn covers, and the 抖音
+* Sample data for testing the page: two 抖音 accounts (one whose login expired), a 小红书, a 公众号 and a 视频号 account,
+* and one each of 人人都是产品经理, 少数派, 优设 and X. Each has sixty days of the daily values its platform's creator
+* backend reports (the last four report none: only their totals are read once a day), posts with drawn covers, and the 抖音
 * account a topic report, a diagnosis report and two drafts. Every value is made up and fixed by a seed, so a test shows
 * the same numbers each time; nothing here calls a platform or a model. The page offers it only in development mode.
 */
@@ -39966,6 +40046,37 @@ const MP_TITLES = [
 	"AI 原型工具横评（2026 版）",
 	"给产品新人的 AI 工具使用指南",
 	"从需求文档到可点原型，我的 AI 工作流"
+];
+const WOSHIPM_TITLES = [
+	"AI 时代，产品经理的需求评审该怎么开",
+	"我把 PRD 交给 AI 写了一个月，结论是",
+	"B 端产品的权限设计，一篇讲清楚",
+	"从 0 到 1 搭一个数据看板：指标怎么选",
+	"用户访谈的 7 个提问技巧",
+	"AI 功能上线后，怎么判断它真的有用",
+	"产品经理的第一份竞品分析模板"
+];
+const SSPAI_TITLES = [
+	"我的 2026 效率工具清单",
+	"用快捷指令把记账做成一键",
+	"一台旧 iPad 的第二春：做成桌面看板",
+	"Obsidian + AI：我的读书笔记工作流",
+	"少即是多：我删掉了 20 个 App"
+];
+const UISDC_TITLES = [
+	"16 个 AI 设计资源网站，从找灵感到出页面",
+	"AI 生成图标的 5 个提示词公式",
+	"设计师的 AI 工作流：从草图到高保真",
+	"一套组件库的命名规范",
+	"移动端配色灵感：9 组渐变"
+];
+const X_TITLES = [
+	"Shipped a tiny AI prototype tool this weekend. Feedback welcome",
+	"Thread: what I learned running 30 user interviews with AI notes",
+	"Hot take: most AI features fail at onboarding, not at the model",
+	"New post on building dashboards without SQL",
+	"Which AI prototyping tool do you use? Poll below",
+	"Small wins: our weekly active users doubled after one copy change"
 ];
 const CHANNELS_TITLES = [
 	"30 秒看懂 AI 原型工具",
@@ -40046,6 +40157,14 @@ function buildPlan(plan, now, random) {
 			dayViews.set(ago, (dayViews.get(ago) ?? 0) + (views ?? 0) * dayShare(age, hit));
 			dayLikes.set(ago, (dayLikes.get(ago) ?? 0) + likes * dayShare(age, hit));
 		}
+		const counters = {
+			views,
+			likes,
+			comments: Math.round(likes * (.08 + random() * .08)),
+			collects: Math.round(likes * (.25 + random() * .3)),
+			shares: Math.round(likes * (.05 + random() * .1))
+		};
+		for (const key of plan.hidden ?? []) counters[key] = void 0;
 		posts.push({
 			accountId: acct.id,
 			postId: `demo-${acct.id}-${String(index)}`,
@@ -40054,11 +40173,7 @@ function buildPlan(plan, now, random) {
 			coverUrl: demoCover(title, index + acct.id.length),
 			publishedAt: (/* @__PURE__ */ new Date(now - publishedAgo * DAY_MS$1)).toISOString(),
 			format: plan.format,
-			views,
-			likes,
-			comments: Math.round(likes * (.08 + random() * .08)),
-			collects: Math.round(likes * (.25 + random() * .3)),
-			shares: Math.round(likes * (.05 + random() * .1)),
+			...counters,
 			extra: {},
 			source: "scrape",
 			updatedAt: capturedAt(now, stop)
@@ -40067,7 +40182,9 @@ function buildPlan(plan, now, random) {
 	const snapshots = [];
 	let followers = plan.followers;
 	let likesTotal = plan.totalLikes;
+	let viewsTotal = plan.views * 120;
 	const reports = new Set(plan.reports);
+	const totals = new Set(plan.totals ?? []);
 	for (let ago = HISTORY_DAYS - 1; ago >= stop; ago--) {
 		const views = Math.round((dayViews.get(ago) ?? 0) + plan.views * .25 * (.6 + random() * .8));
 		const likes = Math.round((dayLikes.get(ago) ?? 0) + Math.max(plan.likes, plan.views * .04) * .25 * (.6 + random() * .8));
@@ -40075,6 +40192,7 @@ function buildPlan(plan, now, random) {
 		const lost = Math.round(1 + random() * Math.max(2, gained * .15));
 		followers += gained - lost;
 		if (likesTotal !== void 0) likesTotal += likes;
+		viewsTotal += views;
 		const values = {
 			plays: views,
 			postLikes: likes,
@@ -40093,11 +40211,12 @@ function buildPlan(plan, now, random) {
 			avgPlaySeconds: 28 + random() * 18
 		};
 		const extra = Object.fromEntries(Object.entries(values).filter(([key]) => reports.has(key)));
+		if (totals.has("totalViews")) extra.totalViews = viewsTotal;
 		snapshots.push({
 			accountId: acct.id,
 			capturedAt: capturedAt(now, ago),
 			source: "scrape",
-			followers,
+			followers: plan.noFollowers === true ? void 0 : followers,
 			likes: likesTotal,
 			posts: plan.titles.length + 40 - Math.floor(ago / plan.every),
 			extra
@@ -40223,6 +40342,76 @@ function demoData(now) {
 			],
 			stoppedDaysAgo: 0,
 			urlOf: (index) => `https://channels.weixin.qq.com/demo/${String(index)}`
+		},
+		{
+			account: account("acct-demo-woshipm", "woshipm", "演示 · 产品手记", "产品方法", created),
+			titles: WOSHIPM_TITLES,
+			format: "article",
+			views: 1800,
+			likes: 0,
+			followers: 2300,
+			totalLikes: 1900,
+			every: 6,
+			hits: [1],
+			reports: [],
+			totals: ["totalViews"],
+			hidden: [
+				"likes",
+				"comments",
+				"shares"
+			],
+			stoppedDaysAgo: 0,
+			urlOf: (index) => `https://www.woshipm.com/pd/demo${String(index)}.html`
+		},
+		{
+			account: account("acct-demo-sspai", "sspai", "演示 · 效率派", "效率工具", created),
+			titles: SSPAI_TITLES,
+			format: "article",
+			views: 0,
+			likes: 45,
+			followers: 900,
+			totalLikes: 1200,
+			every: 9,
+			hits: [3],
+			reports: [],
+			totals: [],
+			hidden: [
+				"views",
+				"collects",
+				"shares"
+			],
+			stoppedDaysAgo: 0,
+			urlOf: (index) => `https://sspai.com/post/demo${String(index)}`
+		},
+		{
+			account: account("acct-demo-uisdc", "uisdc", "演示 · 设计小站", "AI 设计", created),
+			titles: UISDC_TITLES,
+			format: "article",
+			views: 3e3,
+			likes: 0,
+			followers: 0,
+			every: 8,
+			noFollowers: true,
+			hits: [0],
+			reports: [],
+			totals: ["totalViews"],
+			hidden: ["shares"],
+			stoppedDaysAgo: 0,
+			urlOf: (index) => `https://www.uisdc.com/demo-${String(index)}`
+		},
+		{
+			account: account("acct-demo-x", "x", "演示 · Aqing", "AI products", created),
+			titles: X_TITLES,
+			format: "other",
+			views: 1200,
+			likes: 0,
+			followers: 3e3,
+			every: 5,
+			hits: [1],
+			reports: [],
+			totals: [],
+			stoppedDaysAgo: 0,
+			urlOf: (index) => `https://x.com/demo/status/${String(19e5 + index)}`
 		}
 	];
 	const built = plans.map((plan) => buildPlan(plan, now, random));
@@ -40848,6 +41037,39 @@ function fansKpis(source, window) {
 	for (const metric of FAN_METRICS) kpis.push(dailyKpi(metric, source, window));
 	return kpis.filter((kpi) => kpi !== void 0);
 }
+/** A total of the snapshots: a field of the snapshot itself, or one of its `extra` counters. */
+function totalOf(snapshot, key) {
+	if (key === "posts" || key === "likes" || key === "following" || key === "followers") return snapshot[key];
+	return snapshot.extra[key];
+}
+/** The platform's account totals (`descriptor.totals`) as last read on each day, with the change over the window. */
+function totalsKpis(input, window) {
+	const kpis = [];
+	for (const [key, label] of Object.entries(input.platform.totals ?? {})) {
+		const days = /* @__PURE__ */ new Map();
+		for (const snapshot of input.snapshots) {
+			const value = totalOf(snapshot, key);
+			if (value !== void 0) days.set(chinaDay(snapshot.capturedAt), value);
+		}
+		const value = (input.latest === void 0 ? void 0 : totalOf(input.latest, key)) ?? [...days].sort(([a], [b]) => a.localeCompare(b)).pop()?.[1];
+		if (value === void 0) continue;
+		const previous = [...days].filter(([day]) => day <= window.previousTo).sort(([a], [b]) => a.localeCompare(b)).pop()?.[1];
+		kpis.push({
+			key: `total:${key}`,
+			label,
+			unit: "count",
+			value,
+			previous,
+			change: relative(value, previous),
+			daily: inRange(days, window.from, window.to).map(([day, item]) => ({
+				day,
+				value: item
+			})),
+			hint: `平台上显示的${label}；每天的值是当天最后一次读到的数，从开始记录那天算起`
+		});
+	}
+	return kpis;
+}
 /** Axes of the 数据总览 radar: 抖音's five first, then others the platform reports, five at most. */
 const RADAR_KEYS = [
 	"views",
@@ -40905,6 +41127,7 @@ function buildDashboard(input, days) {
 		headline: headlineKpis(source, input.now),
 		works: worksKpis(source, window),
 		fans: fansKpis(source, window),
+		totals: totalsKpis(input, window),
 		top: topPosts(source, input, 3)
 	};
 }
@@ -41378,7 +41601,7 @@ function requireBriefItems(items) {
 //#endregion
 //#region lib/types/adapters/wechat-channels.js
 const ORIGIN = "https://channels.weixin.qq.com";
-const HOME = `${ORIGIN}/platform`;
+const HOME$4 = `${ORIGIN}/platform`;
 const LOGIN = `${ORIGIN}/login.html`;
 const POST_LIST = `${ORIGIN}/platform/post/list`;
 const POST_STATS = `${ORIGIN}/platform/statistic/post`;
@@ -41549,15 +41772,15 @@ const BACKEND_SCRIPT = `(() => {
 * expired session, to `login.html`, so neither the address nor a left-over cookie alone proves a login: reading one
 * as logged in made the view identify the account in a second tab, whose login page replaced the QR code being scanned.
 */
-async function detectLogin(page) {
+async function detectLogin$4(page) {
 	const url = page.url();
 	if (!url.startsWith(ORIGIN)) return "unknown";
 	if (url.startsWith(LOGIN) || url.includes("/login")) return "logged-out";
 	if (!(await page.context().cookies(ORIGIN)).some((cookie) => cookie.name === SESSION_COOKIE && cookie.value !== "")) return "logged-out";
-	if (!url.startsWith(HOME)) return "unknown";
+	if (!url.startsWith(HOME$4)) return "unknown";
 	return await evaluateScript(page, BACKEND_SCRIPT) === true ? "logged-in" : "unknown";
 }
-function loginRequired() {
+function loginRequired$4() {
 	return new MediaScrapeError("login-required", "视频号助手未登录或登录已过期，请在内嵌浏览器中用微信扫码登录后重试。");
 }
 /**
@@ -41580,10 +41803,10 @@ async function capture(page, url, signal, settleMs, until, maxMs = 2e4) {
 	} finally {
 		page.off("response", onResponse);
 	}
-	if (await detectLogin(page) === "logged-out") throw loginRequired();
+	if (await detectLogin$4(page) === "logged-out") throw loginRequired$4();
 	return bodies;
 }
-async function scrape(page, account, limits) {
+async function scrape$4(page, account, limits) {
 	if (account.role !== "own") throw new MediaScrapeError("unsupported", "视频号只能读取自己登录的账号；对标账号请导入数据文件。");
 	const stopCapture = captureJson(page, (url) => url.startsWith(ORIGIN));
 	try {
@@ -41593,7 +41816,7 @@ async function scrape(page, account, limits) {
 	}
 }
 async function scrapeBackend(page, limits) {
-	const homeBodies = await capture(page, HOME, limits.signal, 4e3, (bodies) => bodies.some((body) => parseChannelsAccount(body)?.followers !== void 0), 12e3);
+	const homeBodies = await capture(page, HOME$4, limits.signal, 4e3, (bodies) => bodies.some((body) => parseChannelsAccount(body)?.followers !== void 0), 12e3);
 	const listBodies = await capture(page, POST_LIST, limits.signal, 5e3, (bodies) => bodies.some((body) => parseChannelsPosts(body).length > 0), 5e4);
 	let account;
 	for (const body of [...homeBodies, ...listBodies]) {
@@ -41618,9 +41841,9 @@ async function scrapeBackend(page, limits) {
 		avatarUrl: account?.avatarUrl
 	};
 }
-async function identify(page, signal) {
+async function identify$4(page, signal) {
 	const stopCapture = captureJson(page, (url) => url.startsWith(ORIGIN));
-	const bodies = await capture(page, HOME, signal, 4e3, (found) => found.some((body) => parseChannelsAccount(body)?.name !== void 0), 12e3).catch((error) => {
+	const bodies = await capture(page, HOME$4, signal, 4e3, (found) => found.some((body) => parseChannelsAccount(body)?.name !== void 0), 12e3).catch((error) => {
 		if (error instanceof MediaScrapeError && error.code === "login-required") return void 0;
 		throw error;
 	}).finally(() => {
@@ -41631,13 +41854,13 @@ async function identify(page, signal) {
 		const found = parseChannelsAccount(body);
 		if (found?.name !== void 0) return {
 			name: found.name,
-			profileUrl: HOME,
+			profileUrl: HOME$4,
 			avatarUrl: found.avatarUrl
 		};
 	}
 	return {
 		name: "视频号",
-		profileUrl: HOME
+		profileUrl: HOME$4
 	};
 }
 /** Days an answer must span to be a page's full trend (the pages show 7), not its separate request for yesterday. */
@@ -41720,7 +41943,7 @@ async function history(page, _account, limits) {
 	} finally {
 		page.off("response", onResponse);
 	}
-	if (await detectLogin(page) === "logged-out") throw loginRequired();
+	if (await detectLogin$4(page) === "logged-out") throw loginRequired$4();
 	return [...days].sort(([a], [b]) => a.localeCompare(b)).map(([day, values]) => {
 		const { fansTotal, fansNet, ...extra } = values;
 		return {
@@ -41736,7 +41959,7 @@ const wechatChannelsAdapter = {
 	descriptor: {
 		id: "wechat-channels",
 		displayName: "视频号",
-		loginUrl: HOME,
+		loginUrl: HOME$4,
 		scrape: true,
 		import: true,
 		importHint: "视频号助手 → 数据中心 → 作品数据 → 下载表格。",
@@ -41750,7 +41973,8 @@ const wechatChannelsAdapter = {
 		},
 		noun: "视频",
 		color: "#FA9D3B",
-		beta: true
+		beta: true,
+		scanApp: "微信"
 	},
 	importProfile: {
 		defaultFormat: "video",
@@ -41830,8 +42054,8 @@ const wechatChannelsAdapter = {
 	},
 	scrapableRoles: ["own"],
 	identityMatch: "platform",
-	detectLogin,
-	scrape,
+	detectLogin: detectLogin$4,
+	scrape: scrape$4,
 	history,
 	keepAlive: {
 		url: "https://channels.weixin.qq.com/platform",
@@ -41843,6 +42067,906 @@ const wechatChannelsAdapter = {
 		".login-qrcode img"
 	],
 	qrExpired: expiredQrScript(/二维码已?(失效|过期)/),
+	identify: identify$4
+};
+//#endregion
+//#region lib/types/adapters/sspai.js
+const HOME$3 = "https://sspai.com/";
+const PROFILE_URL$3 = /^https:\/\/sspai\.com\/u\/([^/?#]+)/;
+const SESSION_COOKIES$1 = ["sspai_jwt_token", "sspai_cross_token"];
+const IMAGE_HOST = "https://cdnfile.sspai.com/";
+const PAGE_SIZE = 20;
+/**
+* The slug of a 少数派 profile URL.
+* @param url - such as `https://sspai.com/u/abc/posts`.
+* @returns the slug, or undefined.
+*/
+function sspaiSlugOf(url) {
+	return PROFILE_URL$3.exec(url.trim())?.[1];
+}
+/** Images are stored as keys such as `2023/02/24/abc.png` under the CDN host. */
+function imageUrl(key) {
+	if (key === void 0) return void 0;
+	if (key.startsWith("https://")) return key;
+	return /^[\w/.-]+\.\w+$/.test(key) ? `${IMAGE_HOST}${key.replace(/^\/+/, "")}` : void 0;
+}
+/** An answer of the API: `{ error: 0, data }` on success. */
+function dataOf(json) {
+	const body = asRecord(json);
+	return body?.error === 0 ? body.data : void 0;
+}
+/**
+* Read a user answer.
+* @param json - response body.
+* @returns the user, or undefined when the answer failed or holds no slug.
+*/
+function parseSspaiUser(json) {
+	const user = asRecord(dataOf(json));
+	const slug = stringField(user, "slug");
+	if (user === void 0 || slug === void 0) return void 0;
+	const extra = {};
+	const views = parseCount(user.article_view_count);
+	if (views !== void 0) extra.totalViews = views;
+	const words = parseCount(user.articles_word_count);
+	if (words !== void 0) extra.words = words;
+	return {
+		slug,
+		name: stringField(user, "nickname"),
+		avatarUrl: imageUrl(stringField(user, "avatar")),
+		snapshot: {
+			followers: parseCount(user.followed_count),
+			following: parseCount(user.following_count),
+			likes: parseCount(user.liked_count),
+			posts: parseCount(user.released_article_count),
+			extra
+		}
+	};
+}
+/**
+* Read an `article/user/public/page/get` answer. A read count of 0 is the API hiding it, so it is left out.
+* @param json - response body.
+* @returns the articles and the author's total when given.
+*/
+function parseSspaiPosts(json) {
+	const body = asRecord(json);
+	const list = dataOf(json);
+	const posts = [];
+	for (const item of Array.isArray(list) ? list : []) {
+		const article = asRecord(item);
+		const id = stringField(article, "id");
+		const title = stringField(article, "title");
+		if (article === void 0 || id === void 0 || title === void 0) continue;
+		const views = parseCount(article.view_count);
+		const cover = imageUrl(stringField(article, "banner"));
+		const extra = {};
+		const words = parseCount(article.words_count);
+		if (words !== void 0) extra.words = words;
+		posts.push({
+			postId: id,
+			title,
+			url: `https://sspai.com/post/${id}`,
+			publishedAt: parseDate(article.released_time ?? article.created_time),
+			format: "article",
+			...views === void 0 || views === 0 ? {} : { views },
+			likes: parseCount(article.like_count),
+			comments: parseCount(article.comment_count),
+			...cover === void 0 ? {} : { coverUrl: cover },
+			extra
+		});
+	}
+	return {
+		posts,
+		total: parseCount(body?.total)
+	};
+}
+/**
+* Fetch an API path from the page, sending the session token as the site's own pages do: they keep it in local storage
+* (`ssToken`) and in the `sspai_jwt_token` cookie, and send `Authorization: Bearer <token>`.
+*/
+function apiScript(path) {
+	return `(async () => {
+    let token = ''
+    try { token = localStorage.getItem('ssToken') || '' } catch {}
+    if (!token) token = decodeURIComponent((document.cookie.match(/(?:^|; )sspai_jwt_token=([^;]+)/) || [])[1] || '')
+    const headers = token ? { Authorization: 'Bearer ' + token } : {}
+    const response = await fetch(${JSON.stringify(path)}, { credentials: 'include', headers })
+    return response.ok ? await response.json() : { error: response.status }
+  })()`;
+}
+async function api(page, path) {
+	return await evaluateScript(page, apiScript(path));
+}
+async function detectLogin$3(page) {
+	if ((await page.context().cookies(HOME$3)).some((cookie) => SESSION_COOKIES$1.includes(cookie.name) && cookie.value !== "")) return "logged-in";
+	if (!page.url().startsWith(HOME$3)) return "unknown";
+	const stored = await evaluateScript(page, `(() => { try { return localStorage.getItem('ssToken') || '' } catch { return '' } })()`).catch(() => "");
+	return typeof stored === "string" && stored !== "" ? "logged-in" : "logged-out";
+}
+function loginRequired$3() {
+	return new MediaScrapeError("login-required", "少数派未登录或登录已过期，请在内嵌浏览器中重新登录后重试。");
+}
+/** Open the site so its API calls go out with the profile's cookies. */
+async function openSite(page, signal) {
+	await gotoPage(page, HOME$3, signal);
+	await sleep(1500, signal);
+	if (await detectLogin$3(page) !== "logged-in") throw loginRequired$3();
+}
+async function scrape$3(page, account, limits) {
+	const slug = sspaiSlugOf(account.profileUrl);
+	if (slug === void 0) throw new MediaScrapeError("invalid-profile", "少数派主页链接应形如 https://sspai.com/u/<个性域名>。");
+	await openSite(page, limits.signal);
+	const user = parseSspaiUser(await api(page, `/api/v1/user/slug/info/get?slug=${encodeURIComponent(slug)}`));
+	if (user === void 0) throw new MediaScrapeError("scrape-failed", `没有读到少数派用户 ${slug} 的数据，主页链接可能有误，或接口已变化。`);
+	const posts = [];
+	for (let offset = 0; posts.length < limits.maxPosts; offset += PAGE_SIZE) {
+		const page_ = parseSspaiPosts(await api(page, `/api/v1/article/user/public/page/get?limit=${PAGE_SIZE}&offset=${offset}&slug=${encodeURIComponent(slug)}`));
+		posts.push(...page_.posts);
+		if (page_.posts.length < PAGE_SIZE || page_.total !== void 0 && offset + PAGE_SIZE >= page_.total) break;
+		await sleep(600, limits.signal);
+	}
+	return {
+		snapshot: user.snapshot,
+		posts: posts.slice(0, limits.maxPosts),
+		avatarUrl: user.avatarUrl
+	};
+}
+async function identify$3(page, signal) {
+	await gotoPage(page, HOME$3, signal);
+	await sleep(1500, signal);
+	if (await detectLogin$3(page) !== "logged-in") return void 0;
+	const self = parseSspaiUser(await api(page, "/api/v1/user/info/get"));
+	if (self === void 0) return void 0;
+	return {
+		name: self.name ?? self.slug,
+		profileUrl: `https://sspai.com/u/${self.slug}`,
+		avatarUrl: self.avatarUrl
+	};
+}
+/** Built-in 少数派 adapter. */
+const sspaiAdapter = {
+	descriptor: {
+		id: "sspai",
+		displayName: "少数派",
+		loginUrl: "https://sspai.com/login",
+		scrape: true,
+		import: false,
+		importHint: "",
+		profileUrlExample: "https://sspai.com/u/<个性域名>",
+		metrics: {
+			views: "阅读",
+			likes: "充电",
+			comments: "评论"
+		},
+		noun: "文章",
+		color: "#D71A1B",
+		beta: true,
+		loginHint: "输入手机号收验证码登录，或点下方的微信图标扫码",
+		totals: {
+			posts: "文章数",
+			likes: "获得充电",
+			totalViews: "总阅读"
+		}
+	},
+	importProfile: {
+		defaultFormat: "article",
+		columns: []
+	},
+	scrapableRoles: ["own"],
+	detectLogin: detectLogin$3,
+	scrape: scrape$3,
+	identify: identify$3
+};
+//#endregion
+//#region lib/types/adapters/uisdc.js
+const HOME$2 = "https://www.uisdc.com/";
+const PROFILE_URL$2 = /^https:\/\/(?:www\.)?uisdc\.com\/u\/(\d+)/;
+/** Article pages read per update: each is one request, and the newest articles are the ones that still move. */
+const ARTICLE_PAGES = 20;
+/**
+* The user id of a 优设 profile URL.
+* @param url - such as `https://www.uisdc.com/u/14/publish/all`.
+* @returns the id, or undefined.
+*/
+function uisdcUidOf(url) {
+	return PROFILE_URL$2.exec(url.trim())?.[1];
+}
+const text$1 = (html) => html.replace(/<[^>]+>/g, "").replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code))).replace(/&quot;/g, "\"").replace(/&#039;|&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
+/** A labelled number of the author header, written `<strong>58</strong><i>文章</i>` or `文章 58`. */
+function headerCount(html, label) {
+	const strong = new RegExp(`<strong>\\s*([\\d.,]+\\s*[万wWkK]?)\\s*</strong>\\s*<i>\\s*${label}\\s*</i>`).exec(html);
+	if (strong !== null) return parseCount(strong[1]);
+	const inline = new RegExp(`>\\s*${label}\\s*([\\d.,]+\\s*[万wWkK]?)\\s*<`).exec(html);
+	return inline === null ? void 0 : parseCount(inline[1]);
+}
+/**
+* Read an author page: the header totals and the article list items (`div.item-wrap` with `h2.item-title`).
+* @param html - the page's HTML.
+* @returns the author and the listed articles.
+*/
+function parseUisdcAuthorPage(html) {
+	const posts = [];
+	for (const item of html.split(/<div class="item-wrap\b/).slice(1)) {
+		const link = /<h2 class="item-title">\s*<a href="(https:\/\/www\.uisdc\.com\/[^"#?]+)"[^>]*>([\s\S]*?)<\/a>/.exec(item);
+		if (link === null) continue;
+		const title = text$1(link[2] ?? "");
+		const url = link[1] ?? "";
+		if (title === "" || url === "") continue;
+		const cover = /background-image:\s*url\((?:&quot;|["'])?(https:\/\/[^"')&]+)/.exec(item)?.[1];
+		posts.push({
+			postId: url.replace(/^https:\/\/www\.uisdc\.com\//, ""),
+			title,
+			url,
+			publishedAt: parseDate(/<span class="meta-item meta-time"[^>]*>([^<]+)</.exec(item)?.[1]),
+			format: "article",
+			...cover === void 0 ? {} : { coverUrl: cover },
+			extra: {}
+		});
+	}
+	const extra = {};
+	const popularity = headerCount(html, "人气");
+	if (popularity !== void 0) extra.totalViews = popularity;
+	const avatar = /<div class="author-avatar[^"]*"[\s\S]{0,400}?(?:src="|url\()(https:\/\/[^"')]+)/.exec(html)?.[1];
+	const name = /<h1 class="author-name[^"]*"[^>]*>([\s\S]*?)<\/h1>/.exec(html)?.[1] ?? /<title>([^<-]+?)\s*-\s*设计师主页/.exec(html)?.[1];
+	return {
+		name: name === void 0 ? void 0 : text$1(name) || void 0,
+		avatarUrl: avatar,
+		snapshot: {
+			followers: headerCount(html, "粉丝"),
+			posts: headerCount(html, "文章"),
+			extra
+		},
+		posts,
+		hasMore: /class="next page-numbers"|class="next"/.test(html)
+	};
+}
+/**
+* Read the counters of an article page.
+* @param html - the article page's HTML.
+* @returns the counters found.
+*/
+function parseUisdcArticle(html) {
+	const views = /<span class="meta-item meta-views">\s*阅读\s*([\d.,]+\s*[万wWkK]?)\s*<\/span>/.exec(html)?.[1];
+	const likes = /class="[^"]*\bbtn-zan\b[^"]*"\s+data-count="(\d+)"/.exec(html)?.[1];
+	const collects = /class="[^"]*\bbtn-fav\b[^"]*"\s+data-count="(\d+)"/.exec(html)?.[1];
+	const comments = /<h2 class="comment-title">[\s\S]{0,200}?<em class="count">(\d+)<\/em>\s*条评论/.exec(html)?.[1];
+	return {
+		views: parseCount(views),
+		likes: parseCount(likes),
+		collects: parseCount(collects),
+		comments: parseCount(comments)
+	};
+}
+/**
+* The signed-in user, as the site's own scripts find it: a token `uisdcjwt` in local storage or a cookie, sent as
+* `Authorization: Bearer` to `/api/v1/user/mine`, which answers `data.id`, `nickname` and `avatar`. Without a token the
+* header's login panel shows `.notlogin`.
+*/
+const SELF_SCRIPT$2 = `(async () => {
+  let token = ''
+  try { token = localStorage.getItem('uisdcjwt') || '' } catch {}
+  if (!token) token = decodeURIComponent((document.cookie.match(/(?:^|; )uisdcjwt=([^;]+)/) || [])[1] || '')
+  const notLogin = !!document.querySelector('.login-panel .notlogin')
+  if (!token) return { token: false, notLogin }
+  try {
+    const response = await fetch('/api/v1/user/mine', { credentials: 'include', headers: { Authorization: 'Bearer ' + token } })
+    return { token: true, notLogin, mine: response.ok ? await response.json() : null }
+  } catch {
+    return { token: true, notLogin, mine: null }
+  }
+})()`;
+/**
+* Read what `SELF_SCRIPT` returned.
+* @param capture - script result.
+* @returns the login state, and the user when `/api/v1/user/mine` answered one.
+*/
+function readUisdcSelf(capture) {
+	const record = asRecord(capture);
+	const user = asRecord(asRecord(record?.mine)?.data);
+	const id = stringField(user, "id");
+	const avatar = stringField(user, "avatar");
+	if (id !== void 0 && /^[1-9]\d*$/.test(id)) return {
+		state: "logged-in",
+		uid: id,
+		name: stringField(user, "nickname"),
+		avatarUrl: avatar?.startsWith("https://") === true ? avatar : void 0
+	};
+	if (record?.token === true) return { state: "logged-in" };
+	return { state: record?.notLogin === true || record?.token === false ? "logged-out" : "unknown" };
+}
+async function readSelf(page) {
+	return readUisdcSelf(await evaluateScript(page, SELF_SCRIPT$2).catch(() => void 0));
+}
+async function detectLogin$2(page) {
+	if (!page.url().startsWith(HOME$2)) return "unknown";
+	if ((await page.context().cookies(HOME$2)).some((cookie) => cookie.name === "uisdcjwt" && cookie.value !== "")) return "logged-in";
+	const record = asRecord(await evaluateScript(page, `(() => {
+    let token = ''
+    try { token = localStorage.getItem('uisdcjwt') || '' } catch {}
+    return { token: token !== '', notLogin: !!document.querySelector('.login-panel .notlogin') }
+  })()`).catch(() => void 0));
+	if (record?.token === true) return "logged-in";
+	return record?.notLogin === true ? "logged-out" : "unknown";
+}
+function loginRequired$2() {
+	return new MediaScrapeError("login-required", "优设未登录或登录已过期，请在内嵌浏览器中用微信扫码登录后重试。");
+}
+async function fetchText$1(page, url) {
+	const value = await evaluateScript(page, `fetch(${JSON.stringify(url)}, { credentials: 'include' }).then(r => r.ok ? r.text() : '').catch(() => '')`);
+	return typeof value === "string" ? value : "";
+}
+async function scrape$2(page, account, limits) {
+	const uid = uisdcUidOf(account.profileUrl);
+	if (uid === void 0) throw new MediaScrapeError("invalid-profile", "优设主页链接应形如 https://www.uisdc.com/u/<数字ID>。");
+	await gotoPage(page, `${HOME$2}u/${uid}/publish/all`, limits.signal);
+	await sleep(1500, limits.signal);
+	if (await detectLogin$2(page) === "logged-out") throw loginRequired$2();
+	const html = await evaluateScript(page, "document.documentElement.outerHTML");
+	const author = parseUisdcAuthorPage(typeof html === "string" ? html : "");
+	if (author.snapshot.posts === void 0 && author.posts.length === 0) throw new MediaScrapeError("scrape-failed", `没有在优设主页 ${uid} 上读到文章，主页链接可能有误，或页面结构已变化。`);
+	const posts = [];
+	for (const post of author.posts.slice(0, Math.min(limits.maxPosts, ARTICLE_PAGES))) {
+		const counts = parseUisdcArticle(await fetchText$1(page, post.url ?? ""));
+		posts.push({
+			...post,
+			views: counts.views,
+			likes: counts.likes,
+			collects: counts.collects,
+			comments: counts.comments
+		});
+		await sleep(500, limits.signal);
+	}
+	posts.push(...author.posts.slice(posts.length, limits.maxPosts));
+	return {
+		snapshot: author.snapshot,
+		posts,
+		avatarUrl: author.avatarUrl
+	};
+}
+async function identify$2(page, signal) {
+	await gotoPage(page, HOME$2, signal);
+	for (let waited = 0; waited < 10; waited++) {
+		await sleep(1e3, signal);
+		const self = await readSelf(page);
+		if (self.state === "logged-out" && waited >= 3) return void 0;
+		if (self.uid === void 0) continue;
+		const profileUrl = `${HOME$2}u/${self.uid}/publish/all`;
+		const author = parseUisdcAuthorPage(await fetchText$1(page, profileUrl));
+		return {
+			name: self.name ?? author.name ?? `优设用户 ${self.uid}`,
+			profileUrl,
+			avatarUrl: self.avatarUrl ?? author.avatarUrl
+		};
+	}
+}
+/** Built-in 优设 adapter. */
+const uisdcAdapter = {
+	descriptor: {
+		id: "uisdc",
+		displayName: "优设",
+		loginUrl: HOME$2,
+		scrape: true,
+		import: false,
+		importHint: "",
+		profileUrlExample: "https://www.uisdc.com/u/<数字ID>/publish/all",
+		metrics: {
+			views: "阅读",
+			likes: "点赞",
+			comments: "评论",
+			collects: "收藏"
+		},
+		noun: "文章",
+		color: "#FF6A00",
+		beta: true,
+		scanApp: "微信",
+		totals: {
+			posts: "文章数",
+			totalViews: "人气"
+		}
+	},
+	importProfile: {
+		defaultFormat: "article",
+		columns: []
+	},
+	scrapableRoles: ["own"],
+	detectLogin: detectLogin$2,
+	scrape: scrape$2,
+	identify: identify$2,
+	openLogin: openLoginScript({ selector: ".login-panel a[data-modal-id=\"modal_login\"]" }, /^微信扫码$|安全快捷登录/)
+};
+//#endregion
+//#region lib/types/adapters/woshipm.js
+const HOME$1 = "https://www.woshipm.com/";
+const PROFILE_URL$1 = /^https:\/\/(?:www\.)?woshipm\.com\/u\/(\d+)/;
+const MAX_PAGES = 10;
+/**
+* The user id of a 人人都是产品经理 profile URL.
+* @param url - such as `https://www.woshipm.com/u/12345`.
+* @returns the id, or undefined.
+*/
+function woshipmUidOf(url) {
+	return PROFILE_URL$1.exec(url.trim())?.[1];
+}
+/**
+* Read an `api2/user/profile?uid=` answer.
+* @param json - response body.
+* @returns the user, or undefined when the body holds none.
+*/
+function parseWoshipmProfile(json) {
+	const result = asRecord(asRecord(json)?.RESULT);
+	const info = asRecord(result?.userInfoVo);
+	const articles = asRecord(result?.userArticleCountVo);
+	const common = asRecord(result?.userCommonCountVo);
+	if (info === void 0 && articles === void 0 && common === void 0) return void 0;
+	const extra = {};
+	for (const [key, field] of [
+		["totalViews", "newsViewCountInt"],
+		["totalComments", "newsCommentCountInt"],
+		["totalCollects", "newsFavoritesCountInt"]
+	]) {
+		const value = parseCount(articles?.[field]);
+		if (value !== void 0) extra[key] = value;
+	}
+	const avatar = stringField(info, "avartar") ?? stringField(info, "avatar");
+	return {
+		name: stringField(info, "nickName"),
+		avatarUrl: avatar?.replace(/^http:\/\//, "https://").startsWith("https://") === true ? avatar.replace(/^http:\/\//, "https://") : void 0,
+		snapshot: {
+			followers: parseCount(common?.fansCount),
+			following: parseCount(common?.attentionUserCount),
+			likes: parseCount(articles?.articalPraiseCount) ?? parseCount(common?.praiseCount),
+			posts: parseCount(articles?.articalCount),
+			extra
+		}
+	};
+}
+const decode = (text) => text.replace(/<[^>]+>/g, "").replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code))).replace(/&quot;/g, "\"").replace(/&#039;|&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
+/**
+* Read the article cards (`div.post--card[data-id]`) of an author page.
+* @param html - the page's HTML.
+* @returns the articles in page order, and whether a next page exists.
+*/
+function parseWoshipmAuthorPage(html) {
+	const posts = [];
+	const cards = html.split(/<div class="post--card\b/).slice(1);
+	for (const card of cards) {
+		const id = /data-id="(\d+)"/.exec(card)?.[1];
+		const link = /<h2 class="post--card__title">\s*<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/.exec(card);
+		if (id === void 0 || link === null) continue;
+		const title = decode(link[2] ?? "");
+		if (title === "") continue;
+		const meta = /<div class="stream-list-meta">([\s\S]*?)<\/div>/.exec(card)?.[1] ?? "";
+		const count = (label) => {
+			const match = new RegExp(`<span>\\s*([\\d.,]+\\s*[万wWkK]?)\\s*${label}\\s*</span>`).exec(meta);
+			return match === null ? void 0 : parseCount(match[1]);
+		};
+		const cover = /<div class="post--card__img">[\s\S]*?<img[^>]*src="(https:\/\/[^"]+)"/.exec(card)?.[1];
+		posts.push({
+			postId: id,
+			title,
+			url: (link[1] ?? "").replace(/^http:\/\//, "https://"),
+			publishedAt: parseDate(/<time>([^<]+)<\/time>/.exec(meta)?.[1]),
+			format: "article",
+			views: count("浏览"),
+			collects: count("收藏"),
+			...cover === void 0 ? {} : { coverUrl: cover },
+			extra: {}
+		});
+	}
+	return {
+		posts,
+		hasMore: /class="next page-numbers"/.test(html)
+	};
+}
+/**
+* The signed-in user: every page sets the global `PURE` with `is_user_logged_in` and `user_id` (0 when signed out),
+* which the site's own scripts read; the header's profile link, nickname and avatar, and whether it offers 登录, are
+* the fallback.
+*/
+const SELF_SCRIPT$1 = `(() => {
+  const pure = window.PURE && typeof window.PURE === 'object' ? window.PURE : undefined
+  const header = document.querySelector('header') || document.body
+  const link = [...header.querySelectorAll('a[href*="/u/"]')].find(a => /\\/u\\/\\d+/.test(a.getAttribute('href') || ''))
+  const avatar = header.querySelector('img[src*="avatar"], .user-avatar img, .avatar img')
+  const loginOffered = [...header.querySelectorAll('a, span, div, button')].some(el => el.children.length === 0 && /^\\s*(注册\\s*\\|\\s*)?登录\\s*$/.test(el.textContent || ''))
+  return {
+    pureLoggedIn: pure ? (pure.is_user_logged_in === true || pure.is_user_logged_in === 1 || pure.is_user_logged_in === '1') : null,
+    pureUid: pure && pure.user_id ? String(pure.user_id) : '',
+    href: link ? link.href : '', name: link ? (link.getAttribute('title') || link.textContent || '').trim() : '', avatar: avatar ? avatar.src : '', loginOffered,
+  }
+})()`;
+/**
+* Read what `SELF_SCRIPT` returned.
+* @param capture - script result.
+* @returns the signed-in user id and state, as far as the page tells.
+*/
+function readWoshipmSelf(capture) {
+	const record = asRecord(capture);
+	const avatar = stringField(record, "avatar");
+	const pureUid = stringField(record, "pureUid");
+	const uid = pureUid !== void 0 && /^[1-9]\d*$/.test(pureUid) ? pureUid : woshipmUidOf(stringField(record, "href") ?? "");
+	const pure = record?.pureLoggedIn;
+	return {
+		uid,
+		name: stringField(record, "name"),
+		avatarUrl: avatar?.startsWith("https://") === true ? avatar : void 0,
+		loggedIn: typeof pure === "boolean" ? pure && uid !== void 0 : uid !== void 0 ? true : record?.loginOffered === true ? false : void 0
+	};
+}
+async function detectLogin$1(page) {
+	if (!page.url().startsWith(HOME$1)) return "unknown";
+	const self = readWoshipmSelf(await evaluateScript(page, SELF_SCRIPT$1).catch(() => void 0));
+	return self.loggedIn === void 0 ? "unknown" : self.loggedIn ? "logged-in" : "logged-out";
+}
+function loginRequired$1() {
+	return new MediaScrapeError("login-required", "人人都是产品经理未登录或登录已过期，请在内嵌浏览器中用微信扫码登录后重试。");
+}
+async function fetchText(page, path) {
+	const text = await evaluateScript(page, `fetch(${JSON.stringify(path)}, { credentials: 'include' }).then(r => r.ok ? r.text() : '')`);
+	return typeof text === "string" ? text : "";
+}
+async function fetchJson(page, path) {
+	return await evaluateScript(page, `fetch(${JSON.stringify(path)}, { credentials: 'include' }).then(r => r.ok ? r.json() : null).catch(() => null)`);
+}
+async function scrape$1(page, account, limits) {
+	const uid = woshipmUidOf(account.profileUrl);
+	if (uid === void 0) throw new MediaScrapeError("invalid-profile", "人人都是产品经理主页链接应形如 https://www.woshipm.com/u/<数字ID>。");
+	await gotoPage(page, `${HOME$1}u/${uid}`, limits.signal);
+	await sleep(1500, limits.signal);
+	if (await detectLogin$1(page) === "logged-out") throw loginRequired$1();
+	const user = parseWoshipmProfile(await fetchJson(page, `/api2/user/profile?uid=${uid}`));
+	if (user === void 0) throw new MediaScrapeError("scrape-failed", `没有读到人人都是产品经理用户 ${uid} 的数据，主页链接可能有误，或接口已变化。`);
+	const posts = /* @__PURE__ */ new Map();
+	let html = await evaluateScript(page, "document.documentElement.outerHTML");
+	for (let number = 1; number <= MAX_PAGES && posts.size < limits.maxPosts; number++) {
+		if (number > 1) {
+			await sleep(800, limits.signal);
+			html = await fetchText(page, `/u/${uid}/page/${number}`);
+		}
+		const result = parseWoshipmAuthorPage(typeof html === "string" ? html : "");
+		for (const post of result.posts) posts.set(post.postId, post);
+		if (!result.hasMore || result.posts.length === 0) break;
+	}
+	return {
+		snapshot: user.snapshot,
+		posts: [...posts.values()].slice(0, limits.maxPosts),
+		avatarUrl: user.avatarUrl
+	};
+}
+async function identify$1(page, signal) {
+	await gotoPage(page, HOME$1, signal);
+	for (let waited = 0; waited < 10; waited++) {
+		await sleep(1e3, signal);
+		const self = readWoshipmSelf(await evaluateScript(page, SELF_SCRIPT$1));
+		if (self.loggedIn === false && waited >= 3) return void 0;
+		if (self.uid === void 0) continue;
+		const profile = parseWoshipmProfile(await fetchJson(page, `/api2/user/profile?uid=${self.uid}`));
+		return {
+			name: profile?.name ?? self.name ?? `人人都是产品经理用户 ${self.uid}`,
+			profileUrl: `${HOME$1}u/${self.uid}`,
+			avatarUrl: profile?.avatarUrl ?? self.avatarUrl
+		};
+	}
+}
+/** Built-in 人人都是产品经理 adapter. */
+const woshipmAdapter = {
+	descriptor: {
+		id: "woshipm",
+		displayName: "人人都是产品经理",
+		loginUrl: HOME$1,
+		scrape: true,
+		import: false,
+		importHint: "",
+		profileUrlExample: "https://www.woshipm.com/u/<数字ID>",
+		metrics: {
+			views: "浏览",
+			collects: "收藏"
+		},
+		noun: "文章",
+		color: "#2F6BFF",
+		beta: true,
+		scanApp: "微信",
+		totals: {
+			posts: "文章数",
+			likes: "被赞",
+			totalViews: "总阅读",
+			totalComments: "总评论",
+			totalCollects: "总收藏"
+		}
+	},
+	importProfile: {
+		defaultFormat: "article",
+		columns: []
+	},
+	scrapableRoles: ["own"],
+	detectLogin: detectLogin$1,
+	scrape: scrape$1,
+	identify: identify$1,
+	openLogin: openLoginScript([{ selector: "button.login-guide-login-button" }, { text: /^注册\s*\|\s*登录$/ }], { selector: "iframe[src*=\"passport.woshipm.com\"]" }),
+	qrSelectors: ["img[src*=\"showqrcode\"]"]
+};
+//#endregion
+//#region lib/types/adapters/x.js
+const HOME = "https://x.com/";
+const PROFILE_URL = /^https:\/\/(?:www\.|mobile\.)?(?:x|twitter)\.com\/([A-Za-z0-9_]{1,15})\/?(?:[?#].*)?$/;
+/** Paths under x.com that are not profiles. */
+const RESERVED = new Set([
+	"home",
+	"explore",
+	"notifications",
+	"messages",
+	"i",
+	"settings",
+	"search",
+	"compose",
+	"login",
+	"logout",
+	"tos",
+	"privacy"
+]);
+const SESSION_COOKIES = ["auth_token"];
+/**
+* The handle of an X profile URL.
+* @param url - profile URL on x.com or twitter.com.
+* @returns the handle as written, or undefined when the URL is not a profile.
+*/
+function xHandleOf(url) {
+	const handle = PROFILE_URL.exec(url.trim())?.[1];
+	return handle === void 0 || RESERVED.has(handle.toLowerCase()) ? void 0 : handle;
+}
+/** The user record of a `UserByScreenName` answer, whatever wraps it. */
+function userResult(json) {
+	const result = asRecord(asRecord(asRecord(asRecord(json)?.data)?.user)?.result);
+	return result?.__typename === "User" || asRecord(result?.legacy) !== void 0 ? result : void 0;
+}
+/**
+* Read a `UserByScreenName` answer. Names and avatars moved from `legacy` to `core` and `avatar` in 2025; both are read.
+* @param json - response body.
+* @returns the user, or undefined when the body holds none.
+*/
+function parseXUser(json) {
+	const user = userResult(json);
+	const legacy = asRecord(user?.legacy);
+	const core = asRecord(user?.core);
+	const id = stringField(user, "rest_id");
+	const handle = stringField(core, "screen_name") ?? stringField(legacy, "screen_name");
+	if (id === void 0 || handle === void 0 || legacy === void 0) return void 0;
+	const avatar = stringField(asRecord(user?.avatar), "image_url") ?? stringField(legacy, "profile_image_url_https");
+	const extra = {};
+	const listed = parseCount(legacy.listed_count);
+	if (listed !== void 0) extra.listed = listed;
+	return {
+		id,
+		handle,
+		name: stringField(core, "name") ?? stringField(legacy, "name"),
+		avatarUrl: avatar?.startsWith("https://") === true ? avatar.replace(/_normal(\.\w+)$/, "_200x200$1") : void 0,
+		snapshot: {
+			followers: parseCount(legacy.followers_count),
+			following: parseCount(legacy.friends_count),
+			posts: parseCount(legacy.statuses_count),
+			extra
+		}
+	};
+}
+/** The tweet inside a `tweet_results.result`, unwrapping `TweetWithVisibilityResults`. */
+function unwrapTweet(value) {
+	const record = asRecord(value);
+	if (record?.__typename === "TweetWithVisibilityResults") return asRecord(record.tweet);
+	return record;
+}
+function formatOf(legacy) {
+	const media = asRecord(legacy.extended_entities)?.media ?? asRecord(legacy.entities)?.media;
+	const types = (Array.isArray(media) ? media : []).map((item) => stringField(asRecord(item), "type"));
+	if (types.some((type) => type === "video" || type === "animated_gif")) return "video";
+	if (types.includes("photo")) return "image";
+	return "other";
+}
+/** X prints dates as `Wed Oct 10 20:19:24 +0000 2018`. */
+function xDate(value) {
+	if (typeof value !== "string") return void 0;
+	const date = new Date(value);
+	return Number.isNaN(date.getTime()) ? void 0 : date.toISOString();
+}
+function coverOf(legacy) {
+	const media = asRecord(legacy.extended_entities)?.media ?? asRecord(legacy.entities)?.media;
+	const url = stringField(asRecord(Array.isArray(media) ? media[0] : void 0), "media_url_https");
+	return url?.startsWith("https://") === true ? url : void 0;
+}
+/**
+* Read one tweet record as a post of `userId`: reposts of others and posts by other users (quoted, replied to) are
+* skipped.
+* @param value - a `tweet_results.result` value.
+* @param userId - the account's `rest_id`.
+* @param handle - the account's handle, for the post URL.
+* @returns the post, or undefined.
+*/
+function parseXTweet(value, userId, handle) {
+	const tweet = unwrapTweet(value);
+	const legacy = asRecord(tweet?.legacy);
+	const id = stringField(tweet, "rest_id");
+	if (legacy === void 0 || id === void 0) return void 0;
+	if (stringField(legacy, "user_id_str") !== userId || legacy.retweeted_status_result !== void 0) return void 0;
+	const text = (stringField(asRecord(asRecord(asRecord(tweet?.note_tweet)?.note_tweet_results)?.result), "text") ?? stringField(legacy, "full_text") ?? "").replace(/\s*https:\/\/t\.co\/\w+\s*$/, "").replace(/\s+/g, " ").trim();
+	const extra = {};
+	const quotes = parseCount(legacy.quote_count);
+	if (quotes !== void 0) extra.quotes = quotes;
+	const cover = coverOf(legacy);
+	return {
+		postId: id,
+		title: text === "" ? "（图片或视频）" : text.length > 120 ? `${text.slice(0, 119)}…` : text,
+		url: `https://x.com/${handle}/status/${id}`,
+		publishedAt: xDate(legacy.created_at),
+		format: formatOf(legacy),
+		views: parseCount(stringField(asRecord(tweet?.views), "count")),
+		likes: parseCount(legacy.favorite_count),
+		comments: parseCount(legacy.reply_count),
+		shares: parseCount(legacy.retweet_count),
+		collects: parseCount(legacy.bookmark_count),
+		...cover === void 0 ? {} : { coverUrl: cover },
+		extra
+	};
+}
+/**
+* Collect the account's own posts from a `UserTweets` answer. The timeline nests tweets in entries, pinned entries and
+* conversation modules whose layout X changes from time to time, so every `tweet_results.result` is searched for.
+* @param json - response body.
+* @param userId - the account's `rest_id`.
+* @param handle - the account's handle.
+* @returns the posts, and whether the answer held a bottom cursor (more to load).
+*/
+function parseXTimeline(json, userId, handle) {
+	const posts = /* @__PURE__ */ new Map();
+	let hasMore = false;
+	const visit = (value, depth) => {
+		if (depth > 24 || value === null || typeof value !== "object") return;
+		if (Array.isArray(value)) {
+			for (const item of value) visit(item, depth + 1);
+			return;
+		}
+		const record = value;
+		if (record.cursorType === "Bottom") hasMore = true;
+		const results = asRecord(record.tweet_results)?.result;
+		if (results !== void 0) {
+			const post = parseXTweet(results, userId, handle);
+			if (post !== void 0) posts.set(post.postId, post);
+		}
+		for (const [key, item] of Object.entries(record)) if (key !== "tweet_results") visit(item, depth + 1);
+	};
+	visit(json, 0);
+	return {
+		posts: [...posts.values()],
+		hasMore
+	};
+}
+async function detectLogin(page) {
+	if (await hasCookie(page, HOME, SESSION_COOKIES)) return "logged-in";
+	const url = page.url();
+	return url.startsWith(HOME) || url.startsWith("https://twitter.com/") ? "logged-out" : "unknown";
+}
+function loginRequired() {
+	return new MediaScrapeError("login-required", "X 未登录或登录已过期，请在内嵌浏览器中重新登录后重试。");
+}
+const GRAPHQL = /\/i\/api\/graphql\/[^/]+\/(UserByScreenName|UserTweets)\b/;
+async function scrape(page, account, limits) {
+	const handle = xHandleOf(account.profileUrl);
+	if (handle === void 0) throw new MediaScrapeError("invalid-profile", "X 主页链接应形如 https://x.com/<用户名>。");
+	if (!await hasCookie(page, HOME, SESSION_COOKIES)) throw loginRequired();
+	let user;
+	const answers = [];
+	let pending = 0;
+	const onResponse = (response) => {
+		const name = GRAPHQL.exec(response.url())?.[1];
+		if (name === void 0) return;
+		pending++;
+		response.json().then((json) => {
+			if (name === "UserByScreenName") {
+				const found = parseXUser(json);
+				if (found !== void 0 && found.handle.toLowerCase() === handle.toLowerCase()) user = found;
+			} else answers.push(json);
+		}).catch(() => {}).finally(() => {
+			pending--;
+		});
+	};
+	const posts = /* @__PURE__ */ new Map();
+	const read = () => {
+		if (user === void 0) return true;
+		let more = false;
+		for (const json of answers.splice(0)) {
+			const timeline = parseXTimeline(json, user.id, user.handle);
+			for (const post of timeline.posts) posts.set(post.postId, post);
+			more = more || timeline.hasMore;
+		}
+		return more;
+	};
+	page.on("response", onResponse);
+	try {
+		await gotoPage(page, `https://x.com/${handle}`, limits.signal);
+		for (let waited = 0; waited < 20 && (user === void 0 || answers.length === 0); waited++) await sleep(1e3, limits.signal);
+		if (!await hasCookie(page, HOME, SESSION_COOKIES) || new URL(page.url()).pathname.startsWith("/i/flow/login")) throw loginRequired();
+		read();
+		for (let round = 0; round < 12 && posts.size < limits.maxPosts; round++) {
+			const before = posts.size;
+			await page.mouse.wheel(0, 6e3);
+			await sleep(2e3, limits.signal);
+			read();
+			if (posts.size === before && pending === 0) break;
+		}
+	} finally {
+		page.off("response", onResponse);
+	}
+	if (user === void 0) throw new MediaScrapeError("scrape-failed", `没有在 X 主页 @${handle} 上读到粉丝等数据，页面可能要求验证或结构已变化；可在内嵌浏览器中打开 X 查看。`);
+	const sorted = [...posts.values()].sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""));
+	return {
+		snapshot: user.snapshot,
+		posts: sorted.slice(0, limits.maxPosts),
+		avatarUrl: user.avatarUrl
+	};
+}
+/** The handle in the side bar's profile link, the account switcher's name and avatar. */
+const SELF_SCRIPT = `(() => {
+  const link = document.querySelector('a[data-testid="AppTabBar_Profile_Link"]')
+  const switcher = document.querySelector('[data-testid="SideNav_AccountSwitcher_Button"]')
+  const avatar = switcher ? switcher.querySelector('img[src^="https://"]') : null
+  const name = switcher ? [...switcher.querySelectorAll('span')].map(span => span.textContent.trim()).find(text => text && !text.startsWith('@')) : ''
+  return { href: link ? link.getAttribute('href') : '', name: name || '', avatar: avatar ? avatar.getAttribute('src') : '' }
+})()`;
+/**
+* Read the logged-in account from the side bar of x.com.
+* @param capture - what `SELF_SCRIPT` returned.
+* @returns name, profile URL and avatar, or undefined when the side bar shows no profile link.
+*/
+function parseXSelf(capture) {
+	const record = asRecord(capture);
+	const handle = xHandleOf(`https://x.com${stringField(record, "href") ?? ""}`);
+	if (handle === void 0) return void 0;
+	const avatar = stringField(record, "avatar");
+	return {
+		name: stringField(record, "name") ?? `@${handle}`,
+		profileUrl: `https://x.com/${handle}`,
+		avatarUrl: avatar?.startsWith("https://") === true ? avatar.replace(/_normal(\.\w+)$/, "_200x200$1") : void 0
+	};
+}
+async function identify(page, signal) {
+	if (!await hasCookie(page, HOME, SESSION_COOKIES)) return void 0;
+	await gotoPage(page, "https://x.com/home", signal);
+	for (let waited = 0; waited < 20; waited++) {
+		const self = parseXSelf(await evaluateScript(page, SELF_SCRIPT));
+		if (self !== void 0) return self;
+		await sleep(1e3, signal);
+	}
+}
+/** Built-in X adapter. */
+const xAdapter = {
+	descriptor: {
+		id: "x",
+		displayName: "X",
+		loginUrl: "https://x.com/i/flow/login",
+		scrape: true,
+		import: false,
+		importHint: "",
+		profileUrlExample: "https://x.com/<用户名>",
+		metrics: {
+			views: "查看",
+			likes: "喜欢",
+			comments: "回复",
+			shares: "转帖",
+			collects: "书签"
+		},
+		noun: "帖子",
+		color: "#71767B",
+		beta: true,
+		loginHint: "在窗口里输入 X 的用户名和密码登录",
+		totals: {
+			posts: "帖子数",
+			following: "正在关注"
+		}
+	},
+	importProfile: {
+		defaultFormat: "other",
+		columns: []
+	},
+	scrapableRoles: ["own"],
+	detectLogin,
+	scrape,
 	identify
 };
 //#endregion
@@ -43349,6 +44473,7 @@ function renderDashboard(dashboard) {
 		...dashboard.works.map((kpi) => kpiLines([kpi])[0] + daily(kpi)),
 		"## 粉丝数据",
 		...dashboard.fans.map((kpi) => kpiLines([kpi])[0] + daily(kpi)),
+		...dashboard.totals.length === 0 ? [] : ["## 账号总数", ...dashboard.totals.map((kpi) => kpiLines([kpi])[0] + daily(kpi))],
 		"## 近 30 天发布、数据最好的作品",
 		...dashboard.top.map((item, index) => `${index + 1}. 《${item.post.title}》 ${item.label} ${figure(item.value)}（id ${item.post.postId}）`),
 		dashboard.top.length === 0 ? "暂无" : ""
@@ -44510,7 +45635,11 @@ let MediaSuite = (() => {
 				douyinAdapter,
 				xiaohongshuAdapter,
 				wechatMpAdapter,
-				wechatChannelsAdapter
+				wechatChannelsAdapter,
+				woshipmAdapter,
+				sspaiAdapter,
+				uisdcAdapter,
+				xAdapter
 			]) this.registerAdapter(adapter);
 			this.ctx.inject(["tools"], (child) => {
 				registerMediaTools(child, this);
@@ -44915,7 +46044,11 @@ let MediaSuite = (() => {
 					platform: this.descriptorOf(account.platform),
 					health: this.healthOf(account, now),
 					followers: latestKnown(this.store.recentSnapshots(account.id, LATEST_KNOWN_SNAPSHOTS))?.followers,
-					kpis: [...sections.works, ...sections.fans],
+					kpis: [
+						...sections.works,
+						...sections.fans,
+						...sections.totals
+					],
 					from: sections.from,
 					to: sections.to
 				};

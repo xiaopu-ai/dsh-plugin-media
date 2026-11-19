@@ -2,8 +2,8 @@
 import type { MediaAccount, MediaPlatformId } from './types.ts'
 
 /**
- * Normalize a profile URL for comparison: lower-case host, `rednote.com` read as `xiaohongshu.com`, no query,
- * fragment or trailing slash.
+ * Normalize a profile URL for comparison: lower-case host, `rednote.com` read as `xiaohongshu.com`, `twitter.com` as
+ * `x.com` (whose handles ignore case), no query, fragment or trailing slash.
  * @param url - profile URL as entered or identified.
  * @returns the comparable form, or an empty string for a blank URL.
  */
@@ -17,8 +17,10 @@ export function normalizeProfileUrl(url: string): string {
     // Not an absolute URL: compare the text itself.
     return trimmed.toLowerCase()
   }
-  const host = parsed.host.toLowerCase().replace(/(^|\.)rednote\.com$/, '$1xiaohongshu.com')
-  return `${parsed.protocol}//${host}${parsed.pathname.replace(/\/+$/, '')}`
+  const host = parsed.host.toLowerCase().replace(/(^|\.)rednote\.com$/, '$1xiaohongshu.com').replace(/^(?:www\.|mobile\.)?(?:twitter|x)\.com$/, 'x.com')
+  const path = parsed.pathname.replace(/\/+$/, '')
+  // X handles ignore case: @Name and @name are one account.
+  return `${parsed.protocol}//${host}${host === 'x.com' ? path.toLowerCase() : path}`
 }
 
 /** What an identity or draft knows about the account it refers to. */

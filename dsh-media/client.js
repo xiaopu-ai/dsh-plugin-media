@@ -106,9 +106,14 @@ window.__ModuleLoader__.load({
   --$-p-xiaohongshu:#FF2442;
   --$-p-wechat-mp:#07C160;
   --$-p-wechat-channels:#FA9D3B;
+  --$-p-woshipm:#2F6BFF;
+  --$-p-sspai:#D71A1B;
+  --$-p-uisdc:#FF6A00;
+  --$-p-x:#71767B;
   --$-p-other:var(--$-accent);
   --$-on-p:#FFFFFF;
   --$-logo-douyin:#161823;   /* 抖音 logo 的底（App 图标是黑底） */
+  --$-logo-x:#000000;        /* X 的 logo 是黑底白字；它的识别色用灰，夜间模式的图表里也看得见 */
   /* 看板（第 3V 段）：照抖音创作者中心「数据中心」实测的值。字、底色、按钮、分段、指标色都在这里改 */
   --$-dy-font:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",sans-serif;
   --$-dy-font-num:"Douyin Sans","DIN Alternate","DIN Pro","Barlow",-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;
@@ -1764,7 +1769,7 @@ select.$-input{cursor:pointer}
     const IDENTIFY_FALLBACK_MS = 25_000;
     const NO_IDENTITY = { status: 'none' };
     const HIDDEN = {
-        mode: 'browse', minimized: false, platformName: undefined, status: 'hidden', platform: undefined, view: undefined,
+        mode: 'browse', minimized: false, platformName: undefined, loginWay: {}, status: 'hidden', platform: undefined, view: undefined,
         picture: undefined, qr: undefined, login: 'unknown', reason: undefined, identity: NO_IDENTITY,
     };
     // ---- 登录小浏览器的状态：画面、网址、认出的账号
@@ -1886,7 +1891,7 @@ select.$-input{cursor:pointer}
             lastAccount = account;
             const connecting = mode === 'connect';
             cancelFallback();
-            cell.set({ ...HIDDEN, mode, status: 'opening', platform, platformName: deps.platformName(platform) ?? platform, startedAt: Date.now() });
+            cell.set({ ...HIDDEN, mode, status: 'opening', platform, platformName: deps.platformName(platform) ?? platform, loginWay: deps.loginWay?.(platform) ?? {}, startedAt: Date.now() });
             outbox.length = 0;
             held = false;
             const [opened, login] = await Promise.all([
@@ -2135,7 +2140,7 @@ select.$-input{cursor:pointer}
     // 过了这么多秒还没出二维码，就说明是网慢，不是卡住了。
     const SLOW_STAGE_SECONDS = 8
 
-    function ConnectBar({ identity, qr, platformName, stage, startedAt, loading, onIdentify, onConnect }) {
+    function ConnectBar({ identity, qr, platformName, way = {}, stage, startedAt, loading, onIdentify, onConnect }) {
       // 新开的登录页要先启动浏览器、再加载网页，网慢时要二三十秒；二维码出来之前每秒告诉用户到哪一步、过了几秒，
       // 页面一直在动，不会像卡住。二维码出现过、或网页已经加载完（比如改用密码登录），就不再计时，只留扫码提示。
       const [now, setNow] = useState(() => Date.now())
@@ -2150,7 +2155,7 @@ select.$-input{cursor:pointer}
       const seconds = Math.max(0, Math.floor((now - (startedAt ?? now)) / 1000))
       const platform = platformName ?? ''
       const body = {
-        none: () => !waiting ? h('span', null, t('connect.hint')) : h(Working, null,
+        none: () => !waiting ? h('span', null, way.hint ?? (way.app ? t('connect.hintApp', { app: way.app }) : t('connect.hint'))) : h(Working, null,
           t(`connect.stage.${stage}`, { platform }), h('span', { className: cls('bw-secs'), 'aria-hidden': true }, t('connect.seconds', { s: seconds })),
           seconds >= SLOW_STAGE_SECONDS ? h('span', { className: cls('bw-slow') }, t('connect.slow', { platform })) : null),
         identifying: () => h(Working, null, t('connect.identifying')),
@@ -2250,7 +2255,7 @@ select.$-input{cursor:pointer}
           h(LoginTag, { state: browser.login }),
           h(Btn, { kind: 'ghost', sm: true, icon: 'shrink', label: t('browser.minimize'), onClick: onMinimize }),
           h(Btn, { kind: 'ghost', sm: true, icon: 'x', label: t('browser.close'), onClick: onClose })),
-        browser.mode === 'connect' ? h(ConnectBar, { key: browser.view?.id, identity: browser.identity, qr: browser.qr !== undefined, platformName: browser.platformName, stage: loadingStage(browser), startedAt: browser.startedAt, loading: browser.picture?.loading !== false, onIdentify, onConnect }) : null,
+        browser.mode === 'connect' ? h(ConnectBar, { key: browser.view?.id, identity: browser.identity, qr: browser.qr !== undefined, platformName: browser.platformName, way: browser.loginWay, stage: loadingStage(browser), startedAt: browser.startedAt, loading: browser.picture?.loading !== false, onIdentify, onConnect }) : null,
         h('div', { ref: stageRef, className: cls('bw-stage') },
           // 网页还在加载时顶上一条细进度条（和普通浏览器一样）。
           browser.status === 'opening' || picture?.loading ? h('span', { className: cls('bw-progress'), role: 'progressbar', 'aria-label': t('browser.loading') }) : null,
@@ -2335,7 +2340,7 @@ select.$-input{cursor:pointer}
         qr !== undefined && !showPage
           ? h('div', { className: cls('mini-qr') },
             h('img', { src: `data:image/png;base64,${qr.data}`, alt: t('mini.qrAlt', { platform: browser.platformName }), style: { '--qr-aspect': `${qr.width} / ${qr.height}` }, draggable: false }),
-            h('span', { className: cls('faint') }, t('mini.qrCaption', { platform: browser.platformName })))
+            h('span', { className: cls('faint') }, t('mini.qrCaption', { platform: browser.loginWay?.app ?? browser.platformName })))
           : h('button', { type: 'button', className: cls('mini-frame'), 'aria-label': t('browser.expand'), onClick: expand },
             picture === undefined ? h(Spin) : h('img', { src: `data:image/jpeg;base64,${picture.data}`, alt: '', draggable: false })),
         qr !== undefined ? h('div', { className: cls('mini-status') }, h(LinkBtn, { onClick: () => setShowPage(v => !v) }, t(showPage ? 'mini.qrOnly' : 'mini.fullPage'))) : null,
@@ -2637,7 +2642,16 @@ select.$-input{cursor:pointer}
         return h('svg', { viewBox: '0 0 24 24', style: box, 'aria-hidden': true }, tile(`var(--${P}-p-wechat-channels)`),
           h('path', { d: 'M4.6 12c0-2.6 1.5-4.4 3.3-3.2L12 12l4.1-3.2c1.8-1.2 3.3.6 3.3 3.2s-1.5 4.4-3.3 3.2L12 12l-4.1 3.2c-1.8 1.2-3.3-.6-3.3-3.2Z', fill: 'none', stroke: '#fff', strokeWidth: 1.9, strokeLinejoin: 'round' }))
       }
-      // 以后接入的平台（少数派、X……）没有画好的 logo：用它自己的品牌色做底，写平台名的第一个字。
+      const word = (fill, text, fontSize, y = 15.2) => h('svg', { viewBox: '0 0 24 24', style: box, 'aria-hidden': true }, tile(fill),
+        h('text', { x: 12, y, textAnchor: 'middle', fontSize, fontWeight: 800, fill: '#fff', fontFamily: 'PingFang SC,sans-serif', letterSpacing: '-0.3' }, text))
+      if (id === 'woshipm') return word(`var(--${P}-p-woshipm)`, '人人', 8.6)
+      if (id === 'uisdc') return word(`var(--${P}-p-uisdc)`, '优设', 8.6)
+      if (id === 'sspai') return word(`var(--${P}-p-sspai)`, 'π', 15, 16.6)
+      if (id === 'x') {
+        return h('svg', { viewBox: '0 0 24 24', style: box, 'aria-hidden': true }, tile(`var(--${P}-logo-x)`),
+          h('path', { d: 'M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z', fill: '#fff', transform: 'translate(5.6 5.6) scale(0.533)' }))
+      }
+      // 以后接入的平台没有画好的 logo：用它自己的品牌色做底，写平台名的第一个字。
       return h('svg', { viewBox: '0 0 24 24', style: box, 'aria-hidden': true }, tile(platform?.color ?? `var(--${P}-p-other)`),
         h('text', { x: 12, y: 16, textAnchor: 'middle', fontSize: 11, fontWeight: 700, fill: '#fff' }, String(platform?.displayName ?? id ?? '?').slice(0, 1)))
     }
@@ -2728,7 +2742,8 @@ select.$-input{cursor:pointer}
           ticks.map(v => h('g', { key: v },
             h('line', { x1: pad.l, x2: W - pad.r, y1: y(v), y2: y(v), className: cls('dy-grid') }),
             h('text', { x: pad.l - 10, y: y(v) + 4, textAnchor: 'end', className: cls('dy-axis') }, dyValue(v, unit === 'seconds' ? 'count' : unit)))),
-          points.map((p, i) => i % every === 0 || i === points.length - 1
+          // 每隔几天标一个日期，最后一天总标；离最后一天太近的那个就不标，免得两个日期挤在一起。
+          points.map((p, i) => (i % every === 0 && points.length - 1 - i >= Math.ceil(every / 2)) || i === points.length - 1
             ? h('text', { key: p.day, x: x(i), y: H - 8, textAnchor: 'middle', className: cls('dy-axis') }, dotDay(p.day)) : null),
           points.length > 1 ? h('path', { d: area, fill: `url(#${gradient})` }) : null,
           points.length > 1 ? h('path', { d: line, fill: 'none', stroke, strokeWidth: 2, strokeLinejoin: 'round', strokeLinecap: 'round' }) : null,
@@ -2890,10 +2905,17 @@ select.$-input{cursor:pointer}
           }))),
         h('button', { type: 'button', className: cls('dy-nav-plus'), onClick: onAddPlatform }, h(Icon, { name: 'plus', size: 16 }), t('v2.nav.addPlatform')),
         h('div', { className: cls('dy-nav-foot') },
-          demo ? h('p', null, t('v2.demo.note'), ' ', h('button', { type: 'button', className: cls('dy-link'), onClick: face.clearDemo }, t('v2.demo.clear'))) : null))
+          demo ? h('p', null, t('v2.demo.note'), ' ', h('button', { type: 'button', className: cls('dy-link'), onClick: face.clearDemo }, t('v2.demo.clear')))
+            : DEV ? h('p', null, h('button', { type: 'button', className: cls('dy-link'), onClick: face.loadDemo }, t('v2.demo.load'))) : null))
     }
 
     // ---- 3V.4 第一次打开：还没有账号时，整个中间只让用户添加账号；加了第一个以后才出现看板
+
+    /** 选平台时每个平台下面那行小字：怎么登录。 */
+    function addHint(platform) {
+      if (platform.loginHint) return t('v2.add.login')
+      return platform.scanApp ? t('v2.add.scanApp', { app: platform.scanApp }) : t('v2.add.scan')
+    }
 
     function FirstRun({ platforms, onPick }) {
       const usable = platforms.filter(platform => platform.scrape)
@@ -2904,7 +2926,7 @@ select.$-input{cursor:pointer}
         h('div', { className: cls('dy-pick') }, usable.map(platform => h('button', { key: platform.id, type: 'button', className: cls('dy-pick-item'), onClick: () => onPick(platform) },
           h(PlatformLogo, { platform, size: 36 }),
           h('span', { className: cls('dy-pick-name') }, platform.displayName, platform.beta ? h('span', { className: cls('dy-beta') }, t('v2.beta')) : null),
-          h('span', { className: cls('dy-pick-sub') }, t('v2.add.scan'))))),
+          h('span', { className: cls('dy-pick-sub') }, addHint(platform))))),
         h('p', { className: cls('dy-first-note') }, t('v2.first.note')),
         DEV ? h('button', { type: 'button', className: cls('dy-link'), onClick: face.loadDemo }, t('v2.demo.load')) : null)
     }
@@ -3657,9 +3679,9 @@ select.$-input{cursor:pointer}
       return h('div', { className: cls('dy-alert', `dy-alert-${tone}`), role: tone === 'danger' ? 'alert' : 'status' },
         h(Icon, { name: health.state === 'pending' ? 'clock' : 'warn', size: 16 }),
         h('span', { className: cls('grow') }, t(`v2.health.${health.state}.long`), health.message ? `（${health.message}）` : '',
-          health.state === 'login-required' ? ` ${t('v2.health.loginHint', { platform: platform?.displayName ?? '' })}` : ''),
+          health.state === 'login-required' ? ` ${platform?.loginHint ? t('v2.health.loginHintForm') : t('v2.health.loginHint', { platform: platform?.scanApp ?? platform?.displayName ?? '' })}` : ''),
         health.state === 'login-required'
-          ? h(DyBtn, { kind: 'primary', onClick: onLogin }, t('v2.fix.login-required'))
+          ? h(DyBtn, { kind: 'primary', onClick: onLogin }, t(platform?.loginHint ? 'v2.fix.relogin' : 'v2.fix.login-required'))
           : h(DyBtn, { busy, onClick: onRefresh }, t(`v2.fix.${health.state}`)))
     }
 
@@ -3715,13 +3737,13 @@ select.$-input{cursor:pointer}
     const rangeOptions = () => RANGES.map(days => ({ value: days, label: days === 1 ? t('v2.range.yesterday') : t('v2.range.days', { days }) }))
 
     /** 作品数据、粉丝数据：右上角时间范围、日期、导出；中间一排指标卡；下面是选中那项的走势。 */
-    function SeriesBoard({ title, tip, account, days, onDays, dash, pick, prefer, exportName, after }) {
+    function SeriesBoard({ title, tip, note, account, days, onDays, dash, pick, prefer, exportName, after }) {
       const kpis = dash === undefined ? [] : pick(dash)
       const [selected, setSelected] = useState(undefined)
       const current = kpis.find(kpi => kpi.key === selected) ?? kpis.find(kpi => kpi.key === prefer) ?? kpis[0]
       if (dash !== undefined && kpis.length === 0) return null
       return h(DyCard, {
-        title, tip, note: t('v2.board.daily'),
+        title, tip, note: note ?? t('v2.board.daily'),
         tools: [
           h(DySeg, { key: 'range', value: days, onChange: onDays, label: t('v2.range.label'), options: rangeOptions() }),
           dash ? h('span', { key: 'date', className: cls('dy-date') }, h(Icon, { name: 'calendar', size: 14 }), rangeText(dash.from, dash.to)) : null,
@@ -3730,7 +3752,7 @@ select.$-input{cursor:pointer}
       },
       dash === undefined ? h(Waiting) : h(Fragment, null,
         h(MetricCards, { kpis, value: current?.key, onChange: setSelected }),
-        current ? h(DyLine, { key: current.key, points: current.daily, unit: current.unit, label: current.label, color: kpis.indexOf(current), zero: current.key !== 'followers' }) : null,
+        current ? h(DyLine, { key: current.key, points: current.daily, unit: current.unit, label: current.label, color: kpis.indexOf(current), zero: current.key !== 'followers' && !current.key.startsWith('total:') }) : null,
         after))
     }
 
@@ -3764,6 +3786,8 @@ select.$-input{cursor:pointer}
       const week = useDashboard(account.id, 7, store.version)
       const works = useDashboard(account.id, worksDays, store.version)
       const fans = useDashboard(account.id, fansDays, store.version)
+      const [totalsDays, setTotalsDays] = useState(30)
+      const totals = useDashboard(account.id, totalsDays, store.version)
       const dash = week.data
       const platform = store.platforms.find(item => item.id === account.platform)
       const health = healthOf(store.summary, account.id) ?? dash?.health
@@ -3781,6 +3805,8 @@ select.$-input{cursor:pointer}
         dash === undefined ? (week.reason ? null : h(Waiting)) : h(Fragment, null,
           dash.headline.length < 3 && health?.state === 'ok' ? h('div', { className: cls('dy-alert', 'dy-alert-muted') }, h(Icon, { name: 'info', size: 16 }), h('span', { className: cls('grow') }, t('v2.board.limited', { platform: platform?.displayName ?? '' }))) : null,
           h(OverviewBoard, { dash, onOpenPost }),
+          // 不给每天数据的平台（人人都是产品经理、少数派、优设、X）：平台主页上的总数，每天记一次。
+          (dash.totals ?? []).length > 0 ? h(SeriesBoard, { title: t('v2.board.totals'), tip: t('v2.board.totalsTip'), note: t('v2.board.totalsNote'), account, days: totalsDays, onDays: setTotalsDays, dash: totals.data, pick: d => d.totals ?? [], prefer: (dash.totals[0] ?? {}).key, exportName: t('v2.board.totals') }) : null,
           h(SeriesBoard, { title: t('v2.board.works'), tip: t('v2.board.worksTip'), account, days: worksDays, onDays: setWorksDays, dash: works.data, pick: d => d.works, prefer: 'views', exportName: t('v2.board.works') }),
           h(SeriesBoard, { title: t('v2.board.fans'), tip: t('v2.board.fansTip'), account, days: fansDays, onDays: setFansDays, dash: fans.data, pick: d => d.fans, prefer: 'followers', exportName: t('v2.board.fans') }),
           h(PostsBoard, { dash, onOpenPost })))
@@ -3845,7 +3871,7 @@ select.$-input{cursor:pointer}
           return h('button', { key: platform.id, type: 'button', className: cls('dy-pick-item'), disabled: full, onClick: () => onPick(platform) },
             h(PlatformLogo, { platform, size: 36 }),
             h('span', { className: cls('dy-pick-name') }, platform.displayName, platform.beta ? h('span', { className: cls('dy-beta') }, t('v2.beta')) : null),
-            h('span', { className: cls('dy-pick-sub') }, full ? t('v2.add.full', { max: MAX_ACCOUNTS }) : count > 0 ? t('v2.add.count', { count, max: MAX_ACCOUNTS }) : t('v2.add.scan')))
+            h('span', { className: cls('dy-pick-sub') }, full ? t('v2.add.full', { max: MAX_ACCOUNTS }) : count > 0 ? t('v2.add.count', { count, max: MAX_ACCOUNTS }) : addHint(platform)))
         })))
     }
 
@@ -4403,6 +4429,7 @@ select.$-input{cursor:pointer}
         'add.manual': '手动添加',
         'empty.scan': '扫码添加账号',
         'connect.hint': '请用手机 App 扫码登录，登录后会自动识别账号',
+        'connect.hintApp': '请用{app}扫码登录，登录后会自动识别账号',
         'connect.identifying': '正在识别账号',
         'connect.identifyFailed': '无法识别账号：{reason}',
         'connect.retry': '重试识别',
@@ -4814,6 +4841,7 @@ select.$-input{cursor:pointer}
         'add.manual': 'Add manually',
         'empty.scan': 'Scan to add an account',
         'connect.hint': 'Scan with the phone app to log in; the account is recognized after login',
+        'connect.hintApp': 'Scan with {app} to log in; the account is recognized after login',
         'connect.identifying': 'Recognizing the account',
         'connect.identifyFailed': 'Could not recognize the account: {reason}',
         'connect.retry': 'Recognize again',
@@ -5139,7 +5167,7 @@ select.$-input{cursor:pointer}
         'v2.unit.seconds': '{value}秒',
         'v2.compare.short': '较上期',
         'v2.compare.flat': '持平',
-        'v2.health.login-required': '需要重新扫码',
+        'v2.health.login-required': '需要重新登录',
         'v2.health.failing': '更新失败',
         'v2.health.stale': '数据过期',
         'v2.health.pending': '等待更新',
@@ -5150,6 +5178,8 @@ select.$-input{cursor:pointer}
         'v2.health.pending.long': '还没读到数据，等第一次更新。',
         'v2.health.loginHint': '点「重新扫码」，用{platform} App 扫一下就好，扫完会自动更新。',
         'v2.fix.login-required': '重新扫码',
+        'v2.fix.relogin': '重新登录',
+        'v2.health.loginHintForm': '点「重新登录」，在弹出的窗口里登录一下，登录后会自动更新。',
         'v2.fix.failing': '再试一次',
         'v2.fix.stale': '立即更新',
         'v2.fix.pending': '立即更新',
@@ -5183,7 +5213,7 @@ select.$-input{cursor:pointer}
         'v2.demo.load': '载入演示数据（开发用）',
         'v2.demo.noRefresh': '演示账号的数据是预置的，不会去平台更新',
         'v2.first.title': '添加你的第一个账号',
-        'v2.first.body': '选一个平台，用手机 App 扫码登录。登录后会读取这个账号的作品和数据，看板就出现在这里，之后每隔几小时自动更新。',
+        'v2.first.body': '选一个平台，按提示登录（多数平台用手机 App 扫码）。登录后会读取这个账号的作品和数据，看板就出现在这里，之后每隔几小时自动更新。',
         'v2.first.note': '登录信息只存在这台电脑上。每个平台最多添加 3 个账号。',
         'v2.card.followers': '粉丝',
         'v2.card.net': '近7天 {value}',
@@ -5214,7 +5244,10 @@ select.$-input{cursor:pointer}
         'v2.board.allPosts': '查看所有作品',
         'v2.board.noTop': '近 30 天还没有发布作品',
         'v2.board.noTopCounts': '近 30 天的作品还没有读到单条数据',
-        'v2.board.limited': '{platform}目前只读得到公开主页上的作品和互动数。播放、粉丝变化这些要接创作者后台，接好以前这些模块不显示。',
+        'v2.board.limited': '{platform}不提供每天的数据：插件每天读一次平台上显示的总数和每篇的数，走势从开始记录那天算起。',
+        'v2.board.totals': '账号总数',
+        'v2.board.totalsNote': '每天记一次平台上显示的总数',
+        'v2.board.totalsTip': '平台主页上显示的总数，插件每天记一次，所以走势从开始记录那天算起。',
         'v2.board.works': '作品数据',
         'v2.board.worksTip': '平台每天报告的作品数据，包含历史作品在这段时间里新增的播放、点赞等。',
         'v2.board.fans': '粉丝数据',
@@ -5240,10 +5273,12 @@ select.$-input{cursor:pointer}
         'v2.work.median': '往期中位数 {value}',
         'v2.work.more': '流量来源、观众画像、评论热词要读平台创作者后台，还没接入。',
         'v2.add.title': '添加平台',
-        'v2.add.body': '选一个平台，会打开它的登录页，用手机 App 扫码就行。每个平台最多 3 个账号。',
+        'v2.add.body': '选一个平台，会打开它的登录页，按提示登录就行（多数平台用手机 App 扫码）。每个平台最多 3 个账号。',
         'v2.add.full': '已满 {max} 个',
         'v2.add.count': '已添加 {count}/{max}',
         'v2.add.scan': '扫码添加',
+        'v2.add.scanApp': '{app}扫码添加',
+        'v2.add.login': '登录添加',
         'v2.help.title': '数据指标说明',
         'v2.help.when': '数据更新时间',
         'v2.help.whenBody': '平台每天中午前后给出前一天的数据。插件按设定的间隔（默认 6 小时）去平台读一次，所以「近 7 天」都算到昨天为止。账号页右上角的「立即更新」可以马上读一次。',
@@ -5374,7 +5409,7 @@ select.$-input{cursor:pointer}
         'v2.unit.seconds': '{value}s',
         'v2.compare.short': 'vs prior',
         'v2.compare.flat': 'flat',
-        'v2.health.login-required': 'Scan again',
+        'v2.health.login-required': 'Log in again',
         'v2.health.failing': 'Update failed',
         'v2.health.stale': 'Out of date',
         'v2.health.pending': 'Waiting',
@@ -5385,6 +5420,8 @@ select.$-input{cursor:pointer}
         'v2.health.pending.long': 'Nothing fetched yet; waiting for the first update.',
         'v2.health.loginHint': 'Click "Scan again" and scan with the {platform} app; it updates right after.',
         'v2.fix.login-required': 'Scan again',
+        'v2.fix.relogin': 'Log in again',
+        'v2.health.loginHintForm': 'Click "Log in again" and sign in in the window; it updates right after.',
         'v2.fix.failing': 'Try again',
         'v2.fix.stale': 'Update now',
         'v2.fix.pending': 'Update now',
@@ -5418,7 +5455,7 @@ select.$-input{cursor:pointer}
         'v2.demo.load': 'Load sample data (development)',
         'v2.demo.noRefresh': 'Sample accounts are never fetched',
         'v2.first.title': 'Add your first account',
-        'v2.first.body': 'Pick a platform and log in by scanning with its phone app. The account\'s posts and numbers are read, the dashboard appears here, and it updates every few hours.',
+        'v2.first.body': 'Pick a platform and log in as it asks (most scan with a phone app). The account\'s posts and numbers are read, the dashboard appears here, and it updates every few hours.',
         'v2.first.note': 'Logins are stored on this computer only. Up to 3 accounts per platform.',
         'v2.card.followers': 'Followers',
         'v2.card.net': '7 days {value}',
@@ -5449,7 +5486,10 @@ select.$-input{cursor:pointer}
         'v2.board.allPosts': 'All posts',
         'v2.board.noTop': 'Nothing published in the last 30 days',
         'v2.board.noTopCounts': 'No per-post numbers for the last 30 days yet',
-        'v2.board.limited': '{platform} only shows public posts and their engagement for now. Views and follower changes need the creator backend; those modules stay hidden until it is connected.',
+        'v2.board.limited': '{platform} reports no daily numbers: the plugin reads the totals and each post\'s counters once a day, so trends start the day recording began.',
+        'v2.board.totals': 'Account totals',
+        'v2.board.totalsNote': 'The platform\'s totals, recorded daily',
+        'v2.board.totalsTip': 'Totals shown on the platform, recorded once a day, so trends start the day recording began.',
         'v2.board.works': 'Posts',
         'v2.board.worksTip': 'Daily numbers reported by the platform, including new views and likes on older posts.',
         'v2.board.fans': 'Followers',
@@ -5475,10 +5515,12 @@ select.$-input{cursor:pointer}
         'v2.work.median': 'Usual (median) {value}',
         'v2.work.more': 'Traffic sources, audience and comment keywords need the platform\'s creator backend and are not connected yet.',
         'v2.add.title': 'Add a platform',
-        'v2.add.body': 'Pick a platform to open its login page, then scan with the phone app. Up to 3 accounts per platform.',
+        'v2.add.body': 'Pick a platform to open its login page, then log in as it asks (most scan with a phone app). Up to 3 accounts per platform.',
         'v2.add.full': '{max} accounts, full',
         'v2.add.count': '{count}/{max} added',
         'v2.add.scan': 'Scan to add',
+        'v2.add.scanApp': 'Scan with {app}',
+        'v2.add.login': 'Log in to add',
         'v2.help.title': 'About the numbers',
         'v2.help.when': 'When numbers update',
         'v2.help.whenBody': 'Platforms publish each day\'s numbers around noon the next day. The plugin reads them on a schedule (every 6 hours by default), so "last 7 days" ends yesterday. "Update now" on an account reads right away.',
@@ -5552,10 +5594,15 @@ select.$-input{cursor:pointer}
         const showPanel = () => ctx.layout.selectPanel(ID)
         const store = createMediaStore({ remote, report })
         const platformName = platform => store.get().platforms.find(item => item.id === platform)?.displayName
+        // 登录方式：哪个 App 扫码（人人都是产品经理用微信），或者没有二维码时怎么登录（X 输账号密码）。
+        const loginWay = platform => {
+          const found = store.get().platforms.find(item => item.id === platform)
+          return { app: found?.scanApp, hint: found?.loginHint }
+        }
         // 「重新扫码」是带着账号打开小浏览器的；登录上以后马上更新这个账号，左边的红点就消了。
         let relogin
         const browser = createBrowserSource({
-          remote, identifyFallbackMs: IDENTIFY_FALLBACK_MS, platformName,
+          remote, identifyFallbackMs: IDENTIFY_FALLBACK_MS, platformName, loginWay,
           onLoggedIn: platform => {
             report(t('notice.loggedIn', { platform: platformName(platform) ?? platform }))
             const account = relogin

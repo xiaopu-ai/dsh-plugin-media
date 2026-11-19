@@ -43,6 +43,10 @@ import { buildOverview, latestKnown } from './overview.ts'
 import { accountHealth, buildDashboard, buildPostDetail, dashboardSince } from './dashboard.ts'
 import { buildBriefPrompt, findSyncedWorks, networkTotals, parseBriefLines, requireBriefItems } from './network.ts'
 import { wechatChannelsAdapter } from './adapters/wechat-channels.ts'
+import { sspaiAdapter } from './adapters/sspai.ts'
+import { uisdcAdapter } from './adapters/uisdc.ts'
+import { woshipmAdapter } from './adapters/woshipm.ts'
+import { xAdapter } from './adapters/x.ts'
 import { MediaStore } from './store.ts'
 import { researchKeywords, suggestionQuery, topRelated, type MediaRecency } from './research.ts'
 import { StudioGateway, type GatewayLlm, type GatewayModel, type GatewayWeb } from './gateway.ts'
@@ -338,7 +342,7 @@ export class MediaSuite extends TypertRemoteService {
   }
 
   protected [Service.init](): void {
-    for (const adapter of [douyinAdapter, xiaohongshuAdapter, wechatMpAdapter, wechatChannelsAdapter]) this.registerAdapter(adapter)
+    for (const adapter of [douyinAdapter, xiaohongshuAdapter, wechatMpAdapter, wechatChannelsAdapter, woshipmAdapter, sspaiAdapter, uisdcAdapter, xAdapter]) this.registerAdapter(adapter)
     this.ctx.inject(['tools'], (child) => {
       registerMediaTools(child, this)
       // The workbench's assistant runs on the client's default model through the gateway ('dsh' in the workbench).
@@ -751,7 +755,8 @@ export class MediaSuite extends TypertRemoteService {
       return {
         account, platform: this.descriptorOf(account.platform), health: this.healthOf(account, now),
         followers: latestKnown(this.store.recentSnapshots(account.id, LATEST_KNOWN_SNAPSHOTS))?.followers,
-        kpis: [...sections.works, ...sections.fans], from: sections.from, to: sections.to,
+        // The account totals (平台主页上的总数) go to the brief too; the 全网 sums only take the shared keys.
+        kpis: [...sections.works, ...sections.fans, ...sections.totals], from: sections.from, to: sections.to,
       }
     }
     const accounts = own.map(account => entry(account, span))

@@ -353,6 +353,8 @@ export const wechatChannelsAdapter: MediaPlatformAdapter = {
     noun: '视频',
     color: '#FA9D3B',
     beta: true,
+    // Both log in through WeChat: there is no 视频号 or 公众号 App to scan with.
+    scanApp: '微信',
   },
   importProfile: {
     defaultFormat: 'video',

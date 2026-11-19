@@ -365,6 +365,23 @@ async function defaultAgent(context: BrowserContext): Promise<string | undefined
 }
 
 /** Viewport position of a child frame's element in the page, or undefined when it is detached or not rendered. */
+/** Longest wait for one child frame during a QR or login poll: a frame still loading has no script context yet and would hold the poll. */
+const FRAME_EVAL_MS = 1500
+
+/**
+ * Evaluate a script in a child frame, giving up after {@link FRAME_EVAL_MS}.
+ * @returns the value, or undefined when the frame failed or did not answer in time.
+ */
+async function evaluateFrame(frame: Frame, script: string): Promise<unknown> {
+  let timer: NodeJS.Timeout | undefined
+  const late = new Promise<undefined>(resolve => { timer = setTimeout(() => resolve(undefined), FRAME_EVAL_MS) })
+  try {
+    return await Promise.race([frame.evaluate(script).catch(() => undefined), late])
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 async function frameOrigin(frame: Frame): Promise<{ x: number; y: number } | undefined> {
   const element = await frame.frameElement().catch(() => undefined)
   if (element === undefined) return undefined
@@ -380,6 +397,9 @@ async function frameOrigin(frame: Frame): Promise<{ x: number; y: number } | und
 
 /** Shortest gap between two clicks on an expired QR code's refresh control. */
 const QR_REFRESH_GAP_MS = 5000
+/** Shortest gap between two clicks on a site's own 登录 control, and how many a view makes at most. */
+const OPEN_LOGIN_GAP_MS = 6000
+const OPEN_LOGIN_TRIES = 5
 /** How often a view looks for its QR code until the first one shows. */
 const FIRST_QR_POLL_MS = 300
 /** File in the profiles directory remembering the user agent of the installed Chrome, so a launch needs no second start. */
@@ -411,6 +431,9 @@ interface ViewState {
   qrBusy: boolean
   /** When the view last clicked the page's refresh control of an expired QR code, in epoch milliseconds. */
   qrRefreshedAt: number
+  /** When the view last clicked the site's own 登录 control, and how many times it did. */
+  loginOpenedAt: number
+  loginOpens: number
   /** When the current run of logged-in readings began, in epoch milliseconds; undefined while not logged in. */
   loggedInSince: number | undefined
 }
@@ -664,7 +687,7 @@ export class BrowserManager {
       const view: ViewState = {
         id: brandString<MediaBrowserId>(`browser-${randomUUID()}`), platform, profile, page, cdp, subscribers: new Set(),
         pointer: { x: 0, y: 0, pressed: undefined }, inputs: new InputQueue(), loading: true,
-        qr: new QrTracker(), qrTimer: undefined, qrBusy: false, qrRefreshedAt: 0, loggedInSince: undefined,
+        qr: new QrTracker(), qrTimer: undefined, qrBusy: false, qrRefreshedAt: 0, loginOpenedAt: 0, loginOpens: 0, loggedInSince: undefined,
         lastFrame: undefined, title: '', login: 'unknown', closed: false, poll: undefined, detachTimer: undefined,
       }
       this.views.set(view.id, view)
@@ -745,6 +768,7 @@ export class BrowserManager {
     try {
       const adapter = this.options.adapter(view.platform)
       if (view.login !== 'logged-in' && adapter?.qrExpired !== undefined && await this.refreshExpiredQr(view, adapter.qrExpired)) return
+      if (view.login !== 'logged-in' && view.qr.key === undefined && adapter?.openLogin !== undefined && await this.openLoginDialog(view, adapter.openLogin)) return
       const selectors = adapter?.qrSelectors ?? []
       const poll: QrPoll = view.login === 'logged-in' ? { kind: 'none' } : await snapshotQr({
         evaluate: script => this.findQrInFrames(view, script, selectors.length === 0),
@@ -775,11 +799,13 @@ export class BrowserManager {
     const scroll = asRecord(await page.evaluate('({ x: scrollX, y: scrollY })'))
     for (const frame of page.frames()) {
       if (frame === page.mainFrame()) continue
+      // Picking ignores position, so a frame without a code is skipped before measuring where it sits.
+      const raw = await evaluateFrame(frame, script)
+      if (pickQrRect(parseQrCapture(raw), largestFallback) === undefined) continue
       const at = await frameOrigin(frame)
       if (at === undefined) continue
-      const inner = asRecord(await frame.evaluate('({ x: scrollX, y: scrollY })').catch(() => undefined))
-      const found = offsetQrCapture(await frame.evaluate(script).catch(() => undefined),
-        at.x + numberOr0(scroll?.x) - numberOr0(inner?.x), at.y + numberOr0(scroll?.y) - numberOr0(inner?.y))
+      const inner = asRecord(await evaluateFrame(frame, '({ x: scrollX, y: scrollY })'))
+      const found = offsetQrCapture(raw, at.x + numberOr0(scroll?.x) - numberOr0(inner?.x), at.y + numberOr0(scroll?.y) - numberOr0(inner?.y))
       if (pickQrRect(found, largestFallback) !== undefined) return found
     }
     return main
@@ -795,7 +821,7 @@ export class BrowserManager {
     let found = pointOf(await view.page.evaluate(script))
     for (const frame of found === undefined ? view.page.frames() : []) {
       if (frame === view.page.mainFrame()) continue
-      const inFrame = pointOf(await frame.evaluate(script).catch(() => undefined))
+      const inFrame = pointOf(await evaluateFrame(frame, script))
       const at = inFrame === undefined ? undefined : await frameOrigin(frame)
       if (inFrame !== undefined && at !== undefined) {
         found = { x: at.x + inFrame.x, y: at.y + inFrame.y }
@@ -810,6 +836,24 @@ export class BrowserManager {
     if (Date.now() - view.qrRefreshedAt < QR_REFRESH_GAP_MS) return true
     view.qrRefreshedAt = Date.now()
     await view.inputs.task(() => applyPointer(view.page.mouse, view.pointer, { kind: 'click', button: 'left', x, y }, this.options.dragStepPixels))
+    return true
+  }
+
+  /**
+   * On a site whose QR login is a dialog, click the site's own 登录 control as a user would, once it shows and while
+   * the page shows no code and is not logged in; at most {@link OPEN_LOGIN_TRIES} times per view, {@link OPEN_LOGIN_GAP_MS}
+   * apart. The page need not have finished loading: on a slow network a site's trackers keep it loading for minutes
+   * after the header is usable, and a click that comes before the site's scripts is simply tried again.
+   * @returns whether it clicked.
+   */
+  private async openLoginDialog(view: ViewState, script: string): Promise<boolean> {
+    if (view.loginOpens >= OPEN_LOGIN_TRIES || Date.now() - view.loginOpenedAt < OPEN_LOGIN_GAP_MS) return false
+    const found = pointOf(await view.page.evaluate(script))
+    if (found === undefined) return false
+    view.loginOpenedAt = Date.now()
+    view.loginOpens++
+    noteLogin(view.platform, `login control seen at ${Math.round(found.x)},${Math.round(found.y)}, clicking (${view.loginOpens}/${OPEN_LOGIN_TRIES})`)
+    await view.inputs.task(() => applyPointer(view.page.mouse, view.pointer, { kind: 'click', button: 'left', x: found.x, y: found.y }, this.options.dragStepPixels))
     return true
   }
 

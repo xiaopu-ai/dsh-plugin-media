@@ -84,6 +84,7 @@ export function renderDashboard(dashboard: MediaDashboard): string {
     renderHealth(dashboard.health),
     '## 作品数据', ...dashboard.works.map(kpi => kpiLines([kpi])[0] + daily(kpi)),
     '## 粉丝数据', ...dashboard.fans.map(kpi => kpiLines([kpi])[0] + daily(kpi)),
+    ...dashboard.totals.length === 0 ? [] : ['## 账号总数', ...dashboard.totals.map(kpi => kpiLines([kpi])[0] + daily(kpi))],
     '## 近 30 天发布、数据最好的作品',
     ...dashboard.top.map((item, index) => `${index + 1}. 《${item.post.title}》 ${item.label} ${figure(item.value)}（id ${item.post.postId}）`),
     dashboard.top.length === 0 ? '暂无' : '',

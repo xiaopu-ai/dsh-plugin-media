@@ -1,6 +1,7 @@
 /**
- * Sample data for testing the page: two 抖音 accounts (one whose login expired), a 小红书, a 公众号 and a 视频号 account.
- * Each has sixty days of the daily values its platform's creator backend reports, posts with drawn covers, and the 抖音
+ * Sample data for testing the page: two 抖音 accounts (one whose login expired), a 小红书, a 公众号 and a 视频号 account,
+ * and one each of 人人都是产品经理, 少数派, 优设 and X. Each has sixty days of the daily values its platform's creator
+ * backend reports (the last four report none: only their totals are read once a day), posts with drawn covers, and the 抖音
  * account a topic report, a diagnosis report and two drafts. Every value is made up and fixed by a seed, so a test shows
  * the same numbers each time; nothing here calls a platform or a model. The page offers it only in development mode.
  */
@@ -55,6 +56,17 @@ const MP_TITLES = [
   '万字长文：AI 产品经理的能力模型', '我们为什么放弃了自研大模型', 'AI Agent 落地的 5 个真实案例', '复盘：一个 AI 功能从立项到下线',
   '大模型应用的成本账，算清楚再做', 'AI 原型工具横评（2026 版）', '给产品新人的 AI 工具使用指南', '从需求文档到可点原型，我的 AI 工作流',
 ]
+const WOSHIPM_TITLES = [
+  'AI 时代，产品经理的需求评审该怎么开', '我把 PRD 交给 AI 写了一个月，结论是', 'B 端产品的权限设计，一篇讲清楚', '从 0 到 1 搭一个数据看板：指标怎么选',
+  '用户访谈的 7 个提问技巧', 'AI 功能上线后，怎么判断它真的有用', '产品经理的第一份竞品分析模板',
+]
+const SSPAI_TITLES = ['我的 2026 效率工具清单', '用快捷指令把记账做成一键', '一台旧 iPad 的第二春：做成桌面看板', 'Obsidian + AI：我的读书笔记工作流', '少即是多：我删掉了 20 个 App']
+const UISDC_TITLES = ['16 个 AI 设计资源网站，从找灵感到出页面', 'AI 生成图标的 5 个提示词公式', '设计师的 AI 工作流：从草图到高保真', '一套组件库的命名规范', '移动端配色灵感：9 组渐变']
+const X_TITLES = [
+  'Shipped a tiny AI prototype tool this weekend. Feedback welcome', 'Thread: what I learned running 30 user interviews with AI notes',
+  'Hot take: most AI features fail at onboarding, not at the model', 'New post on building dashboards without SQL', 'Which AI prototyping tool do you use? Poll below',
+  'Small wins: our weekly active users doubled after one copy change',
+]
 const CHANNELS_TITLES = ['30 秒看懂 AI 原型工具', '产品经理的一天｜AI 版', '一句话让 AI 做出一个网页', 'AI 会议纪要实测', '我用 AI 做了一个小游戏', '大模型选型，记住这三点']
 
 /** Cover colors: a gradient per post, picked by index. */
@@ -97,6 +109,12 @@ interface AccountPlan {
   readonly reports: readonly string[]
   /** Days since the last capture; the account's data stops then. */
   readonly stoppedDaysAgo: number
+  /** The platform reports no follower total (优设). */
+  readonly noFollowers?: boolean | undefined
+  /** Post counters the platform does not report, left empty on every post. */
+  readonly hidden?: readonly ('views' | 'likes' | 'comments' | 'collects' | 'shares')[] | undefined
+  /** Account totals the platform reports, as snapshot `extra` keys: `totalViews` grows with the posts' views. */
+  readonly totals?: readonly string[] | undefined
   readonly urlOf: (index: number) => string
 }
 
@@ -138,17 +156,23 @@ function buildPlan(plan: AccountPlan, now: number, random: () => number): { snap
       dayViews.set(ago, (dayViews.get(ago) ?? 0) + (views ?? 0) * dayShare(age, hit))
       dayLikes.set(ago, (dayLikes.get(ago) ?? 0) + likes * dayShare(age, hit))
     }
+    const counters: Record<'views' | 'likes' | 'comments' | 'collects' | 'shares', number | undefined> = {
+      views, likes, comments: Math.round(likes * (0.08 + random() * 0.08)), collects: Math.round(likes * (0.25 + random() * 0.3)),
+      shares: Math.round(likes * (0.05 + random() * 0.1)),
+    }
+    for (const key of plan.hidden ?? []) counters[key] = undefined
     posts.push({
       accountId: acct.id, postId: `demo-${acct.id}-${String(index)}`, title, url: plan.urlOf(index), coverUrl: demoCover(title, index + acct.id.length),
-      publishedAt: new Date(now - publishedAgo * DAY_MS).toISOString(), format: plan.format, views, likes,
-      comments: Math.round(likes * (0.08 + random() * 0.08)), collects: Math.round(likes * (0.25 + random() * 0.3)),
-      shares: Math.round(likes * (0.05 + random() * 0.1)), extra: {}, source: 'scrape', updatedAt: capturedAt(now, stop),
+      publishedAt: new Date(now - publishedAgo * DAY_MS).toISOString(), format: plan.format, ...counters,
+      extra: {}, source: 'scrape', updatedAt: capturedAt(now, stop),
     })
   })
   const snapshots: MediaMetricSnapshot[] = []
   let followers = plan.followers
   let likesTotal = plan.totalLikes
+  let viewsTotal = plan.views * 120
   const reports = new Set(plan.reports)
+  const totals = new Set(plan.totals ?? [])
   for (let ago = HISTORY_DAYS - 1; ago >= stop; ago--) {
     // Older posts outside the list keep drawing a little every day.
     const views = Math.round((dayViews.get(ago) ?? 0) + plan.views * 0.25 * (0.6 + random() * 0.8))
@@ -157,6 +181,7 @@ function buildPlan(plan: AccountPlan, now: number, random: () => number): { snap
     const lost = Math.round(1 + random() * Math.max(2, gained * 0.15))
     followers += gained - lost
     if (likesTotal !== undefined) likesTotal += likes
+    viewsTotal += views
     const values: Record<string, number> = {
       plays: views, postLikes: likes, postComments: Math.round(likes * (0.09 + random() * 0.05)),
       postShares: Math.round(likes * (0.07 + random() * 0.05)), postCollects: Math.round(likes * (0.3 + random() * 0.2)),
@@ -165,9 +190,13 @@ function buildPlan(plan: AccountPlan, now: number, random: () => number): { snap
       completionRate5s: 0.46 + random() * 0.12, completionRate: 0.12 + random() * 0.08, bounceRate2s: 0.38 + random() * 0.1,
       coverCtr: 0.05 + random() * 0.03, avgPlaySeconds: 28 + random() * 18,
     }
-    const extra = Object.fromEntries(Object.entries(values).filter(([key]) => reports.has(key)))
+    const extra: Record<string, number> = Object.fromEntries(Object.entries(values).filter(([key]) => reports.has(key)))
+    if (totals.has('totalViews')) extra.totalViews = viewsTotal
     // A day the account posted nothing has no plays to weigh its rates with on a quiet account; keep rates anyway.
-    snapshots.push({ accountId: acct.id, capturedAt: capturedAt(now, ago), source: 'scrape', followers, likes: likesTotal, posts: plan.titles.length + 40 - Math.floor(ago / plan.every), extra })
+    snapshots.push({
+      accountId: acct.id, capturedAt: capturedAt(now, ago), source: 'scrape', followers: plan.noFollowers === true ? undefined : followers, likes: likesTotal,
+      posts: plan.titles.length + 40 - Math.floor(ago / plan.every), extra,
+    })
   }
   return { snapshots, posts }
 }
@@ -210,6 +239,30 @@ export function demoData(now: number): MediaDemoData {
       titles: CHANNELS_TITLES, format: 'video', views: 900, likes: 0, followers: 1_500, every: 3.5,
       hits: [2], reports: ['plays', 'postLikes', 'postComments', 'postShares', 'completionRate', 'avgPlaySeconds', 'fansNet'],
       stoppedDaysAgo: 0, urlOf: index => `https://channels.weixin.qq.com/demo/${String(index)}`,
+    },
+    {
+      account: account('acct-demo-woshipm', 'woshipm', '演示 · 产品手记', '产品方法', created),
+      titles: WOSHIPM_TITLES, format: 'article', views: 1800, likes: 0, followers: 2_300, totalLikes: 1_900, every: 6,
+      hits: [1], reports: [], totals: ['totalViews'], hidden: ['likes', 'comments', 'shares'],
+      stoppedDaysAgo: 0, urlOf: index => `https://www.woshipm.com/pd/demo${String(index)}.html`,
+    },
+    {
+      account: account('acct-demo-sspai', 'sspai', '演示 · 效率派', '效率工具', created),
+      titles: SSPAI_TITLES, format: 'article', views: 0, likes: 45, followers: 900, totalLikes: 1_200, every: 9,
+      hits: [3], reports: [], totals: [], hidden: ['views', 'collects', 'shares'],
+      stoppedDaysAgo: 0, urlOf: index => `https://sspai.com/post/demo${String(index)}`,
+    },
+    {
+      account: account('acct-demo-uisdc', 'uisdc', '演示 · 设计小站', 'AI 设计', created),
+      titles: UISDC_TITLES, format: 'article', views: 3000, likes: 0, followers: 0, every: 8, noFollowers: true,
+      hits: [0], reports: [], totals: ['totalViews'], hidden: ['shares'],
+      stoppedDaysAgo: 0, urlOf: index => `https://www.uisdc.com/demo-${String(index)}`,
+    },
+    {
+      account: account('acct-demo-x', 'x', '演示 · Aqing', 'AI products', created),
+      titles: X_TITLES, format: 'other', views: 1200, likes: 0, followers: 3_000, every: 5,
+      hits: [1], reports: [], totals: [],
+      stoppedDaysAgo: 0, urlOf: index => `https://x.com/demo/status/${String(1_900_000 + index)}`,
     },
   ]
   const built = plans.map(plan => buildPlan(plan, now, random))

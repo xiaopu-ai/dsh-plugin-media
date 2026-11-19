@@ -922,7 +922,10 @@ const _xiaopuai_dsh_media_mediaSuite_dashboard_result$schema = () => _xiaopuai_d
 			_undefined(),
 			literal(false),
 			literal(true)
-		]).readonly().optional().describe("Set while the adapter has not been checked against a real logged-in account; the page marks the platform as a trial.")
+		]).readonly().optional().describe("Set while the adapter has not been checked against a real logged-in account; the page marks the platform as a trial."),
+		"scanApp": union([_undefined(), string$1()]).readonly().optional().describe("The phone App that scans the login QR code, when it is not the platform's own, such as `微信`."),
+		"loginHint": union([_undefined(), string$1()]).readonly().optional().describe("How to log in, for platforms whose login view shows no QR code by default, such as typing a name and password."),
+		"totals": union([_undefined(), record(string$1(), string$1()).readonly()]).readonly().optional().describe("Account totals the platform shows, in its own words, for platforms that report no daily values: the board's 账号总数 card follows them day by day as read. Keys are `posts`, `likes`, `following` or a snapshot `extra` key such as `totalViews`; the order is the card's.")
 	}).readonly(),
 	"health": object({
 		"state": union([
@@ -992,6 +995,23 @@ const _xiaopuai_dsh_media_mediaSuite_dashboard_result$schema = () => _xiaopuai_d
 		})).readonly().describe("Daily values inside the window, oldest first; days without data are left out."),
 		"hint": string$1().readonly().describe("How the number is counted, in Chinese.")
 	})).readonly().describe("Counters of 粉丝数据 over the chosen window."),
+	"totals": array(object({
+		"key": string$1().readonly().describe("Stable key: `views`, `likes`, `comments`, `shares`, `collects`, `posts`, `engagement`, `profileViews`, `followers`, `fansNet`, …"),
+		"label": string$1().readonly().describe("Display name in the platform's words, such as `阅读量`."),
+		"unit": union([
+			literal("count"),
+			literal("percent"),
+			literal("seconds")
+		]).readonly(),
+		"value": union([_undefined(), number$1()]).readonly().optional().describe("Total over the window, or the newest value for a running total such as followers; undefined when unknown."),
+		"change": union([_undefined(), number$1()]).readonly().optional().describe("Relative change against the window of the same length before it, such as 0.12 for +12%; undefined when unknown."),
+		"previous": union([_undefined(), number$1()]).readonly().optional().describe("Value over the window of the same length before it; undefined when unknown."),
+		"daily": array(object({
+			"day": string$1().readonly().describe("`YYYY-MM-DD`, China time."),
+			"value": number$1().readonly()
+		})).readonly().describe("Daily values inside the window, oldest first; days without data are left out."),
+		"hint": string$1().readonly().describe("How the number is counted, in Chinese.")
+	})).readonly().describe("The account totals the platform declares in `totals`, as last read on each day of the chosen window."),
 	"top": array(object({
 		"post": object({
 			"accountId": string$1().readonly(),
@@ -1459,7 +1479,10 @@ const _xiaopuai_dsh_media_mediaSuite_network_result$schema = () => _xiaopuai_dsh
 				_undefined(),
 				literal(false),
 				literal(true)
-			]).readonly().optional().describe("Set while the adapter has not been checked against a real logged-in account; the page marks the platform as a trial.")
+			]).readonly().optional().describe("Set while the adapter has not been checked against a real logged-in account; the page marks the platform as a trial."),
+			"scanApp": union([_undefined(), string$1()]).readonly().optional().describe("The phone App that scans the login QR code, when it is not the platform's own, such as `微信`."),
+			"loginHint": union([_undefined(), string$1()]).readonly().optional().describe("How to log in, for platforms whose login view shows no QR code by default, such as typing a name and password."),
+			"totals": union([_undefined(), record(string$1(), string$1()).readonly()]).readonly().optional().describe("Account totals the platform shows, in its own words, for platforms that report no daily values: the board's 账号总数 card follows them day by day as read. Keys are `posts`, `likes`, `following` or a snapshot `extra` key such as `totalViews`; the order is the card's.")
 		}).readonly(),
 		"health": object({
 			"state": union([
@@ -1678,7 +1701,10 @@ const _xiaopuai_dsh_media_mediaSuite_platforms_result$schema = () => _xiaopuai_d
 		_undefined(),
 		literal(false),
 		literal(true)
-	]).readonly().optional().describe("Set while the adapter has not been checked against a real logged-in account; the page marks the platform as a trial.")
+	]).readonly().optional().describe("Set while the adapter has not been checked against a real logged-in account; the page marks the platform as a trial."),
+	"scanApp": union([_undefined(), string$1()]).readonly().optional().describe("The phone App that scans the login QR code, when it is not the platform's own, such as `微信`."),
+	"loginHint": union([_undefined(), string$1()]).readonly().optional().describe("How to log in, for platforms whose login view shows no QR code by default, such as typing a name and password."),
+	"totals": union([_undefined(), record(string$1(), string$1()).readonly()]).readonly().optional().describe("Account totals the platform shows, in its own words, for platforms that report no daily values: the board's 账号总数 card follows them day by day as read. Keys are `posts`, `likes`, `following` or a snapshot `extra` key such as `totalViews`; the order is the card's.")
 }));
 let _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_0$schema$value;
 const _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_0$schema$value ??= string$1();
@@ -1726,7 +1752,10 @@ const _xiaopuai_dsh_media_mediaSuite_postDetail_result$schema = () => _xiaopuai_
 			_undefined(),
 			literal(false),
 			literal(true)
-		]).readonly().optional().describe("Set while the adapter has not been checked against a real logged-in account; the page marks the platform as a trial.")
+		]).readonly().optional().describe("Set while the adapter has not been checked against a real logged-in account; the page marks the platform as a trial."),
+		"scanApp": union([_undefined(), string$1()]).readonly().optional().describe("The phone App that scans the login QR code, when it is not the platform's own, such as `微信`."),
+		"loginHint": union([_undefined(), string$1()]).readonly().optional().describe("How to log in, for platforms whose login view shows no QR code by default, such as typing a name and password."),
+		"totals": union([_undefined(), record(string$1(), string$1()).readonly()]).readonly().optional().describe("Account totals the platform shows, in its own words, for platforms that report no daily values: the board's 账号总数 card follows them day by day as read. Keys are `posts`, `likes`, `following` or a snapshot `extra` key such as `totalViews`; the order is the card's.")
 	}).readonly(),
 	"post": object({
 		"accountId": string$1().readonly(),
@@ -1975,7 +2004,10 @@ const _xiaopuai_dsh_media_mediaSuite_summary_result$schema = () => _xiaopuai_dsh
 				_undefined(),
 				literal(false),
 				literal(true)
-			]).readonly().optional().describe("Set while the adapter has not been checked against a real logged-in account; the page marks the platform as a trial.")
+			]).readonly().optional().describe("Set while the adapter has not been checked against a real logged-in account; the page marks the platform as a trial."),
+			"scanApp": union([_undefined(), string$1()]).readonly().optional().describe("The phone App that scans the login QR code, when it is not the platform's own, such as `微信`."),
+			"loginHint": union([_undefined(), string$1()]).readonly().optional().describe("How to log in, for platforms whose login view shows no QR code by default, such as typing a name and password."),
+			"totals": union([_undefined(), record(string$1(), string$1()).readonly()]).readonly().optional().describe("Account totals the platform shows, in its own words, for platforms that report no daily values: the board's 账号总数 card follows them day by day as read. Keys are `posts`, `likes`, `following` or a snapshot `extra` key such as `totalViews`; the order is the card's.")
 		}).readonly(),
 		"health": object({
 			"state": union([
@@ -2412,7 +2444,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 425,
+				"line": 429,
 				"column": 3
 			}
 		},
@@ -2509,7 +2541,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1367,
+				"line": 1372,
 				"column": 3
 			}
 		},
@@ -2604,7 +2636,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1341,
+				"line": 1346,
 				"column": 9
 			}
 		},
@@ -2781,7 +2813,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 773,
+				"line": 778,
 				"column": 3
 			}
 		},
@@ -2815,7 +2847,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1560,
+				"line": 1565,
 				"column": 9
 			}
 		},
@@ -2968,7 +3000,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1476,
+				"line": 1481,
 				"column": 10
 			}
 		},
@@ -3336,7 +3368,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1489,
+				"line": 1494,
 				"column": 9
 			}
 		},
@@ -3447,7 +3479,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1450,
+				"line": 1455,
 				"column": 9
 			}
 		},
@@ -3465,7 +3497,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 633,
+				"line": 637,
 				"column": 3
 			}
 		},
@@ -3515,7 +3547,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 852,
+				"line": 857,
 				"column": 3
 			}
 		},
@@ -3548,7 +3580,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 519,
+				"line": 523,
 				"column": 3
 			}
 		},
@@ -3622,7 +3654,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 561,
+				"line": 565,
 				"column": 3
 			}
 		},
@@ -3935,7 +3967,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1194,
+				"line": 1199,
 				"column": 9
 			}
 		},
@@ -4248,7 +4280,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1025,
+				"line": 1030,
 				"column": 9
 			}
 		},
@@ -4577,7 +4609,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1040,
+				"line": 1045,
 				"column": 9
 			}
 		},
@@ -4639,7 +4671,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1514,
+				"line": 1519,
 				"column": 9
 			}
 		},
@@ -4726,7 +4758,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 974,
+				"line": 979,
 				"column": 9
 			}
 		},
@@ -4813,7 +4845,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 613,
+				"line": 617,
 				"column": 3
 			}
 		},
@@ -4871,7 +4903,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1432,
+				"line": 1437,
 				"column": 3
 			}
 		},
@@ -4974,7 +5006,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 572,
+				"line": 576,
 				"column": 3
 			}
 		},
@@ -5008,7 +5040,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 745,
+				"line": 749,
 				"column": 3
 			}
 		},
@@ -5058,7 +5090,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 648,
+				"line": 652,
 				"column": 3
 			}
 		},
@@ -5072,83 +5104,11 @@ const $remote = createTypertRemoteInfo({
 				typeSymbol: "@xiaopuai/dsh-media#mediaSuite/platforms:result",
 				create: _xiaopuai_dsh_media_mediaSuite_platforms_result$schema,
 				description: "descriptors in registration order.",
-				jsonSchema: {
-					"type": "array",
-					"items": {
-						"type": "object",
-						"properties": {
-							"search": {
-								"type": "boolean",
-								"description": "Whether the platform can search posts, filled in by the registry from the adapter; adapters omit it."
-							},
-							"id": { "type": "string" },
-							"displayName": {
-								"type": "string",
-								"description": "Display name in the platform's own language, such as `小红书`."
-							},
-							"loginUrl": {
-								"type": "string",
-								"description": "Home page the embedded browser opens for login."
-							},
-							"scrape": {
-								"type": "boolean",
-								"description": "Whether the adapter scrapes through the embedded browser."
-							},
-							"import": {
-								"type": "boolean",
-								"description": "Whether the adapter maps creator-backend export files."
-							},
-							"importHint": {
-								"type": "string",
-								"description": "Short hint describing which export file the user should upload."
-							},
-							"profileUrlExample": {
-								"type": "string",
-								"description": "Example profile URL shown as the input placeholder."
-							},
-							"metrics": {
-								"type": "object",
-								"properties": {
-									"views": { "type": "string" },
-									"likes": { "type": "string" },
-									"comments": { "type": "string" },
-									"shares": { "type": "string" },
-									"collects": { "type": "string" }
-								},
-								"required": [],
-								"additionalProperties": true,
-								"description": "The platform's own names for the post counters, such as `阅读` for a 公众号's `views`. Counters the platform does not report are left out, so the page and the tools never show a counter that is always empty."
-							},
-							"noun": {
-								"type": "string",
-								"description": "What one post is called on the platform, such as `视频`, `笔记` or `文章`."
-							},
-							"color": {
-								"type": "string",
-								"description": "Brand color (CSS), for the platform's tints and its series in charts; a platform added later brings its own."
-							},
-							"beta": {
-								"type": "boolean",
-								"enum": [false, true],
-								"description": "Set while the adapter has not been checked against a real logged-in account; the page marks the platform as a trial."
-							}
-						},
-						"required": [
-							"id",
-							"displayName",
-							"loginUrl",
-							"scrape",
-							"import",
-							"importHint",
-							"profileUrlExample"
-						],
-						"additionalProperties": true
-					}
-				}
+				jsonSchemaError: "typert tool schema: selected dictionaries require string keys and unconstrained JSON values"
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 416,
+				"line": 420,
 				"column": 3
 			}
 		},
@@ -5198,7 +5158,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 873,
+				"line": 878,
 				"column": 3
 			}
 		},
@@ -5248,7 +5208,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 674,
+				"line": 678,
 				"column": 3
 			}
 		},
@@ -5313,7 +5273,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 888,
+				"line": 893,
 				"column": 9
 			}
 		},
@@ -5346,7 +5306,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 589,
+				"line": 593,
 				"column": 3
 			}
 		},
@@ -5379,7 +5339,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 598,
+				"line": 602,
 				"column": 3
 			}
 		},
@@ -5603,7 +5563,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 438,
+				"line": 442,
 				"column": 3
 			}
 		},
@@ -5780,7 +5740,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 788,
+				"line": 793,
 				"column": 3
 			}
 		},
@@ -5799,7 +5759,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1280,
+				"line": 1285,
 				"column": 9
 			}
 		},
@@ -5850,7 +5810,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1302,
+				"line": 1307,
 				"column": 9
 			}
 		},
@@ -5868,7 +5828,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 722,
+				"line": 726,
 				"column": 3
 			}
 		},
@@ -6183,7 +6143,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1328,
+				"line": 1333,
 				"column": 3
 			}
 		},
@@ -6277,7 +6237,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 530,
+				"line": 534,
 				"column": 3
 			}
 		}
@@ -6669,7 +6629,7 @@ const TYPERT = {
 				},
 				{
 					"name": "MediaDashboard",
-					"declaration": "export interface MediaDashboard {\n    readonly account: MediaAccount;\n    readonly platform: MediaPlatformDescriptor;\n    readonly health: MediaAccountHealth;\n    readonly days: number;\n    readonly from: string;\n    readonly to: string;\n    readonly headline: readonly MediaKpi[];\n    readonly works: readonly MediaKpi[];\n    readonly fans: readonly MediaKpi[];\n    readonly top: readonly MediaRankedPost[];\n    readonly posts: readonly MediaPost[];\n}"
+					"declaration": "export interface MediaDashboard {\n    readonly account: MediaAccount;\n    readonly platform: MediaPlatformDescriptor;\n    readonly health: MediaAccountHealth;\n    readonly days: number;\n    readonly from: string;\n    readonly to: string;\n    readonly headline: readonly MediaKpi[];\n    readonly works: readonly MediaKpi[];\n    readonly fans: readonly MediaKpi[];\n    readonly totals: readonly MediaKpi[];\n    readonly top: readonly MediaRankedPost[];\n    readonly posts: readonly MediaPost[];\n}"
 				},
 				{
 					"name": "MediaDataSource",
@@ -6793,11 +6753,11 @@ const TYPERT = {
 				},
 				{
 					"name": "MediaPlatformAdapter",
-					"declaration": "export interface MediaPlatformAdapter {\n    readonly descriptor: MediaPlatformDescriptor;\n    readonly importProfile: MediaImportProfile;\n    readonly scrapableRoles?: readonly MediaAccountRole[];\n    readonly detectLogin: (page: Page) => Promise<MediaLoginState>;\n    readonly scrape?: (page: Page, account: MediaAccount, limits: MediaScrapeLimits) => Promise<MediaScrapeResult>;\n    readonly identify?: (page: Page, signal: AbortSignal) => Promise<MediaIdentityFields | undefined>;\n    readonly identityMatch?: 'profile-url' | 'platform';\n    readonly history?: (page: Page, account: MediaAccount, limits: MediaHistoryLimits) => Promise<readonly MediaHistoryDay[]>;\n    readonly search?: (page: Page, keyword: string, limits: MediaSearchLimits) => Promise<readonly MediaRelatedPost[]>;\n    readonly trending?: (page: Page, signal: AbortSignal) => Promise<readonly MediaTrendingTopic[]>;\n    readonly qrSelectors?: readonly string[];\n    readonly qrExpired?: string;\n    readonly keepAlive?: { readonly url: string; readonly everyMinutes: number; };\n}"
+					"declaration": "export interface MediaPlatformAdapter {\n    readonly descriptor: MediaPlatformDescriptor;\n    readonly importProfile: MediaImportProfile;\n    readonly scrapableRoles?: readonly MediaAccountRole[];\n    readonly detectLogin: (page: Page) => Promise<MediaLoginState>;\n    readonly scrape?: (page: Page, account: MediaAccount, limits: MediaScrapeLimits) => Promise<MediaScrapeResult>;\n    readonly identify?: (page: Page, signal: AbortSignal) => Promise<MediaIdentityFields | undefined>;\n    readonly identityMatch?: 'profile-url' | 'platform';\n    readonly history?: (page: Page, account: MediaAccount, limits: MediaHistoryLimits) => Promise<readonly MediaHistoryDay[]>;\n    readonly search?: (page: Page, keyword: string, limits: MediaSearchLimits) => Promise<readonly MediaRelatedPost[]>;\n    readonly trending?: (page: Page, signal: AbortSignal) => Promise<readonly MediaTrendingTopic[]>;\n    readonly qrSelectors?: readonly string[];\n    readonly qrExpired?: string;\n    readonly openLogin?: string;\n    readonly keepAlive?: { readonly url: string; readonly everyMinutes: number; };\n}"
 				},
 				{
 					"name": "MediaPlatformDescriptor",
-					"declaration": "export interface MediaPlatformDescriptor {\n    readonly search?: boolean;\n    readonly id: MediaPlatformId;\n    readonly displayName: string;\n    readonly loginUrl: string;\n    readonly scrape: boolean;\n    readonly import: boolean;\n    readonly importHint: string;\n    readonly profileUrlExample: string;\n    readonly metrics?: MediaMetricLabels | undefined;\n    readonly noun?: string | undefined;\n    readonly color?: string | undefined;\n    readonly beta?: boolean | undefined;\n}"
+					"declaration": "export interface MediaPlatformDescriptor {\n    readonly search?: boolean;\n    readonly id: MediaPlatformId;\n    readonly displayName: string;\n    readonly loginUrl: string;\n    readonly scrape: boolean;\n    readonly import: boolean;\n    readonly importHint: string;\n    readonly profileUrlExample: string;\n    readonly metrics?: MediaMetricLabels | undefined;\n    readonly noun?: string | undefined;\n    readonly color?: string | undefined;\n    readonly beta?: boolean | undefined;\n    readonly scanApp?: string | undefined;\n    readonly loginHint?: string | undefined;\n    readonly totals?: Readonly<Record<string, string>> | undefined;\n}"
 				},
 				{
 					"name": "MediaPlatformId",

@@ -142,6 +142,13 @@ export interface MediaPlatformAdapter {
    */
   readonly qrExpired?: string
   /**
+   * JavaScript expression evaluated in the login page while it is not logged in and shows no QR code, usually built
+   * with `openLoginScript` of `page.ts`: the CSS-pixel point of the site's own 登录 control, or null once the login
+   * dialog is open. For sites whose QR login is a dialog on an ordinary page (人人都是产品经理, 优设): the login view
+   * clicks it, a few times at most, so the code shows without the user hunting for the button.
+   */
+  readonly openLogin?: string
+  /**
    * Visits that keep the login alive between updates, for platforms whose web sessions end when idle. 视频号 ends an
    * idle session within hours although its cookie lasts more than a year (an update every 30 minutes kept one alive
    * for 14 hours; with no visit it was gone within 10); 公众号 renews its 4-day login on every visit. While DSH runs,

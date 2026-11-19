@@ -149,3 +149,30 @@ describe('post detail', () => {
     expect(detail.baselinePosts).toBe(3)
   })
 })
+
+describe('account totals of platforms without daily values', () => {
+  const woshipm: MediaPlatformDescriptor = {
+    ...douyin, id: 'woshipm', displayName: '人人都是产品经理', metrics: { views: '浏览', collects: '收藏' }, noun: '文章',
+    totals: { posts: '文章数', likes: '被赞', totalViews: '总阅读' },
+  }
+
+  it('follows each declared total as last read per day, against the end of the previous window', () => {
+    const snapshots = [
+      snapshot(9, { posts: 30, likes: 400, extra: { totalViews: 80_000 } }),
+      snapshot(8, { posts: 31, likes: 410, extra: { totalViews: 81_000 } }),
+      snapshot(3, { posts: 32, likes: 420, extra: { totalViews: 84_000 } }),
+      snapshot(1, { posts: 33, likes: 450, extra: { totalViews: 90_000 } }),
+    ]
+    const sections = buildDashboard({ account: { ...account, platform: 'woshipm' }, platform: woshipm, snapshots, latest: snapshots.at(-1), posts: [], now: NOW }, 7)
+    expect(sections.totals.map(kpi => [kpi.key, kpi.label, kpi.value, kpi.previous])).toEqual([
+      ['total:posts', '文章数', 33, 31], ['total:likes', '被赞', 450, 410], ['total:totalViews', '总阅读', 90_000, 81_000],
+    ])
+    expect(sections.totals[2]?.daily).toEqual([{ day: '2026-11-08', value: 84_000 }, { day: '2026-11-10', value: 90_000 }])
+    expect(sections.totals[2]?.change).toBeCloseTo(9_000 / 81_000)
+  })
+
+  it('is empty for platforms that declare none', () => {
+    const sections = buildDashboard({ account, platform: douyin, snapshots: [snapshot(1, { posts: 3, likes: 9 })], latest: undefined, posts: [], now: NOW }, 7)
+    expect(sections.totals).toEqual([])
+  })
+})

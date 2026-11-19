@@ -64,7 +64,7 @@ it('holds at most the configured number of own accounts per platform, not counti
 
 it('registers the built-in platforms and validates account drafts', async () => {
   const suite = await fixture()
-  expect(suite.platforms().map(platform => platform.id)).toEqual(['douyin', 'xiaohongshu', 'wechat-mp', 'wechat-channels'])
+  expect(suite.platforms().map(platform => platform.id)).toEqual(['douyin', 'xiaohongshu', 'wechat-mp', 'wechat-channels', 'woshipm', 'sspai', 'uisdc', 'x'])
   const account = suite.saveAccount(draft)
   expect(account).toMatchObject({ name: '我的公众号', monitor: { enabled: true, intervalMinutes: 30 } })
   const updated = suite.saveAccount({ ...draft, id: account.id, name: '新名字', monitor: { enabled: false, intervalMinutes: 0 } })

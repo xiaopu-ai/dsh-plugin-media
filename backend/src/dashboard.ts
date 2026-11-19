@@ -345,6 +345,34 @@ function fansKpis(source: Sources, window: Window): MediaKpi[] {
   return kpis.filter((kpi): kpi is MediaKpi => kpi !== undefined)
 }
 
+/** A total of the snapshots: a field of the snapshot itself, or one of its `extra` counters. */
+function totalOf(snapshot: MediaMetricSnapshot, key: string): number | undefined {
+  if (key === 'posts' || key === 'likes' || key === 'following' || key === 'followers') return snapshot[key]
+  return snapshot.extra[key]
+}
+
+/** The platform's account totals (`descriptor.totals`) as last read on each day, with the change over the window. */
+function totalsKpis(input: DashboardInput, window: Window): MediaKpi[] {
+  const kpis: MediaKpi[] = []
+  for (const [key, label] of Object.entries(input.platform.totals ?? {})) {
+    const days = new Map<string, number>()
+    for (const snapshot of input.snapshots) {
+      const value = totalOf(snapshot, key)
+      if (value !== undefined) days.set(chinaDay(snapshot.capturedAt), value)
+    }
+    const latest = input.latest === undefined ? undefined : totalOf(input.latest, key)
+    const value = latest ?? [...days].sort(([a], [b]) => a.localeCompare(b)).pop()?.[1]
+    if (value === undefined) continue
+    const previous = [...days].filter(([day]) => day <= window.previousTo).sort(([a], [b]) => a.localeCompare(b)).pop()?.[1]
+    kpis.push({
+      key: `total:${key}`, label, unit: 'count', value, previous, change: relative(value, previous),
+      daily: inRange(days, window.from, window.to).map(([day, item]) => ({ day, value: item })),
+      hint: `平台上显示的${label}；每天的值是当天最后一次读到的数，从开始记录那天算起`,
+    })
+  }
+  return kpis
+}
+
 /** Axes of the 数据总览 radar: 抖音's five first, then others the platform reports, five at most. */
 const RADAR_KEYS = ['views', 'engagement', 'completion5s', 'posts', 'fansNet', 'completion', 'likes', 'comments', 'shares', 'profileViews', 'collects'] as const
 
@@ -384,6 +412,7 @@ export interface DashboardSections {
   readonly headline: readonly MediaKpi[]
   readonly works: readonly MediaKpi[]
   readonly fans: readonly MediaKpi[]
+  readonly totals: readonly MediaKpi[]
   readonly top: readonly MediaRankedPost[]
 }
 
@@ -401,6 +430,7 @@ export function buildDashboard(input: DashboardInput, days: number): DashboardSe
     headline: headlineKpis(source, input.now),
     works: worksKpis(source, window),
     fans: fansKpis(source, window),
+    totals: totalsKpis(input, window),
     top: topPosts(source, input, 3),
   }
 }

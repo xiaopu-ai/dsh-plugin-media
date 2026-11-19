@@ -54,6 +54,16 @@ export interface MediaPlatformDescriptor {
   readonly color?: string | undefined
   /** Set while the adapter has not been checked against a real logged-in account; the page marks the platform as a trial. */
   readonly beta?: boolean | undefined
+  /** The phone App that scans the login QR code, when it is not the platform's own, such as `微信`. */
+  readonly scanApp?: string | undefined
+  /** How to log in, for platforms whose login view shows no QR code by default, such as typing a name and password. */
+  readonly loginHint?: string | undefined
+  /**
+   * Account totals the platform shows, in its own words, for platforms that report no daily values: the board's 账号总数
+   * card follows them day by day as read. Keys are `posts`, `likes`, `following` or a snapshot `extra` key such as
+   * `totalViews`; the order is the card's.
+   */
+  readonly totals?: Readonly<Record<string, string>> | undefined
 }
 
 /** Display names of the post counters a platform reports. */
@@ -236,6 +246,8 @@ export interface MediaDashboard {
   readonly works: readonly MediaKpi[]
   /** Counters of 粉丝数据 over the chosen window. */
   readonly fans: readonly MediaKpi[]
+  /** The account totals the platform declares in `totals`, as last read on each day of the chosen window. */
+  readonly totals: readonly MediaKpi[]
   /** The three posts with the most views (or likes) among those published in the last 30 days. */
   readonly top: readonly MediaRankedPost[]
   /** Newest posts with their latest counters. */

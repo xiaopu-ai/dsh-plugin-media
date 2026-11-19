@@ -4,7 +4,7 @@
 
 # 自媒体
 
-**抖音、小红书、公众号、视频号的数据，一个页面看完。**
+**抖音、小红书、公众号、视频号，还有人人都是产品经理、少数派、优设、X，一个页面看完。**
 
 DeepSeek Harness 插件 · 扫码登录 · 每日 AI 简报 · 数据只存在你自己的电脑上
 
@@ -26,7 +26,7 @@ DeepSeek Harness 插件 · 扫码登录 · 每日 AI 简报 · 数据只存在�
 
 | | |
 |---|---|
-| 📊 **一个页面看全部账号** | 抖音、小红书、微信公众号、视频号，每个平台最多 3 个号，不用再一个个打开创作者后台 |
+| 📊 **一个页面看全部账号** | 抖音、小红书、微信公众号、视频号、人人都是产品经理、少数派、优设、X，每个平台最多 3 个号，不用再一个个打开后台 |
 | 📰 **每天一份 AI 简报** | 每天早上 9 点自动写好：哪个号停更了、哪条数据涨了、下一条发什么。点开一条，就能看到依据和具体做法 |
 | 📈 **全网数据合计** | 播放、粉丝、点赞……所有平台加在一起看，走势图能往前翻 90 天 |
 | 🤖 **会看数据的 AI 助手** | 直接问「我最新那条视频多少评论」「帮我想下一条选题」 |
@@ -38,7 +38,7 @@ DeepSeek Harness 插件 · 扫码登录 · 每日 AI 简报 · 数据只存在�
 
 - 电脑上装好了 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（0.2.x 版本）
 - 电脑上装好了 [Google Chrome](https://www.google.com/chrome/)（插件用它扫码登录、读数据，在后台运行，不会弹出来）
-- 手机上有要登录的平台 App：抖音、小红书或微信
+- 手机上有要登录的平台 App：抖音、小红书或微信（少数派也可以用手机验证码，X 用账号密码）
 
 ### ① 安装插件
 
@@ -59,7 +59,11 @@ DeepSeek Harness 插件 · 扫码登录 · 每日 AI 简报 · 数据只存在�
 ### ② 扫码添加账号
 
 1. 点左边的 **自媒体**，在页面上选一个平台
-2. 打开手机上对应的 App，扫窗口里的二维码，在手机上确认登录
+2. 按窗口顶上的提示登录，在手机上确认：
+   - 抖音、小红书：用各自的 App 扫码
+   - 公众号、视频号、人人都是产品经理、优设：用微信扫码
+   - 少数派：输入手机号收验证码，或点微信图标扫码
+   - X：在窗口里输入 X 的用户名和密码
 3. 插件认出是哪个账号后，点 **添加为我的账号**
 
 <img src="docs/screenshots/step-add-account.png" width="560" alt="添加你的第一个账号：选一个平台，扫码添加">
@@ -117,8 +121,9 @@ DeepSeek Harness 插件 · 扫码登录 · 每日 AI 简报 · 数据只存在�
 - **公众号**：登录 4 天不用就过期，每访问一次重新算 4 天。DeepSeek Harness 开着时，插件每天至少访问一次，所以只要 4 天内开过它就不会掉。
 - **视频号**：闲置几个小时就会被平台退出登录。DeepSeek Harness 开着时，插件每 30 分钟轻轻打开一次视频号助手首页（不读数据），实测这样能一直保持登录。
 - **抖音、小红书**：一次登录能用一两个月以上。
+- **人人都是产品经理、少数派、优设、X**：刚接入，还没实测能保持多久。
 
-电脑睡眠、合上盖子或 DeepSeek Harness 关掉太久，登录还是可能过期。过期后账号名旁会出现红点，点 **重新扫码**、用手机扫一下就好，数据都在。另外，在别的电脑或浏览器上登录同一个视频号助手，可能会把插件这边的登录挤掉。
+电脑睡眠、合上盖子或 DeepSeek Harness 关掉太久，登录还是可能过期。过期后账号名旁会出现红点，点 **重新扫码**（少数派、X 是 **重新登录**）再登一次就好，数据都在。另外，在别的电脑或浏览器上登录同一个视频号助手，可能会把插件这边的登录挤掉。
 
 </details>
 
@@ -171,7 +176,14 @@ DeepSeek Harness 插件 · 扫码登录 · 每日 AI 简报 · 数据只存在�
 
 <br>
 
-支持抖音、小红书、微信公众号、视频号，每个平台最多 3 个账号。视频号标着「试用」，数据已经和视频号助手核对过，但用的人还少。
+支持抖音、小红书、微信公众号、视频号、人人都是产品经理、少数派、优设、X，每个平台最多 3 个账号。
+
+视频号标着「试用」，数据已经和视频号助手核对过，但用的人还少。
+
+人人都是产品经理、少数派、优设、X 是新接入的，也标着「试用」，还没用真实账号逐项核对过，遇到问题欢迎[提 issue](https://github.com/xiaopu-ai/dsh-plugin-media/issues)：
+
+- 读的是这些网站自己显示的数：粉丝、文章数、总阅读这类总数，和每篇的阅读 / 点赞 / 收藏 / 评论（各平台给的不一样，少数派不公开每篇的阅读，优设过万的阅读只给到 0.1 万）。
+- 它们不像抖音、公众号那样给「每天的数据」，所以插件每天记一次总数，看板上的「账号总数」和粉丝走势从添加那天开始画。
 
 </details>
 
@@ -202,7 +214,7 @@ DeepSeek Harness 插件 · 扫码登录 · 每日 AI 简报 · 数据只存在�
 
 ## English
 
-**自媒体 (Media)** is a [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) plugin that puts the creator data of your Douyin, Xiaohongshu (RED), WeChat Official Account and WeChat Channels accounts on one dashboard, with a daily AI brief and an AI assistant that can read the numbers. You log in by scanning a QR code in a built-in headless Chrome, and all data stays on your machine. The UI is in Chinese with an English fallback.
+**自媒体 (Media)** is a [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) plugin that puts the creator data of your Douyin, Xiaohongshu (RED), WeChat Official Account, WeChat Channels, Woshipm (人人都是产品经理), SSPAI (少数派), UISDC (优设) and X accounts on one dashboard, with a daily AI brief and an AI assistant that can read the numbers. You log in inside a built-in headless Chrome (QR code for most platforms, name and password for X), and all data stays on your machine. The UI is in Chinese with an English fallback.
 
 **Install:** in DeepSeek Harness 0.2.x, open **Plugins → Add plugin**, enter `@xiaopuai/dsh-media` and click **Install**. Google Chrome must be installed.
 
