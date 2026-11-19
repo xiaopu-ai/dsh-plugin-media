@@ -171,6 +171,19 @@ describe('account totals of platforms without daily values', () => {
     expect(sections.totals[2]?.change).toBeCloseTo(9_000 / 81_000)
   })
 
+  it('ends the window today, and shows nothing for 昨天 on the day recording began instead of today\'s total', () => {
+    const today = { ...snapshot(0, { posts: 47, likes: 349, followers: 210, extra: { totalViews: 381_500 } }), capturedAt: '2026-11-11T10:00:00+08:00' }
+    const input = { account: { ...account, platform: 'woshipm' }, platform: woshipm, snapshots: [today], latest: today, posts: [], now: NOW }
+    const week = buildDashboard(input, 7)
+    expect([week.from, week.to]).toEqual(['2026-11-05', '2026-11-11'])
+    expect(week.totals[0]).toMatchObject({ key: 'total:posts', value: 47, daily: [{ day: '2026-11-11', value: 47 }] })
+    expect(week.fans.find(kpi => kpi.key === 'followers')).toMatchObject({ value: 210, daily: [{ day: '2026-11-11', value: 210 }] })
+    const yesterday = buildDashboard(input, 1)
+    expect([yesterday.from, yesterday.to]).toEqual(['2026-11-10', '2026-11-10'])
+    expect(yesterday.totals.map(kpi => [kpi.key, kpi.value, kpi.daily.length])).toEqual([['total:posts', undefined, 0], ['total:likes', undefined, 0], ['total:totalViews', undefined, 0]])
+    expect(yesterday.fans.find(kpi => kpi.key === 'followers')?.value).toBeUndefined()
+  })
+
   it('is empty for platforms that declare none', () => {
     const sections = buildDashboard({ account, platform: douyin, snapshots: [snapshot(1, { posts: 3, likes: 9 })], latest: undefined, posts: [], now: NOW }, 7)
     expect(sections.totals).toEqual([])

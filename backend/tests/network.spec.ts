@@ -75,6 +75,25 @@ describe('今日简报', () => {
     expect(prompt.system).toContain('每行输出一个 JSON 对象')
   })
 
+  it('lists each account\'s past titles, writes each platform\'s own counter names and marks, and asks not to repeat a topic', () => {
+    const sspai: MediaNetworkAccount = { ...networkAccount('ss', 'sspai', []), platform: { ...descriptor('sspai', '少数派'), metrics: { views: '阅读', likes: '充电', comments: '评论' } } }
+    const article: MediaPost = {
+      ...post('ss', 's1', '深度拆解一个写作 Agent', '2026-11-05T08:40:00Z', 743), likes: 3, format: 'article',
+      badges: [{ key: 'home', label: '首页推荐' }, { key: 'rank:daily', label: '日榜', rank: 3 }],
+    }
+    const prompt = buildBriefPrompt({
+      accounts: [sspai], totals: [], synced: [],
+      posts: [article, post('ss', 's0', 'RAG 入门：一个视频讲清原理', '2026-11-01T09:10:00Z')], platformName: () => '少数派', today: '2026-11-19',
+    })
+    expect(prompt.input).toContain('阅读743 充电3')
+    expect(prompt.input).not.toContain('点赞3')
+    expect(prompt.input).toContain('［平台标记：首页推荐、日榜第 3 名］')
+    expect(prompt.input).toContain('已发布作品的标题（最近 2 条，新的在前；推荐选题前对照）：')
+    expect(prompt.input).toContain('- 11-01 RAG 入门：一个视频讲清原理')
+    expect(prompt.system).toContain('topic 不要推荐账号已经做过的题')
+    expect(prompt.system).toContain('周期里有新作品就不能说停更')
+  })
+
   it('shows finished lines while the answer streams, and links a line to the account it names', () => {
     const streaming = '{"kind":"fact","text":"全网播放 9.4 万"}\n{"kind":"alert","text":"小红书 7 天没发","acc'
     expect(parseBriefLines(streaming, false, [douyin, channels])).toEqual([{ kind: 'fact', text: '全网播放 9.4 万' }])

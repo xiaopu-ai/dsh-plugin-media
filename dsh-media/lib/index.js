@@ -2177,6 +2177,13 @@ const postSchema = object({
 	shares: count,
 	coverUrl: string().optional(),
 	extra,
+	badges: array(object({
+		key: string().min(1),
+		label: string(),
+		rank: number().int().positive().optional(),
+		at: string().optional(),
+		seenAt: string().optional()
+	})).optional(),
 	source: _enum(["scrape", "import"]),
 	updatedAt: string()
 });
@@ -40175,6 +40182,10 @@ function buildPlan(plan, now, random) {
 			format: plan.format,
 			...counters,
 			extra: {},
+			...hit && plan.marks !== void 0 ? { badges: plan.marks.map((mark) => ({
+				...mark,
+				seenAt: (/* @__PURE__ */ new Date(now - (publishedAgo - 1) * DAY_MS$1)).toISOString()
+			})) } : {},
 			source: "scrape",
 			updatedAt: capturedAt(now, stop)
 		});
@@ -40360,6 +40371,15 @@ function demoData(now) {
 				"comments",
 				"shares"
 			],
+			marks: [{
+				key: "rank:daily",
+				label: "日榜",
+				rank: 3
+			}, {
+				key: "rank:weekly",
+				label: "周榜",
+				rank: 12
+			}],
 			stoppedDaysAgo: 0,
 			urlOf: (index) => `https://www.woshipm.com/pd/demo${String(index)}.html`
 		},
@@ -40380,6 +40400,13 @@ function demoData(now) {
 				"collects",
 				"shares"
 			],
+			marks: [{
+				key: "home",
+				label: "首页推荐"
+			}, {
+				key: "corner:Matrix精选",
+				label: "Matrix精选"
+			}],
 			stoppedDaysAgo: 0,
 			urlOf: (index) => `https://sspai.com/post/demo${String(index)}`
 		},
@@ -40396,6 +40423,10 @@ function demoData(now) {
 			reports: [],
 			totals: ["totalViews"],
 			hidden: ["shares"],
+			marks: [{
+				key: "featured",
+				label: "精选"
+			}],
 			stoppedDaysAgo: 0,
 			urlOf: (index) => `https://www.uisdc.com/demo-${String(index)}`
 		},
@@ -41014,19 +41045,24 @@ function worksKpis(source, window) {
 	kpis.splice(at < 0 ? kpis.length : at, 0, engagementKpi(source, window));
 	return kpis.filter((kpi) => kpi !== void 0);
 }
+/** Whether a platform's numbers are readings of its page rather than daily reports: it reports no daily values. */
+function isLive(platform) {
+	return platform.totals !== void 0;
+}
 function fansKpis(source, window) {
 	const kpis = [];
 	const followers = source.latestFollowers;
 	if (followers !== void 0) {
 		const at = (day) => [...source.followers].filter(([item]) => item <= day).sort(([a], [b]) => a.localeCompare(b)).pop()?.[1];
 		const previous = at(window.previousTo);
+		const value = isLive(source.platform) ? at(window.to) : followers;
 		kpis.push({
 			key: "followers",
 			label: source.platform.id === "douyin" ? "总粉丝量" : "粉丝总数",
 			unit: "count",
-			value: followers,
+			value,
 			previous,
-			change: relative(followers, previous),
+			change: relative(value, previous),
 			daily: inRange(source.followers, window.from, window.to).map(([day, value]) => ({
 				day,
 				value
@@ -41051,8 +41087,10 @@ function totalsKpis(input, window) {
 			const value = totalOf(snapshot, key);
 			if (value !== void 0) days.set(chinaDay(snapshot.capturedAt), value);
 		}
-		const value = (input.latest === void 0 ? void 0 : totalOf(input.latest, key)) ?? [...days].sort(([a], [b]) => a.localeCompare(b)).pop()?.[1];
-		if (value === void 0) continue;
+		const latest = input.latest === void 0 ? void 0 : totalOf(input.latest, key);
+		if (latest === void 0 && days.size === 0) continue;
+		const byEnd = [...days].filter(([day]) => day <= window.to).sort(([a], [b]) => a.localeCompare(b)).pop()?.[1];
+		const value = window.to >= chinaDay(new Date(input.now).toISOString()) ? latest ?? byEnd : byEnd;
 		const previous = [...days].filter(([day]) => day <= window.previousTo).sort(([a], [b]) => a.localeCompare(b)).pop()?.[1];
 		kpis.push({
 			key: `total:${key}`,
@@ -41119,7 +41157,8 @@ function topPosts(source, input, count) {
 */
 function buildDashboard(input, days) {
 	const source = sources(input);
-	const window = windowOf(input.now, days, lastReportedDay(source, input.now));
+	const today = chinaDay(new Date(input.now).toISOString());
+	const window = windowOf(input.now, days, isLive(input.platform) ? days === 1 ? addDays(today, -1) : today : lastReportedDay(source, input.now));
 	return {
 		days,
 		from: window.from,
@@ -41237,6 +41276,8 @@ function buildPostDetail(input) {
 * 总览 across accounts: 全网 totals (plain sums, no de-duplication) with their 90-day trend, the same work published on
 * several platforms, and the 今日简报's prompt and lines. Pure functions; the suite gathers the accounts and posts.
 */
+/** Titles per account the 今日简报 sees, so it does not suggest a topic the account has already done. */
+const BRIEF_TITLES = 20;
 /** The 全网 counters, in display order, with the dashboard KPI each one sums. */
 const NETWORK_KEYS = [
 	{
@@ -41459,15 +41500,32 @@ function figure$1(value, unit) {
 function changeText$1(change) {
 	return change === void 0 ? "" : `（较上期 ${change >= 0 ? "+" : ""}${(change * 100).toFixed(0)}%）`;
 }
+/**
+* Name a post's marks for the model, such as `首页推荐、日榜第 3 名`.
+* @param post - the post.
+* @returns the marks joined, or an empty string.
+*/
+function badgeText(post) {
+	return (post.badges ?? []).map((badge) => badge.rank === void 0 ? badge.label : `${badge.label}第 ${String(badge.rank)} 名`).join("、");
+}
 function postLine(post, platform) {
-	const counters = [
-		["播放/阅读", post.views],
-		["点赞", post.likes],
-		["评论", post.comments],
-		["分享", post.shares],
-		["收藏", post.collects]
-	].flatMap(([label, value]) => value === void 0 ? [] : [`${String(label)}${String(value)}`]).join(" ");
-	return `- [${platform}] ${post.publishedAt?.slice(0, 10) ?? "时间未知"}《${post.title.slice(0, 60)}》 ${counters}`;
+	const counters = POST_COUNTERS$2.flatMap((key) => {
+		const label = platform === void 0 ? DEFAULT_COUNTER_NAMES[key] : counterLabel(platform, key);
+		return label === void 0 || post[key] === void 0 ? [] : [`${label}${String(post[key])}`];
+	}).join(" ");
+	const marks = badgeText(post);
+	return `- [${platform?.displayName ?? "未知平台"}] ${post.publishedAt === void 0 ? "时间未知" : chinaDayOf(post.publishedAt)}《${post.title.slice(0, 60)}》 ${counters}${marks === "" ? "" : ` ［平台标记：${marks}］`}`;
+}
+const DEFAULT_COUNTER_NAMES = {
+	views: "播放/阅读",
+	likes: "点赞",
+	comments: "评论",
+	shares: "分享",
+	collects: "收藏"
+};
+/** The China day of an instant, as `2026-11-19`. */
+function chinaDayOf(iso) {
+	return new Date(Date.parse(iso) + 8 * 36e5).toISOString().slice(0, 10);
 }
 /**
 * The prompt of the 今日简报: every account's counters of the last 7 days, the 全网 totals, each account's best recent
@@ -41489,14 +41547,19 @@ function buildBriefPrompt(input) {
 		for (const kpi of item.kpis) if (kpi.value !== void 0) lines.push(`- ${kpi.label}：${figure$1(kpi.value, kpi.unit)}${changeText$1(kpi.change)}`);
 		const recent = input.posts.filter((post) => post.accountId === item.account.id);
 		const newest = recent[0]?.publishedAt;
-		if (newest !== void 0) lines.push(`最近一次发布：${newest.slice(0, 10)}`);
+		if (newest !== void 0) lines.push(`最近一次发布：${chinaDayOf(newest)}`);
 		const best = [...recent].sort((a, b) => (b.views ?? b.likes ?? 0) - (a.views ?? a.likes ?? 0)).slice(0, 3);
-		if (best.length > 0) lines.push("表现最好的作品：", ...best.map((post) => postLine(post, item.platform.displayName)));
+		if (best.length > 0) lines.push("表现最好的作品：", ...best.map((post) => postLine(post, item.platform)));
+		if (recent.length > 0) {
+			lines.push(`已发布作品的标题（最近 ${String(Math.min(recent.length, BRIEF_TITLES))} 条，新的在前；推荐选题前对照）：`);
+			lines.push(...recent.slice(0, BRIEF_TITLES).map((post) => `- ${post.publishedAt === void 0 ? "" : `${chinaDayOf(post.publishedAt).slice(5)} `}${post.title.slice(0, 40)}`));
+		}
 		lines.push("");
 	}
 	lines.push("## 全网合计（各平台直接相加，不去重）", "");
 	for (const total of input.totals) lines.push(`- ${total.label}：${figure$1(total.value, total.unit)}${changeText$1(total.change)}`);
-	lines.push("", "## 最近发布的作品", "", ...input.posts.slice(0, 12).map((post) => postLine(post, input.platformName(post.accountId))));
+	const platformOf = new Map(input.accounts.map((item) => [item.account.id, item.platform]));
+	lines.push("", "## 最近发布的作品", "", ...input.posts.slice(0, 12).map((post) => postLine(post, platformOf.get(post.accountId))));
 	if (input.synced.length > 0) {
 		lines.push("", "## 多平台同步发布的作品（合计）", "");
 		for (const work of input.synced) lines.push(`- 《${work.title.slice(0, 60)}》 ${work.posts.length} 个平台，合计播放/阅读 ${figure$1(work.views, "count")}，点赞 ${figure$1(work.likes, "count")}`);
@@ -41512,7 +41575,11 @@ function buildBriefPrompt(input) {
 			"规则：text 不超过 28 个字，必须带具体数字或作品名；只用给出的数据，不编造。",
 			"detail 是点开这一行看到的说明，60 到 120 个字，分两句：先写依据（引用上面的具体数字、日期或作品），再写具体怎么做（发什么、什么形式、标题怎么写、发在哪个平台、什么时候发）。",
 			"account 照抄给出的账号名，platform 写平台名；work 照抄上面出现过的作品标题（不涉及具体作品就省略）；metric 是这一行说的指标，取 views（播放/阅读）、followers（粉丝）、fansNet（粉丝净增）、likes、comments、shares、posts（发布数）之一；没有的字段省略。",
-			"至少 2 条 action、2 条 topic；alert 只写真有问题的。"
+			"至少 2 条 action、2 条 topic；alert 只写真有问题的。",
+			"说「停更」「掉量」之前，先核对这个账号的「最近一次发布」和统计周期里的发布数；周期里有新作品就不能说停更。",
+			"topic 不要推荐账号已经做过的题：先对照上面每个账号「已发布作品的标题」。同一主题已经发过的，要么换题，要么在 detail 里点明「已发过《原标题》（日期、数据），这次做续篇／复盘／换角度」，并说清和原作品的区别。",
+			"各平台的指标名照上面写的用（比如少数派的「充电」不是点赞、文章的「阅读」不是播放），不要换成别的平台的叫法。",
+			"原因只写数据直接支持的；推测要写「可能」，并说明还缺什么数据。插件读不到流量来源、观众画像和推荐曝光，平台标记只有上面写出来的那些。"
 		].join("\n"),
 		input: lines.join("\n")
 	};
@@ -42141,6 +42208,18 @@ function parseSspaiPosts(json) {
 		const extra = {};
 		const words = parseCount(article.words_count);
 		if (words !== void 0) extra.words = words;
+		const badges = [];
+		const home = parseCount(article.recommend_to_home_at);
+		if (article.is_recommend_to_home === true || home !== void 0 && home > 0) badges.push({
+			key: "home",
+			label: "首页推荐",
+			...home === void 0 || home <= 0 ? {} : { at: parseDate(home) }
+		});
+		const corner = stringField(asRecord(article.corner), "name");
+		if (corner !== void 0) badges.push({
+			key: `corner:${corner}`,
+			label: corner
+		});
 		posts.push({
 			postId: id,
 			title,
@@ -42151,7 +42230,8 @@ function parseSspaiPosts(json) {
 			likes: parseCount(article.like_count),
 			comments: parseCount(article.comment_count),
 			...cover === void 0 ? {} : { coverUrl: cover },
-			extra
+			extra,
+			badges
 		});
 	}
 	return {
@@ -42245,13 +42325,15 @@ const sspaiAdapter = {
 			posts: "文章数",
 			likes: "获得充电",
 			totalViews: "总阅读"
-		}
+		},
+		marks: "首页推荐（带推荐时间）和 Matrix 精选这类角标，是少数派在文章数据里标出来的，每次更新都会读到。"
 	},
 	importProfile: {
 		defaultFormat: "article",
 		columns: []
 	},
 	scrapableRoles: ["own"],
+	maxPosts: 100,
 	detectLogin: detectLogin$3,
 	scrape: scrape$3,
 	identify: identify$3
@@ -42260,8 +42342,10 @@ const sspaiAdapter = {
 //#region lib/types/adapters/uisdc.js
 const HOME$2 = "https://www.uisdc.com/";
 const PROFILE_URL$2 = /^https:\/\/(?:www\.)?uisdc\.com\/u\/(\d+)/;
-/** Article pages read per update: each is one request, and the newest articles are the ones that still move. */
-const ARTICLE_PAGES = 20;
+/** Author list pages read per update; a page lists 25 articles. */
+const LIST_PAGES = 4;
+/** Article pages fetched at once. */
+const ARTICLE_BATCH = 4;
 /**
 * The user id of a 优设 profile URL.
 * @param url - such as `https://www.uisdc.com/u/14/publish/all`.
@@ -42285,7 +42369,10 @@ function headerCount(html, label) {
 */
 function parseUisdcAuthorPage(html) {
 	const posts = [];
-	for (const item of html.split(/<div class="item-wrap\b/).slice(1)) {
+	const chunks = html.split(/<div class="item-wrap\b/);
+	for (const [index, item] of chunks.entries()) {
+		if (index === 0) continue;
+		const featured = /data-jingxuan="([^"]*)"[^>]*>\s*$/.exec((chunks[index - 1] ?? "").slice(-600))?.[1]?.trim() ?? "";
 		const link = /<h2 class="item-title">\s*<a href="(https:\/\/www\.uisdc\.com\/[^"#?]+)"[^>]*>([\s\S]*?)<\/a>/.exec(item);
 		if (link === null) continue;
 		const title = text$1(link[2] ?? "");
@@ -42299,7 +42386,11 @@ function parseUisdcAuthorPage(html) {
 			publishedAt: parseDate(/<span class="meta-item meta-time"[^>]*>([^<]+)</.exec(item)?.[1]),
 			format: "article",
 			...cover === void 0 ? {} : { coverUrl: cover },
-			extra: {}
+			extra: {},
+			badges: featured === "" || featured === "0" ? [] : [{
+				key: "featured",
+				label: "精选"
+			}]
 		});
 	}
 	const extra = {};
@@ -42316,24 +42407,44 @@ function parseUisdcAuthorPage(html) {
 			extra
 		},
 		posts,
-		hasMore: /class="next page-numbers"|class="next"/.test(html)
+		hasMore: /class="next page-numbers"|class="next"|class="fy fy-next"/.test(html)
 	};
 }
 /**
-* Read the counters of an article page.
-* @param html - the article page's HTML.
-* @returns the counters found.
+* Read a `get_user_stats` answer: `{ error: 0, data: { publish, views, followed } }`.
+* @param json - response body.
+* @returns the totals; a follower count of 0 is left out, since the site answers 0 to anyone but the account itself.
 */
-function parseUisdcArticle(html) {
+function parseUisdcStats(json) {
+	const body = asRecord(json);
+	const data = body?.error === 0 ? asRecord(body.data) : void 0;
+	const followers = parseCount(data?.followed);
+	return {
+		posts: parseCount(data?.publish),
+		views: parseCount(data?.views),
+		followers: followers === 0 ? void 0 : followers
+	};
+}
+/**
+* Read an article page. 阅读 is missing on some articles: the site shows none there.
+* @param html - the article page's HTML.
+* @param uid - the author's id, to find the author's follow button.
+* @returns what the page showed.
+*/
+function parseUisdcArticle(html, uid) {
 	const views = /<span class="meta-item meta-views">\s*阅读\s*([\d.,]+\s*[万wWkK]?)\s*<\/span>/.exec(html)?.[1];
 	const likes = /class="[^"]*\bbtn-zan\b[^"]*"\s+data-count="(\d+)"/.exec(html)?.[1];
 	const collects = /class="[^"]*\bbtn-fav\b[^"]*"\s+data-count="(\d+)"/.exec(html)?.[1];
 	const comments = /<h2 class="comment-title">[\s\S]{0,200}?<em class="count">(\d+)<\/em>\s*条评论/.exec(html)?.[1];
+	const time = /<span class="meta-item meta-time" title="(\d{4}-\d{2}-\d{2} \d{2}:\d{2}(?::\d{2})?)"/.exec(html)?.[1];
+	const follow = uid === void 0 ? void 0 : [...html.matchAll(/<span[^>]*data-component="follow"[^>]*>/g)].map((match) => match[0]).find((tag) => tag.includes(`data-uid="${uid}"`));
 	return {
 		views: parseCount(views),
 		likes: parseCount(likes),
 		collects: parseCount(collects),
-		comments: parseCount(comments)
+		comments: parseCount(comments),
+		publishedAt: parseDate(time),
+		followers: parseCount(follow === void 0 ? void 0 : /data-count="(\d+)"/.exec(follow)?.[1])
 	};
 }
 /**
@@ -42394,6 +42505,11 @@ async function fetchText$1(page, url) {
 	const value = await evaluateScript(page, `fetch(${JSON.stringify(url)}, { credentials: 'include' }).then(r => r.ok ? r.text() : '').catch(() => '')`);
 	return typeof value === "string" ? value : "";
 }
+/** Fetch several pages at once; one that fails reads as empty. */
+async function fetchTexts(page, urls) {
+	const value = await evaluateScript(page, `Promise.all(${JSON.stringify(urls)}.map(url => fetch(url, { credentials: 'include' }).then(r => r.ok ? r.text() : '').catch(() => '')))`);
+	return Array.isArray(value) ? urls.map((_, index) => typeof value[index] === "string" ? value[index] : "") : urls.map(() => "");
+}
 async function scrape$2(page, account, limits) {
 	const uid = uisdcUidOf(account.profileUrl);
 	if (uid === void 0) throw new MediaScrapeError("invalid-profile", "优设主页链接应形如 https://www.uisdc.com/u/<数字ID>。");
@@ -42402,22 +42518,46 @@ async function scrape$2(page, account, limits) {
 	if (await detectLogin$2(page) === "logged-out") throw loginRequired$2();
 	const html = await evaluateScript(page, "document.documentElement.outerHTML");
 	const author = parseUisdcAuthorPage(typeof html === "string" ? html : "");
-	if (author.snapshot.posts === void 0 && author.posts.length === 0) throw new MediaScrapeError("scrape-failed", `没有在优设主页 ${uid} 上读到文章，主页链接可能有误，或页面结构已变化。`);
-	const posts = [];
-	for (const post of author.posts.slice(0, Math.min(limits.maxPosts, ARTICLE_PAGES))) {
-		const counts = parseUisdcArticle(await fetchText$1(page, post.url ?? ""));
-		posts.push({
-			...post,
-			views: counts.views,
-			likes: counts.likes,
-			collects: counts.collects,
-			comments: counts.comments
-		});
-		await sleep(500, limits.signal);
+	const listed = new Map(author.posts.map((post) => [post.postId, post]));
+	for (let number = 2, more = author.hasMore; more && number <= LIST_PAGES && listed.size < limits.maxPosts; number++) {
+		await sleep(600, limits.signal);
+		const next = parseUisdcAuthorPage(await fetchText$1(page, `${HOME$2}u/${uid}/publish/all/page/${String(number)}`));
+		for (const post of next.posts) if (!listed.has(post.postId)) listed.set(post.postId, post);
+		more = next.hasMore && next.posts.length > 0;
 	}
-	posts.push(...author.posts.slice(posts.length, limits.maxPosts));
+	const stats = parseUisdcStats(await evaluateScript(page, `fetch('/ajax.php?action=get_user_stats&uid=${uid}', { credentials: 'include' }).then(r => r.ok ? r.json() : null).catch(() => null)`).catch(() => null));
+	if (stats.posts === void 0 && author.snapshot.posts === void 0 && listed.size === 0) throw new MediaScrapeError("scrape-failed", `没有在优设主页 ${uid} 上读到文章，主页链接可能有误，或页面结构已变化。`);
+	const posts = [];
+	let followers = stats.followers;
+	const wanted = [...listed.values()].slice(0, limits.maxPosts);
+	for (let start = 0; start < wanted.length; start += ARTICLE_BATCH) {
+		const batch = wanted.slice(start, start + ARTICLE_BATCH);
+		const pages = await fetchTexts(page, batch.map((post) => post.url ?? ""));
+		for (const [index, post] of batch.entries()) {
+			const counts = parseUisdcArticle(pages[index] ?? "", uid);
+			followers ??= counts.followers;
+			posts.push({
+				...post,
+				views: counts.views,
+				likes: counts.likes,
+				collects: counts.collects,
+				comments: counts.comments,
+				publishedAt: counts.publishedAt ?? post.publishedAt
+			});
+		}
+		await sleep(400, limits.signal);
+	}
+	const extra = {
+		...author.snapshot.extra,
+		...stats.views === void 0 ? {} : { totalViews: stats.views }
+	};
 	return {
-		snapshot: author.snapshot,
+		snapshot: {
+			...author.snapshot,
+			posts: stats.posts ?? author.snapshot.posts,
+			followers: followers ?? author.snapshot.followers,
+			extra
+		},
 		posts,
 		avatarUrl: author.avatarUrl
 	};
@@ -42461,13 +42601,15 @@ const uisdcAdapter = {
 		totals: {
 			posts: "文章数",
 			totalViews: "人气"
-		}
+		},
+		marks: "「精选」是优设在作者主页的文章列表里标出来的，每次更新都会读到。优设的作者榜和热文榜还没接入。"
 	},
 	importProfile: {
 		defaultFormat: "article",
 		columns: []
 	},
 	scrapableRoles: ["own"],
+	maxPosts: 100,
 	detectLogin: detectLogin$2,
 	scrape: scrape$2,
 	identify: identify$2,
@@ -42477,7 +42619,14 @@ const uisdcAdapter = {
 //#region lib/types/adapters/woshipm.js
 const HOME$1 = "https://www.woshipm.com/";
 const PROFILE_URL$1 = /^https:\/\/(?:www\.)?woshipm\.com\/u\/(\d+)/;
-const MAX_PAGES = 10;
+/** Author pages read per update; a page lists 10 articles. */
+const MAX_PAGES = 12;
+/** The site's rankings, as its home page names them. */
+const RANKINGS = [
+	["daily", "日榜"],
+	["weekly", "周榜"],
+	["monthly", "月榜"]
+];
 /**
 * The user id of a 人人都是产品经理 profile URL.
 * @param url - such as `https://www.woshipm.com/u/12345`.
@@ -42558,6 +42707,55 @@ function parseWoshipmAuthorPage(html) {
 	};
 }
 /**
+* Read a ranking answer (`api2/app/article/popular/<period>`): `RESULT` lists the articles in ranking order, each as
+* `{ data: { id } }`.
+* @param json - response body.
+* @returns the article ids, first place first.
+*/
+function parseWoshipmRanking(json) {
+	const list = asRecord(json)?.RESULT;
+	return (Array.isArray(list) ? list : []).flatMap((item) => {
+		const id = stringField(asRecord(asRecord(item)?.data), "id");
+		return id === void 0 ? [] : [id];
+	});
+}
+/**
+* The articles in a slot of the home page's banner, as the site's script loads it
+* (`server.woshipm.com/api/v1/advert/feed?position_ids=32` for the big slider, `34` for the small one): `result` lists
+* the slides, articles among them linking `woshipm.com/<category>/<id>.html`.
+* @param json - response body.
+* @returns the article ids shown there.
+*/
+function parseWoshipmHomeSlots(json) {
+	const list = asRecord(json)?.result;
+	return (Array.isArray(list) ? list : []).flatMap((item) => {
+		const id = /^https?:\/\/(?:www\.)?woshipm\.com\/[\w-]+\/(\d+)\.html/.exec(stringField(asRecord(item), "url") ?? "")?.[1];
+		return id === void 0 ? [] : [id];
+	});
+}
+/**
+* Marks of the account's articles: a place on each ranking it is on, and a home page slot.
+* @param rankings - each ranking's article ids in order, by period.
+* @param homeSlots - ids in the home page's recommended slots.
+* @returns the marks by article id.
+*/
+function woshipmBadges(rankings, homeSlots) {
+	const marks = /* @__PURE__ */ new Map();
+	const add = (id, badge) => {
+		marks.set(id, [...marks.get(id) ?? [], badge]);
+	};
+	for (const [period, label] of RANKINGS) for (const [index, id] of (rankings[period] ?? []).entries()) add(id, {
+		key: `rank:${period}`,
+		label,
+		rank: index + 1
+	});
+	for (const id of new Set(homeSlots)) add(id, {
+		key: "home",
+		label: "首页推荐位"
+	});
+	return marks;
+}
+/**
 * The signed-in user: every page sets the global `PURE` with `is_user_logged_in` and `user_id` (0 when signed out),
 * which the site's own scripts read; the header's profile link, nickname and avatar, and whether it offers 登录, are
 * the fallback.
@@ -42601,7 +42799,7 @@ function loginRequired$1() {
 	return new MediaScrapeError("login-required", "人人都是产品经理未登录或登录已过期，请在内嵌浏览器中用微信扫码登录后重试。");
 }
 async function fetchText(page, path) {
-	const text = await evaluateScript(page, `fetch(${JSON.stringify(path)}, { credentials: 'include' }).then(r => r.ok ? r.text() : '')`);
+	const text = await evaluateScript(page, `fetch(${JSON.stringify(path)}, { credentials: 'include' }).then(r => r.ok ? r.text() : '').catch(() => '')`);
 	return typeof text === "string" ? text : "";
 }
 async function fetchJson(page, path) {
@@ -42616,21 +42814,41 @@ async function scrape$1(page, account, limits) {
 	const user = parseWoshipmProfile(await fetchJson(page, `/api2/user/profile?uid=${uid}`));
 	if (user === void 0) throw new MediaScrapeError("scrape-failed", `没有读到人人都是产品经理用户 ${uid} 的数据，主页链接可能有误，或接口已变化。`);
 	const posts = /* @__PURE__ */ new Map();
-	let html = await evaluateScript(page, "document.documentElement.outerHTML");
 	for (let number = 1; number <= MAX_PAGES && posts.size < limits.maxPosts; number++) {
-		if (number > 1) {
-			await sleep(800, limits.signal);
-			html = await fetchText(page, `/u/${uid}/page/${number}`);
-		}
-		const result = parseWoshipmAuthorPage(typeof html === "string" ? html : "");
+		if (number > 1) await sleep(800, limits.signal);
+		const result = parseWoshipmAuthorPage(await fetchText(page, number === 1 ? `/u/${uid}` : `/u/${uid}/page/${number}`));
 		for (const post of result.posts) posts.set(post.postId, post);
 		if (!result.hasMore || result.posts.length === 0) break;
 	}
+	if (posts.size === 0 && (user.snapshot.posts ?? 0) > 0) throw new MediaScrapeError("scrape-failed", `人人都是产品经理显示有 ${String(user.snapshot.posts)} 篇文章，但作者主页上没有读到文章列表，页面结构可能已变化。`);
+	const marks = woshipmBadges(await readRankings(page, limits.signal), await readHomeSlots(page));
+	const listed = [...posts.values()].slice(0, limits.maxPosts).map((post) => ({
+		...post,
+		badges: marks.get(post.postId) ?? []
+	}));
 	return {
 		snapshot: user.snapshot,
-		posts: [...posts.values()].slice(0, limits.maxPosts),
+		posts: listed,
 		avatarUrl: user.avatarUrl
 	};
+}
+/** The home page banner's two sliders; like the rankings, one that fails to load counts as empty. */
+async function readHomeSlots(page) {
+	const ids = [];
+	for (const position of [32, 34]) {
+		const json = await evaluateScript(page, `fetch('https://server.woshipm.com/api/v1/advert/feed?position_ids=${String(position)}').then(r => r.ok ? r.json() : null).catch(() => null)`).catch(() => null);
+		ids.push(...parseWoshipmHomeSlots(json));
+	}
+	return ids;
+}
+/** The site's three rankings; one that fails to load counts as empty, so a ranking never fails an update. */
+async function readRankings(page, signal) {
+	const rankings = {};
+	for (const [period] of RANKINGS) {
+		rankings[period] = parseWoshipmRanking(await fetchJson(page, `/api2/app/article/popular/${period}`).catch(() => null));
+		await sleep(300, signal);
+	}
+	return rankings;
 }
 async function identify$1(page, signal) {
 	await gotoPage(page, HOME$1, signal);
@@ -42671,13 +42889,15 @@ const woshipmAdapter = {
 			totalViews: "总阅读",
 			totalComments: "总评论",
 			totalCollects: "总收藏"
-		}
+		},
+		marks: "每次更新时看一遍人人都是产品经理的日榜、周榜、月榜和首页顶部的推荐位，你的文章在上面就记下来（记最好的名次）。只有插件看到时才记得到：两次更新之间上榜又下榜的，这里没有。"
 	},
 	importProfile: {
 		defaultFormat: "article",
 		columns: []
 	},
 	scrapableRoles: ["own"],
+	maxPosts: 100,
 	detectLogin: detectLogin$1,
 	scrape: scrape$1,
 	identify: identify$1,
@@ -43200,7 +43420,10 @@ var MediaStore = class {
 			for (const post of posts) {
 				const row = select.get(post.accountId, post.postId);
 				const stored = row === void 0 ? void 0 : this.decode(postSchema, row.doc, "posts");
-				const merged = stored === void 0 ? post : mergePost(stored, post);
+				const merged = stored === void 0 ? {
+					...post,
+					badges: mergeBadges(void 0, post.badges, post.updatedAt)
+				} : mergePost(stored, post);
 				write.run(merged.accountId, merged.postId, merged.publishedAt ?? null, merged.updatedAt, JSON.stringify(merged));
 				const previous = last.get(merged.accountId, merged.postId);
 				const unchanged = previous !== void 0 && POST_COUNTERS.every((key) => nullable(previous[key]) === (merged[key] ?? null));
@@ -43254,6 +43477,15 @@ var MediaStore = class {
 	*/
 	post(id, postId) {
 		return this.docs(postSchema, "posts", "SELECT doc FROM posts WHERE account_id = ? AND post_id = ?", id, postId)[0];
+	}
+	/**
+	* Count an account's stored posts.
+	* @param id - account id.
+	* @returns the number of posts.
+	*/
+	countPosts(id) {
+		const row = this.db.prepare("SELECT COUNT(*) AS n FROM posts WHERE account_id = ?").get(id);
+		return Number(row?.n ?? 0);
 	}
 	/**
 	* Read the newest posts: by publish time when known, otherwise by write time.
@@ -43397,9 +43629,36 @@ function mergePost(stored, next) {
 			...stored.extra,
 			...next.extra
 		},
+		badges: mergeBadges(stored.badges, next.badges, next.updatedAt),
 		source: next.source,
 		updatedAt: next.updatedAt
 	};
+}
+/**
+* Merge a post's marks: a mark once seen is kept (a ranking lists a post only for a while), its best place on a ranking
+* and the first time an update saw it are kept, and a mark seen now for the first time is stamped with `at`.
+* @param stored - the stored marks.
+* @param next - the marks read now.
+* @param at - the instant of this update.
+* @returns the marks, or undefined when neither side has any.
+*/
+function mergeBadges(stored, next, at) {
+	if (stored === void 0 && next === void 0) return void 0;
+	const byKey = /* @__PURE__ */ new Map();
+	for (const badge of stored ?? []) byKey.set(badge.key, badge);
+	for (const badge of next ?? []) {
+		const old = byKey.get(badge.key);
+		const ranks = [old?.rank, badge.rank].filter((rank) => rank !== void 0);
+		const when = badge.at ?? old?.at;
+		byKey.set(badge.key, {
+			key: badge.key,
+			label: badge.label,
+			...ranks.length === 0 ? {} : { rank: Math.min(...ranks) },
+			...when === void 0 ? {} : { at: when },
+			seenAt: old?.seenAt ?? badge.seenAt ?? at
+		});
+	}
+	return [...byKey.values()];
 }
 function nullable(value) {
 	return typeof value === "number" || typeof value === "bigint" ? Number(value) : null;
@@ -44453,10 +44712,25 @@ function kpiLines(kpis) {
 	return kpis.map((kpi) => `- ${kpi.label}：${figure(kpi.value, kpi.unit)}${changeText(kpi.change)}；口径：${kpi.hint}`);
 }
 function counters(post, platform) {
-	return POST_COUNTERS$2.flatMap((key) => {
+	const text = POST_COUNTERS$2.flatMap((key) => {
 		const label = counterLabel(platform, key);
 		return label === void 0 || post[key] === void 0 ? [] : [`${label} ${figure(post[key])}`];
 	}).join("，");
+	const marks = badgeText(post);
+	return marks === "" ? text : `${text}${text === "" ? "" : "，"}平台标记：${marks}`;
+}
+/**
+* What the numbers cover and what the plugin cannot see, so a diagnosis keeps facts and guesses apart.
+* @param platform - the account's platform.
+* @param coverage - posts read against the platform's count.
+* @returns Markdown lines.
+*/
+function renderBounds(platform, coverage) {
+	const noun = platform.noun ?? "作品";
+	const lines = ["## 数据边界（解释原因时必须遵守）"];
+	if (coverage !== void 0) lines.push(coverage.total !== void 0 && coverage.total > coverage.read ? `- 插件读到 ${String(coverage.read)} 条${noun}，平台显示账号共 ${String(coverage.total)} 条；排名、中位数只在读到的这些里算，不能当成全账号的结论。` : `- 插件读到 ${String(coverage.read)} 条${noun}${coverage.total === void 0 ? "" : `（平台显示共 ${String(coverage.total)} 条）`}。`);
+	lines.push(`- 插件只有平台公开给作者的数：${Object.values(platform.metrics ?? {}).join("、") || "播放、点赞、评论等"}。读不到流量来源、推荐曝光、观众画像；平台标记只有列出来的那些${platform.marks === void 0 ? "（这个平台没有接入推荐和榜单标记）" : ""}。`, "- 只把数据直接支持的写成结论；原因若是推测，写「可能」，并说明要验证还缺什么数据。不要从几条作品推出「全账号」「已经失效」「决定了七成」这类断言。");
+	return lines;
 }
 /**
 * Render a dashboard as Markdown for the model.
@@ -44476,7 +44750,8 @@ function renderDashboard(dashboard) {
 		...dashboard.totals.length === 0 ? [] : ["## 账号总数", ...dashboard.totals.map((kpi) => kpiLines([kpi])[0] + daily(kpi))],
 		"## 近 30 天发布、数据最好的作品",
 		...dashboard.top.map((item, index) => `${index + 1}. 《${item.post.title}》 ${item.label} ${figure(item.value)}（id ${item.post.postId}）`),
-		dashboard.top.length === 0 ? "暂无" : ""
+		dashboard.top.length === 0 ? "暂无" : "",
+		...renderBounds(platform, dashboard.coverage)
 	].filter((line) => line !== "").join("\n");
 }
 /**
@@ -44507,8 +44782,10 @@ function renderPostDetail(detail) {
 		"## 数据",
 		...detail.metrics.map((metric) => `- ${metric.label}：${figure(metric.value)}${versus(metric.value, metric.median)}`),
 		...detail.rates.length === 0 ? [] : ["## 比率", ...detail.rates.map((rate) => `- ${rate.label}：${figure(rate.value, "percent")}${versus(rate.value, rate.median, "percent")}`)],
-		detail.rank === void 0 ? "" : `按${detail.rank.by}在近期 ${detail.rank.of} 条作品里排第 ${detail.rank.position}。`,
-		`对比基准：同账号最近 ${detail.baselinePosts} 条其他作品。`
+		badgeText(post) === "" ? "" : `平台标记：${badgeText(post)}`,
+		detail.rank === void 0 ? "" : `按${detail.rank.by}在插件读到的近期 ${detail.rank.of} 条作品里排第 ${detail.rank.position}。`,
+		`对比基准：同账号最近 ${detail.baselinePosts} 条其他作品。`,
+		...renderBounds(detail.platform, detail.coverage)
 	].filter((line) => line !== "").join("\n");
 }
 /**
@@ -44988,9 +45265,8 @@ var __esDecorate = function(ctor, descriptorIn, decorators, contextIn, initializ
 	if (target) Object.defineProperty(target, contextIn.name, descriptor);
 	done = true;
 };
-/** Posts read per account for the 总览 feed and the synced-work search, and the most the feed shows. */
+/** Posts read per account for the 总览 feed and the synced-work search: each account's newest, so a platform filter shows them all. */
 const NETWORK_POSTS_PER_ACCOUNT = 30;
-const NETWORK_FEED = 60;
 /** Days of the 全网 trend chart. */
 /** Longest a keep-alive visit may take, slow login pages included. */
 const KEEP_ALIVE_TIMEOUT_MS = 9e4;
@@ -45060,6 +45336,8 @@ const IMAGE_TYPES = [
 	"image/gif"
 ];
 const POST_LIMIT_MAX = 500;
+/** Posts an account's board lists: every article of the article sites, which read up to 100. */
+const DASHBOARD_POSTS = 100;
 /** Longest direction a topic report accepts, in characters. */
 const MAX_DIRECTION_CHARS = 500;
 /** Snapshots searched for the last known value of a counter the newest snapshot lacks. */
@@ -46062,7 +46340,7 @@ let MediaSuite = (() => {
 				accounts,
 				totals: networkTotals(accounts, history),
 				synced: findSyncedWorks(posts, (id) => platformOf.get(id)),
-				posts: posts.slice(0, NETWORK_FEED)
+				posts
 			};
 		}
 		/**
@@ -46163,7 +46441,16 @@ let MediaSuite = (() => {
 				account,
 				platform: this.descriptorOf(account.platform),
 				health: this.healthOf(account, now),
-				posts: this.store.posts(id, 50)
+				posts: this.store.posts(id, DASHBOARD_POSTS),
+				coverage: this.coverage(account)
+			};
+		}
+		/** How many posts of an account are stored, against the count its platform last showed. */
+		coverage(account) {
+			const total = latestKnown(this.store.recentSnapshots(account.id, LATEST_KNOWN_SNAPSHOTS))?.posts;
+			return {
+				read: this.store.countPosts(account.id),
+				...total === void 0 ? {} : { total }
 			};
 		}
 		/**
@@ -46177,12 +46464,15 @@ let MediaSuite = (() => {
 			const account = this.account(id);
 			const post = this.store.post(id, postId);
 			if (post === void 0) throw notFound("post", postId);
-			return buildPostDetail({
-				account,
-				platform: this.descriptorOf(account.platform),
-				post,
-				recent: this.store.posts(id, 50)
-			});
+			return {
+				...buildPostDetail({
+					account,
+					platform: this.descriptorOf(account.platform),
+					post,
+					recent: this.store.posts(id, 50)
+				}),
+				coverage: this.coverage(account)
+			};
 		}
 		/**
 		* Scrape one account now through the platform's headless browser. The run is recorded even when it fails.
@@ -46221,7 +46511,7 @@ let MediaSuite = (() => {
 			const profile = this.profileFor(account);
 			try {
 				const limits = {
-					maxPosts: this.config.maxPostsPerScrape,
+					maxPosts: Math.max(this.config.maxPostsPerScrape, adapter.maxPosts ?? 0),
 					signal: deadline
 				};
 				const result = await this.browser.withPage(profile, deadline, (page) => scrape(page, account, limits));

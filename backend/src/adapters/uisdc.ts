@@ -1,7 +1,10 @@
 /**
  * 优设 adapter: own accounts read from the site while logged in. The author page `/u/<id>/publish/all` lists the
- * articles (title, link, date, cover) and the author's 文章 and 人气 totals; the counters of each article are on its own
- * page: 阅读 (the site rounds it to 0.1万 from 10,000 up), 点赞 and 收藏 (`data-count` of the buttons) and 评论.
+ * articles (title, link, date, cover, and `data-jingxuan` for 精选) a page at a time (`…/page/<n>`, 下一页 links the
+ * next); `ajax.php?action=get_user_stats` answers the totals the page header shows (发布, 人气, and 粉丝 to the account
+ * itself). The counters of each article are on its own page: 阅读 (rounded to 0.1k / 0.1万; some articles show none),
+ * 点赞 and 收藏 (`data-count` of the buttons), 评论, the exact publish time (the `title` of its date) and the author's
+ * follower count on the follow button.
  */
 import type { Page } from 'playwright-core'
 import { parseCount, parseDate } from '../counters.ts'
@@ -12,8 +15,10 @@ import type { MediaIdentityFields, MediaPlatformAdapter, MediaPostFields, MediaS
 
 const HOME = 'https://www.uisdc.com/'
 const PROFILE_URL = /^https:\/\/(?:www\.)?uisdc\.com\/u\/(\d+)/
-/** Article pages read per update: each is one request, and the newest articles are the ones that still move. */
-const ARTICLE_PAGES = 20
+/** Author list pages read per update; a page lists 25 articles. */
+const LIST_PAGES = 4
+/** Article pages fetched at once. */
+const ARTICLE_BATCH = 4
 
 /**
  * The user id of a 优设 profile URL.
@@ -55,7 +60,11 @@ function headerCount(html: string, label: string): number | undefined {
  */
 export function parseUisdcAuthorPage(html: string): UisdcAuthorPage {
   const posts: MediaPostFields[] = []
-  for (const item of html.split(/<div class="item-wrap\b/).slice(1)) {
+  const chunks = html.split(/<div class="item-wrap\b/)
+  for (const [index, item] of chunks.entries()) {
+    if (index === 0) continue
+    // The item's own element, ending the chunk before, carries data-jingxuan: empty, or set when the site featured it.
+    const featured = /data-jingxuan="([^"]*)"[^>]*>\s*$/.exec((chunks[index - 1] ?? '').slice(-600))?.[1]?.trim() ?? ''
     const link = /<h2 class="item-title">\s*<a href="(https:\/\/www\.uisdc\.com\/[^"#?]+)"[^>]*>([\s\S]*?)<\/a>/.exec(item)
     if (link === null) continue
     const title = text(link[2] ?? '')
@@ -70,6 +79,7 @@ export function parseUisdcAuthorPage(html: string): UisdcAuthorPage {
       format: 'article',
       ...cover === undefined ? {} : { coverUrl: cover },
       extra: {},
+      badges: featured === '' || featured === '0' ? [] : [{ key: 'featured', label: '精选' }],
     })
   }
   const extra: Record<string, number> = {}
@@ -82,29 +92,60 @@ export function parseUisdcAuthorPage(html: string): UisdcAuthorPage {
     avatarUrl: avatar,
     snapshot: { followers: headerCount(html, '粉丝'), posts: headerCount(html, '文章'), extra },
     posts,
-    hasMore: /class="next page-numbers"|class="next"/.test(html),
+    hasMore: /class="next page-numbers"|class="next"|class="fy fy-next"/.test(html),
   }
 }
 
-/** Counters of one article page. */
+/** The header totals as `ajax.php?action=get_user_stats` answers them. */
+export interface UisdcStats {
+  readonly posts?: number | undefined
+  readonly views?: number | undefined
+  /** Followers; the site answers them to the account itself only, else 0. */
+  readonly followers?: number | undefined
+}
+
+/**
+ * Read a `get_user_stats` answer: `{ error: 0, data: { publish, views, followed } }`.
+ * @param json - response body.
+ * @returns the totals; a follower count of 0 is left out, since the site answers 0 to anyone but the account itself.
+ */
+export function parseUisdcStats(json: unknown): UisdcStats {
+  const body = asRecord(json)
+  const data = body?.error === 0 ? asRecord(body.data) : undefined
+  const followers = parseCount(data?.followed)
+  return { posts: parseCount(data?.publish), views: parseCount(data?.views), followers: followers === 0 ? undefined : followers }
+}
+
+/** What one article page shows. */
 export interface UisdcArticleCounts {
   readonly views?: number | undefined
   readonly likes?: number | undefined
   readonly collects?: number | undefined
   readonly comments?: number | undefined
+  /** The exact publish time; the author list gives the day only. */
+  readonly publishedAt?: string | undefined
+  /** The author's followers, from the follow button of the author box. */
+  readonly followers?: number | undefined
 }
 
 /**
- * Read the counters of an article page.
+ * Read an article page. 阅读 is missing on some articles: the site shows none there.
  * @param html - the article page's HTML.
- * @returns the counters found.
+ * @param uid - the author's id, to find the author's follow button.
+ * @returns what the page showed.
  */
-export function parseUisdcArticle(html: string): UisdcArticleCounts {
+export function parseUisdcArticle(html: string, uid?: string): UisdcArticleCounts {
   const views = /<span class="meta-item meta-views">\s*阅读\s*([\d.,]+\s*[万wWkK]?)\s*<\/span>/.exec(html)?.[1]
   const likes = /class="[^"]*\bbtn-zan\b[^"]*"\s+data-count="(\d+)"/.exec(html)?.[1]
   const collects = /class="[^"]*\bbtn-fav\b[^"]*"\s+data-count="(\d+)"/.exec(html)?.[1]
   const comments = /<h2 class="comment-title">[\s\S]{0,200}?<em class="count">(\d+)<\/em>\s*条评论/.exec(html)?.[1]
-  return { views: parseCount(views), likes: parseCount(likes), collects: parseCount(collects), comments: parseCount(comments) }
+  const time = /<span class="meta-item meta-time" title="(\d{4}-\d{2}-\d{2} \d{2}:\d{2}(?::\d{2})?)"/.exec(html)?.[1]
+  const follow = uid === undefined ? undefined
+    : [...html.matchAll(/<span[^>]*data-component="follow"[^>]*>/g)].map(match => match[0]).find(tag => tag.includes(`data-uid="${uid}"`))
+  return {
+    views: parseCount(views), likes: parseCount(likes), collects: parseCount(collects), comments: parseCount(comments),
+    publishedAt: parseDate(time), followers: parseCount(follow === undefined ? undefined : /data-count="(\d+)"/.exec(follow)?.[1]),
+  }
 }
 
 /**
@@ -178,6 +219,12 @@ async function fetchText(page: Page, url: string): Promise<string> {
   return typeof value === 'string' ? value : ''
 }
 
+/** Fetch several pages at once; one that fails reads as empty. */
+async function fetchTexts(page: Page, urls: readonly string[]): Promise<string[]> {
+  const value = await evaluateScript(page, `Promise.all(${JSON.stringify(urls)}.map(url => fetch(url, { credentials: 'include' }).then(r => r.ok ? r.text() : '').catch(() => '')))`)
+  return Array.isArray(value) ? urls.map((_, index) => typeof value[index] === 'string' ? value[index] : '') : urls.map(() => '')
+}
+
 async function scrape(page: Page, account: MediaAccount, limits: MediaScrapeLimits): Promise<MediaScrapeResult> {
   const uid = uisdcUidOf(account.profileUrl)
   if (uid === undefined) throw new MediaScrapeError('invalid-profile', '优设主页链接应形如 https://www.uisdc.com/u/<数字ID>。')
@@ -186,17 +233,33 @@ async function scrape(page: Page, account: MediaAccount, limits: MediaScrapeLimi
   if (await detectLogin(page) === 'logged-out') throw loginRequired()
   const html = await evaluateScript(page, 'document.documentElement.outerHTML')
   const author = parseUisdcAuthorPage(typeof html === 'string' ? html : '')
-  if (author.snapshot.posts === undefined && author.posts.length === 0) {
+  const listed = new Map(author.posts.map(post => [post.postId, post]))
+  for (let number = 2, more = author.hasMore; more && number <= LIST_PAGES && listed.size < limits.maxPosts; number++) {
+    await sleep(600, limits.signal)
+    const next = parseUisdcAuthorPage(await fetchText(page, `${HOME}u/${uid}/publish/all/page/${String(number)}`))
+    for (const post of next.posts) if (!listed.has(post.postId)) listed.set(post.postId, post)
+    more = next.hasMore && next.posts.length > 0
+  }
+  const stats = parseUisdcStats(await evaluateScript(page, `fetch('/ajax.php?action=get_user_stats&uid=${uid}', { credentials: 'include' }).then(r => r.ok ? r.json() : null).catch(() => null)`).catch(() => null))
+  if (stats.posts === undefined && author.snapshot.posts === undefined && listed.size === 0) {
     throw new MediaScrapeError('scrape-failed', `没有在优设主页 ${uid} 上读到文章，主页链接可能有误，或页面结构已变化。`)
   }
   const posts: MediaPostFields[] = []
-  for (const post of author.posts.slice(0, Math.min(limits.maxPosts, ARTICLE_PAGES))) {
-    const counts = parseUisdcArticle(await fetchText(page, post.url ?? ''))
-    posts.push({ ...post, views: counts.views, likes: counts.likes, collects: counts.collects, comments: counts.comments })
-    await sleep(500, limits.signal)
+  let followers = stats.followers
+  const wanted = [...listed.values()].slice(0, limits.maxPosts)
+  for (let start = 0; start < wanted.length; start += ARTICLE_BATCH) {
+    const batch = wanted.slice(start, start + ARTICLE_BATCH)
+    const pages = await fetchTexts(page, batch.map(post => post.url ?? ''))
+    for (const [index, post] of batch.entries()) {
+      const counts = parseUisdcArticle(pages[index] ?? '', uid)
+      followers ??= counts.followers
+      posts.push({ ...post, views: counts.views, likes: counts.likes, collects: counts.collects, comments: counts.comments, publishedAt: counts.publishedAt ?? post.publishedAt })
+    }
+    await sleep(400, limits.signal)
   }
-  posts.push(...author.posts.slice(posts.length, limits.maxPosts))
-  return { snapshot: author.snapshot, posts, avatarUrl: author.avatarUrl }
+  const extra = { ...author.snapshot.extra, ...stats.views === undefined ? {} : { totalViews: stats.views } }
+  const snapshot: MediaSnapshotFields = { ...author.snapshot, posts: stats.posts ?? author.snapshot.posts, followers: followers ?? author.snapshot.followers, extra }
+  return { snapshot, posts, avatarUrl: author.avatarUrl }
 }
 
 async function identify(page: Page, signal: AbortSignal): Promise<MediaIdentityFields | undefined> {
@@ -229,9 +292,11 @@ export const uisdcAdapter: MediaPlatformAdapter = {
     beta: true,
     scanApp: '微信',
     totals: { posts: '文章数', totalViews: '人气' },
+    marks: '「精选」是优设在作者主页的文章列表里标出来的，每次更新都会读到。优设的作者榜和热文榜还没接入。',
   },
   importProfile: { defaultFormat: 'article', columns: [] },
   scrapableRoles: ['own'],
+  maxPosts: 100,
   detectLogin,
   scrape,
   identify,

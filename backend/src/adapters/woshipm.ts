@@ -1,18 +1,24 @@
 /**
  * 人人都是产品经理 adapter: own accounts read from the site while logged in. `api2/user/profile` answers the account
  * totals (粉丝, 文章, total 浏览, 点赞, 评论 and 收藏 over all articles); the author page `/u/<uid>` lists the articles
- * a page at a time (`/u/<uid>/page/<n>`, WordPress pagination) with each one's 浏览 and 收藏.
+ * a page at a time (`/u/<uid>/page/<n>`, WordPress pagination) with each one's 浏览 and 收藏. The list is read from the
+ * pages as the server sends them: in the open page the site's scripts redraw it, and the drawn page held no cards.
+ * Each update also reads the site's 日榜, 周榜 and 月榜 (`api2/app/article/popular/<daily|weekly|monthly>`) and the
+ * home page's recommended slots, and marks the account's articles found there.
  */
 import type { Page } from 'playwright-core'
 import { parseCount, parseDate } from '../counters.ts'
 import { MediaScrapeError } from '../errors.ts'
-import type { MediaAccount, MediaLoginState } from '../types.ts'
+import type { MediaAccount, MediaLoginState, MediaPostBadge } from '../types.ts'
 import { asRecord, evaluateScript, gotoPage, openLoginScript, sleep, stringField } from './page.ts'
 import type { MediaIdentityFields, MediaPlatformAdapter, MediaPostFields, MediaScrapeLimits, MediaScrapeResult, MediaSnapshotFields } from './types.ts'
 
 const HOME = 'https://www.woshipm.com/'
 const PROFILE_URL = /^https:\/\/(?:www\.)?woshipm\.com\/u\/(\d+)/
-const MAX_PAGES = 10
+/** Author pages read per update; a page lists 10 articles. */
+const MAX_PAGES = 12
+/** The site's rankings, as its home page names them. */
+const RANKINGS = [['daily', '日榜'], ['weekly', '周榜'], ['monthly', '月榜']] as const
 
 /**
  * The user id of a 人人都是产品经理 profile URL.
@@ -109,6 +115,51 @@ export function parseWoshipmAuthorPage(html: string): WoshipmPostPage {
 }
 
 /**
+ * Read a ranking answer (`api2/app/article/popular/<period>`): `RESULT` lists the articles in ranking order, each as
+ * `{ data: { id } }`.
+ * @param json - response body.
+ * @returns the article ids, first place first.
+ */
+export function parseWoshipmRanking(json: unknown): string[] {
+  const list = asRecord(json)?.RESULT
+  return (Array.isArray(list) ? list : []).flatMap(item => {
+    const id = stringField(asRecord(asRecord(item)?.data), 'id')
+    return id === undefined ? [] : [id]
+  })
+}
+
+/**
+ * The articles in a slot of the home page's banner, as the site's script loads it
+ * (`server.woshipm.com/api/v1/advert/feed?position_ids=32` for the big slider, `34` for the small one): `result` lists
+ * the slides, articles among them linking `woshipm.com/<category>/<id>.html`.
+ * @param json - response body.
+ * @returns the article ids shown there.
+ */
+export function parseWoshipmHomeSlots(json: unknown): string[] {
+  const list = asRecord(json)?.result
+  return (Array.isArray(list) ? list : []).flatMap(item => {
+    const id = /^https?:\/\/(?:www\.)?woshipm\.com\/[\w-]+\/(\d+)\.html/.exec(stringField(asRecord(item), 'url') ?? '')?.[1]
+    return id === undefined ? [] : [id]
+  })
+}
+
+/**
+ * Marks of the account's articles: a place on each ranking it is on, and a home page slot.
+ * @param rankings - each ranking's article ids in order, by period.
+ * @param homeSlots - ids in the home page's recommended slots.
+ * @returns the marks by article id.
+ */
+export function woshipmBadges(rankings: Readonly<Record<string, readonly string[]>>, homeSlots: readonly string[]): Map<string, MediaPostBadge[]> {
+  const marks = new Map<string, MediaPostBadge[]>()
+  const add = (id: string, badge: MediaPostBadge): void => { marks.set(id, [...marks.get(id) ?? [], badge]) }
+  for (const [period, label] of RANKINGS) {
+    for (const [index, id] of (rankings[period] ?? []).entries()) add(id, { key: `rank:${period}`, label, rank: index + 1 })
+  }
+  for (const id of new Set(homeSlots)) add(id, { key: 'home', label: '首页推荐位' })
+  return marks
+}
+
+/**
  * The signed-in user: every page sets the global `PURE` with `is_user_logged_in` and `user_id` (0 when signed out),
  * which the site's own scripts read; the header's profile link, nickname and avatar, and whether it offers 登录, are
  * the fallback.
@@ -164,7 +215,7 @@ function loginRequired(): MediaScrapeError {
 }
 
 async function fetchText(page: Page, path: string): Promise<string> {
-  const text = await evaluateScript(page, `fetch(${JSON.stringify(path)}, { credentials: 'include' }).then(r => r.ok ? r.text() : '')`)
+  const text = await evaluateScript(page, `fetch(${JSON.stringify(path)}, { credentials: 'include' }).then(r => r.ok ? r.text() : '').catch(() => '')`)
   return typeof text === 'string' ? text : ''
 }
 
@@ -181,17 +232,38 @@ async function scrape(page: Page, account: MediaAccount, limits: MediaScrapeLimi
   const user = parseWoshipmProfile(await fetchJson(page, `/api2/user/profile?uid=${uid}`))
   if (user === undefined) throw new MediaScrapeError('scrape-failed', `没有读到人人都是产品经理用户 ${uid} 的数据，主页链接可能有误，或接口已变化。`)
   const posts = new Map<string, MediaPostFields>()
-  let html = await evaluateScript(page, 'document.documentElement.outerHTML')
   for (let number = 1; number <= MAX_PAGES && posts.size < limits.maxPosts; number++) {
-    if (number > 1) {
-      await sleep(800, limits.signal)
-      html = await fetchText(page, `/u/${uid}/page/${number}`)
-    }
-    const result = parseWoshipmAuthorPage(typeof html === 'string' ? html : '')
+    if (number > 1) await sleep(800, limits.signal)
+    const result = parseWoshipmAuthorPage(await fetchText(page, number === 1 ? `/u/${uid}` : `/u/${uid}/page/${number}`))
     for (const post of result.posts) posts.set(post.postId, post)
     if (!result.hasMore || result.posts.length === 0) break
   }
-  return { snapshot: user.snapshot, posts: [...posts.values()].slice(0, limits.maxPosts), avatarUrl: user.avatarUrl }
+  if (posts.size === 0 && (user.snapshot.posts ?? 0) > 0) {
+    throw new MediaScrapeError('scrape-failed', `人人都是产品经理显示有 ${String(user.snapshot.posts)} 篇文章，但作者主页上没有读到文章列表，页面结构可能已变化。`)
+  }
+  const marks = woshipmBadges(await readRankings(page, limits.signal), await readHomeSlots(page))
+  const listed = [...posts.values()].slice(0, limits.maxPosts).map(post => ({ ...post, badges: marks.get(post.postId) ?? [] }))
+  return { snapshot: user.snapshot, posts: listed, avatarUrl: user.avatarUrl }
+}
+
+/** The home page banner's two sliders; like the rankings, one that fails to load counts as empty. */
+async function readHomeSlots(page: Page): Promise<string[]> {
+  const ids: string[] = []
+  for (const position of [32, 34]) {
+    const json = await evaluateScript(page, `fetch('https://server.woshipm.com/api/v1/advert/feed?position_ids=${String(position)}').then(r => r.ok ? r.json() : null).catch(() => null)`).catch(() => null)
+    ids.push(...parseWoshipmHomeSlots(json))
+  }
+  return ids
+}
+
+/** The site's three rankings; one that fails to load counts as empty, so a ranking never fails an update. */
+async function readRankings(page: Page, signal: AbortSignal): Promise<Record<string, string[]>> {
+  const rankings: Record<string, string[]> = {}
+  for (const [period] of RANKINGS) {
+    rankings[period] = parseWoshipmRanking(await fetchJson(page, `/api2/app/article/popular/${period}`).catch(() => null))
+    await sleep(300, signal)
+  }
+  return rankings
 }
 
 async function identify(page: Page, signal: AbortSignal): Promise<MediaIdentityFields | undefined> {
@@ -227,9 +299,11 @@ export const woshipmAdapter: MediaPlatformAdapter = {
     beta: true,
     scanApp: '微信',
     totals: { posts: '文章数', likes: '被赞', totalViews: '总阅读', totalComments: '总评论', totalCollects: '总收藏' },
+    marks: '每次更新时看一遍人人都是产品经理的日榜、周榜、月榜和首页顶部的推荐位，你的文章在上面就记下来（记最好的名次）。只有插件看到时才记得到：两次更新之间上榜又下榜的，这里没有。',
   },
   importProfile: { defaultFormat: 'article', columns: [] },
   scrapableRoles: ['own'],
+  maxPosts: 100,
   detectLogin,
   scrape,
   identify,

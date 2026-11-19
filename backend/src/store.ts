@@ -11,7 +11,7 @@ import {
 } from './schemas.ts'
 import type {
   MediaAccount, MediaAccountId, MediaAnalysisReport, MediaBrief, MediaDraft, MediaDraftId, MediaLoginState, MediaMetricSnapshot,
-  MediaPost, MediaPostSnapshot,
+  MediaPost, MediaPostBadge, MediaPostSnapshot,
   MediaReportId, MediaRunRecord, MediaTopicReport,
 } from './types.ts'
 
@@ -256,7 +256,7 @@ export class MediaStore {
       for (const post of posts) {
         const row: Row | undefined = select.get(post.accountId, post.postId)
         const stored = row === undefined ? undefined : this.decode(postSchema, row.doc, 'posts')
-        const merged: MediaPost = stored === undefined ? post : mergePost(stored, post)
+        const merged: MediaPost = stored === undefined ? { ...post, badges: mergeBadges(undefined, post.badges, post.updatedAt) } : mergePost(stored, post)
         write.run(merged.accountId, merged.postId, merged.publishedAt ?? null, merged.updatedAt, JSON.stringify(merged))
         const previous: Row | undefined = last.get(merged.accountId, merged.postId)
         const unchanged = previous !== undefined && POST_COUNTERS.every(key => nullable(previous[key]) === (merged[key] ?? null))
@@ -307,6 +307,16 @@ export class MediaStore {
    */
   post(id: MediaAccountId, postId: string): MediaPost | undefined {
     return this.docs(postSchema, 'posts', 'SELECT doc FROM posts WHERE account_id = ? AND post_id = ?', id, postId)[0]
+  }
+
+  /**
+   * Count an account's stored posts.
+   * @param id - account id.
+   * @returns the number of posts.
+   */
+  countPosts(id: MediaAccountId): number {
+    const row: Row | undefined = this.db.prepare('SELECT COUNT(*) AS n FROM posts WHERE account_id = ?').get(id)
+    return Number(row?.n ?? 0)
   }
 
   /**
@@ -465,9 +475,36 @@ export function mergePost(stored: MediaPost, next: MediaPost): MediaPost {
     shares: next.shares ?? stored.shares,
     coverUrl: next.coverUrl ?? stored.coverUrl,
     extra: { ...stored.extra, ...next.extra },
+    badges: mergeBadges(stored.badges, next.badges, next.updatedAt),
     source: next.source,
     updatedAt: next.updatedAt,
   }
+}
+
+/**
+ * Merge a post's marks: a mark once seen is kept (a ranking lists a post only for a while), its best place on a ranking
+ * and the first time an update saw it are kept, and a mark seen now for the first time is stamped with `at`.
+ * @param stored - the stored marks.
+ * @param next - the marks read now.
+ * @param at - the instant of this update.
+ * @returns the marks, or undefined when neither side has any.
+ */
+export function mergeBadges(stored: readonly MediaPostBadge[] | undefined, next: readonly MediaPostBadge[] | undefined, at: string): MediaPostBadge[] | undefined {
+  if (stored === undefined && next === undefined) return undefined
+  const byKey = new Map<string, MediaPostBadge>()
+  for (const badge of stored ?? []) byKey.set(badge.key, badge)
+  for (const badge of next ?? []) {
+    const old = byKey.get(badge.key)
+    const ranks = [old?.rank, badge.rank].filter(rank => rank !== undefined)
+    const when = badge.at ?? old?.at
+    byKey.set(badge.key, {
+      key: badge.key, label: badge.label,
+      ...ranks.length === 0 ? {} : { rank: Math.min(...ranks) },
+      ...when === undefined ? {} : { at: when },
+      seenAt: old?.seenAt ?? badge.seenAt ?? at,
+    })
+  }
+  return [...byKey.values()]
 }
 
 function nullable(value: unknown): number | null {

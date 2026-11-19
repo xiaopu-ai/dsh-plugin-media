@@ -80,6 +80,11 @@ export interface MediaPlatformAdapter {
   /** Roles `scrape` supports; omitted means every role. Other roles are import-only and skipped by monitoring. */
   readonly scrapableRoles?: readonly MediaAccountRole[]
   /**
+   * Posts one scrape reads when more than the configured number: article sites list every article a page or an API
+   * call at a time, and an author rarely has more than a hundred, so their whole list is read.
+   */
+  readonly maxPosts?: number
+  /**
    * Inspect the platform's persistent browser profile.
    * @param page - a page of that profile, possibly showing any site.
    * @returns the detected login state.

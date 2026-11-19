@@ -74,6 +74,13 @@ export const postSchema: z.ZodType<MediaPost> = z.object({
   shares: count,
   coverUrl: z.string().optional(),
   extra,
+  badges: z.array(z.object({
+    key: z.string().min(1),
+    label: z.string(),
+    rank: z.number().int().positive().optional(),
+    at: z.string().optional(),
+    seenAt: z.string().optional(),
+  })).optional(),
   source: z.enum(['scrape', 'import']),
   updatedAt: z.string(),
 })

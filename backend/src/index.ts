@@ -57,15 +57,14 @@ import { registerWritingTools } from './writing-tools.ts'
 import type {
   MediaAccount, MediaAccountDraft, MediaAccountId, MediaAccountIdentity, MediaAccountOverview, MediaAnalysisReport, MediaBrowserFrame,
   MediaBrowserId, MediaBrowserInput, MediaBrowserView, MediaDraft, MediaDraftId, MediaDraftInput, MediaUiSettings, MediaImportResult,
-  MediaLoginState, MediaPlatformDescriptor, MediaAccountHealth, MediaAccountSummary, MediaDashboard, MediaPostDetail, MediaSummary,
+  MediaLoginState, MediaPlatformDescriptor, MediaPostCoverage, MediaAccountHealth, MediaAccountSummary, MediaDashboard, MediaPostDetail, MediaSummary,
   MediaBriefItem, MediaBriefState, MediaNetwork, MediaNetworkAccount,
   MediaKeywordSearch, MediaNewsItem, MediaPlatformId, MediaPost, MediaRelatedPost, MediaReportId, MediaRunRecord, MediaTopicReport,
   MediaTopicResearch, MediaTopicSuggestion, MediaTrendingTopic,
 } from './types.ts'
 
-/** Posts read per account for the 总览 feed and the synced-work search, and the most the feed shows. */
+/** Posts read per account for the 总览 feed and the synced-work search: each account's newest, so a platform filter shows them all. */
 const NETWORK_POSTS_PER_ACCOUNT = 30
-const NETWORK_FEED = 60
 /** Days of the 全网 trend chart. */
 /** Longest a keep-alive visit may take, slow login pages included. */
 const KEEP_ALIVE_TIMEOUT_MS = 90_000
@@ -249,6 +248,8 @@ export const Config: z<Partial<Config>, Config> = z.object({
 const IMAGE_TYPES: readonly string[] = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
 
 const POST_LIMIT_MAX = 500
+/** Posts an account's board lists: every article of the article sites, which read up to 100. */
+const DASHBOARD_POSTS = 100
 /** Longest direction a topic report accepts, in characters. */
 const MAX_DIRECTION_CHARS = 500
 /** Snapshots searched for the last known value of a counter the newest snapshot lacks. */
@@ -766,7 +767,7 @@ export class MediaSuite extends TypertRemoteService {
     const platformOf = new Map<string, string>(own.map(account => [account.id, account.platform]))
     return {
       days: span, accounts, totals: networkTotals(accounts, history),
-      synced: findSyncedWorks(posts, id => platformOf.get(id)), posts: posts.slice(0, NETWORK_FEED),
+      synced: findSyncedWorks(posts, id => platformOf.get(id)), posts,
     }
   }
 
@@ -863,8 +864,15 @@ export class MediaSuite extends TypertRemoteService {
       account,
       platform: this.descriptorOf(account.platform),
       health: this.healthOf(account, now),
-      posts: this.store.posts(id, 50),
+      posts: this.store.posts(id, DASHBOARD_POSTS),
+      coverage: this.coverage(account),
     }
+  }
+
+  /** How many posts of an account are stored, against the count its platform last showed. */
+  private coverage(account: MediaAccount): MediaPostCoverage {
+    const total = latestKnown(this.store.recentSnapshots(account.id, LATEST_KNOWN_SNAPSHOTS))?.posts
+    return { read: this.store.countPosts(account.id), ...total === undefined ? {} : { total } }
   }
 
   /**
@@ -879,7 +887,7 @@ export class MediaSuite extends TypertRemoteService {
     const account = this.account(id)
     const post = this.store.post(id, postId)
     if (post === undefined) throw notFound('post', postId)
-    return buildPostDetail({ account, platform: this.descriptorOf(account.platform), post, recent: this.store.posts(id, 50) })
+    return { ...buildPostDetail({ account, platform: this.descriptorOf(account.platform), post, recent: this.store.posts(id, 50) }), coverage: this.coverage(account) }
   }
 
   /**
@@ -911,7 +919,7 @@ export class MediaSuite extends TypertRemoteService {
     const deadline = AbortSignal.any([signal, AbortSignal.timeout(this.config.scrapeTimeoutSeconds * 1000)])
     const profile = this.profileFor(account)
     try {
-      const limits = { maxPosts: this.config.maxPostsPerScrape, signal: deadline }
+      const limits = { maxPosts: Math.max(this.config.maxPostsPerScrape, adapter.maxPosts ?? 0), signal: deadline }
       const result = await this.browser.withPage(profile, deadline, page => scrape(page, account, limits))
       const at = new Date().toISOString()
       this.store.setLogin(profile.key, 'logged-in', at)

@@ -121,3 +121,17 @@ it('keeps login states per browser profile and forgets a deleted profile', () =>
   expect(store.login('douyin')).toBe('logged-in')
   store.close()
 })
+
+it('keeps a post\'s marks once seen, with the best place and the first time an update saw each', () => {
+  const store = new MediaStore(tempDb())
+  store.putAccount(account)
+  store.upsertPosts([post({ badges: [{ key: 'rank:daily', label: '日榜', rank: 5 }], updatedAt: '2026-11-18T01:00:00.000Z' })])
+  store.upsertPosts([post({ badges: [{ key: 'rank:daily', label: '日榜', rank: 3 }, { key: 'home', label: '首页推荐', at: '2026-11-17T08:00:00.000Z' }], updatedAt: '2026-11-19T01:00:00.000Z' })])
+  store.upsertPosts([post({ badges: [], updatedAt: '2026-11-20T01:00:00.000Z' })])
+  store.upsertPosts([post({ updatedAt: '2026-11-21T01:00:00.000Z' })])
+  expect(store.posts(id, 10)[0]?.badges).toEqual([
+    { key: 'rank:daily', label: '日榜', rank: 3, seenAt: '2026-11-18T01:00:00.000Z' },
+    { key: 'home', label: '首页推荐', at: '2026-11-17T08:00:00.000Z', seenAt: '2026-11-19T01:00:00.000Z' },
+  ])
+  expect(store.countPosts(id)).toBe(1)
+})

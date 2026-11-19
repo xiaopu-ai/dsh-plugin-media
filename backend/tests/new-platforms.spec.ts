@@ -1,8 +1,10 @@
 /** 人人都是产品经理, 少数派, 优设 and X: what their pages and APIs answer, read into counters and posts. */
 import { describe, expect, it } from 'vitest'
 import { parseSspaiPosts, parseSspaiUser, sspaiSlugOf } from '../src/adapters/sspai.ts'
-import { parseUisdcArticle, parseUisdcAuthorPage, readUisdcSelf, uisdcUidOf } from '../src/adapters/uisdc.ts'
-import { parseWoshipmAuthorPage, parseWoshipmProfile, readWoshipmSelf, woshipmUidOf } from '../src/adapters/woshipm.ts'
+import { parseUisdcArticle, parseUisdcAuthorPage, parseUisdcStats, readUisdcSelf, uisdcUidOf } from '../src/adapters/uisdc.ts'
+import {
+  parseWoshipmAuthorPage, parseWoshipmHomeSlots, parseWoshipmProfile, parseWoshipmRanking, readWoshipmSelf, woshipmBadges, woshipmUidOf,
+} from '../src/adapters/woshipm.ts'
 import { parseXSelf, parseXTimeline, parseXUser, xHandleOf } from '../src/adapters/x.ts'
 import { normalizeProfileUrl } from '../src/identity.ts'
 
@@ -81,7 +83,7 @@ describe('少数派', () => {
     expect(page.total).toBe(2)
     expect(page.posts[0]).toEqual({
       postId: '119039', title: '徒步旅行指南', url: 'https://sspai.com/post/119039', publishedAt: new Date(1795057088 * 1000).toISOString(),
-      format: 'article', likes: 7, comments: 1, coverUrl: 'https://cdnfile.sspai.com/2026/11/14/b.jpg', extra: {},
+      format: 'article', likes: 7, comments: 1, coverUrl: 'https://cdnfile.sspai.com/2026/11/14/b.jpg', extra: {}, badges: [],
     })
     expect(page.posts[1]?.views).toBe(5210)
     expect(sspaiSlugOf('https://sspai.com/u/aqing/posts')).toBe('aqing')
@@ -101,7 +103,7 @@ describe('优设', () => {
     expect(page.snapshot).toEqual({ followers: undefined, posts: 58, extra: { totalViews: 2567000 } })
     expect(page.posts).toEqual([{
       postId: 'reverse-design-workflow', title: '16个AI设计资源网站', url: 'https://www.uisdc.com/reverse-design-workflow',
-      publishedAt: '2026-10-12T16:00:00.000Z', format: 'article', coverUrl: 'https://image.uisdc.com/a.webp', extra: {},
+      publishedAt: '2026-10-12T16:00:00.000Z', format: 'article', coverUrl: 'https://image.uisdc.com/a.webp', extra: {}, badges: [],
     }])
     expect(uisdcUidOf('https://www.uisdc.com/u/14/publish/all')).toBe('14')
   })
@@ -167,5 +169,56 @@ describe('X', () => {
     expect(xHandleOf('https://twitter.com/Aqing_Dev/')).toBe('Aqing_Dev')
     expect(xHandleOf('https://x.com/i/flow/login')).toBeUndefined()
     expect(normalizeProfileUrl('https://twitter.com/Aqing_Dev/')).toBe(normalizeProfileUrl('https://x.com/aqing_dev'))
+  })
+})
+
+describe('platform marks', () => {
+  it('人人都是产品经理: places on the 日榜, 周榜 and 月榜, and the home banner slots', () => {
+    expect(parseWoshipmRanking({ RESULT: [{ controlTypeCode: 2001, data: { id: 7000001 } }, { data: { id: 7000002 } }, { data: null }], CODE: 200 })).toEqual(['7000001', '7000002'])
+    expect(parseWoshipmRanking({ RESULT: null })).toEqual([])
+    expect(parseWoshipmHomeSlots({
+      code: 0,
+      result: [{ url: 'https://developer.example.com/topic/1', courses: '商业内容' }, { url: 'https://www.woshipm.com/ai/7000002.html', courses: '文章' }],
+    })).toEqual(['7000002'])
+    const marks = woshipmBadges({ daily: ['1', '9'], weekly: ['9'], monthly: [] }, ['9', '9'])
+    expect(marks.get('9')).toEqual([
+      { key: 'rank:daily', label: '日榜', rank: 2 }, { key: 'rank:weekly', label: '周榜', rank: 1 }, { key: 'home', label: '首页推荐位' },
+    ])
+    expect(marks.get('2')).toBeUndefined()
+  })
+
+  it('少数派: 首页推荐 with its time and the corner badge', () => {
+    const page = parseSspaiPosts({
+      error: 0, total: 1,
+      data: [{ id: 95956, title: '转行一年的感想', like_count: 63, comment_count: 29, view_count: 0, released_time: 1738250373, is_recommend_to_home: true, recommend_to_home_at: 1739415901, corner: { id: 6, name: 'Matrix精选' } }],
+    })
+    expect(page.posts[0]?.badges).toEqual([
+      { key: 'home', label: '首页推荐', at: new Date(1739415901 * 1000).toISOString() }, { key: 'corner:Matrix精选', label: 'Matrix精选' },
+    ])
+  })
+
+  it('优设: 精选 from data-jingxuan, the next list page, the header totals and an article page', () => {
+    const item = (pid: number, slug: string, featured: string): string => `<div class="user-item-all-item item user-item" data-pid="${String(pid)}" data-jingxuan="${featured}"><div class="item-wrap">
+      <div class="item-thumb"><a href="https://www.uisdc.com/${slug}" class="a_scale"><i class="thumb " style="background-image:url(https://image.uisdc.com/${slug}.webp)"></i></a></div>
+      <div class="item-main"><h2 class="item-title"><a href="https://www.uisdc.com/${slug}" target="_blank">${slug}</a></h2>
+      <div class="item-meta"><span class="meta-item meta-time">2026/11/05</span></div></div></div></div>`
+    const page = parseUisdcAuthorPage(`${item(1, 'ai-hiring-check', '1')}${item(2, 'model-review', '')}
+      <li class="fy fy-next"><a href="https://www.uisdc.com/u/14/publish/all/page/2"><span>下一页</span></a></li>`)
+    expect(page.hasMore).toBe(true)
+    expect(page.posts.map(post => post.badges)).toEqual([[{ key: 'featured', label: '精选' }], []])
+    expect(parseUisdcAuthorPage(item(3, 'cms', '')).hasMore).toBe(false)
+
+    expect(parseUisdcStats({ error: 0, data: { views: 1378965, fav: 0, publish: 46, follow: 0, followed: 0, url: 'https://www.uisdc.com/u/14' } }))
+      .toEqual({ posts: 46, views: 1378965, followers: undefined })
+    expect(parseUisdcStats({ error: 0, data: { publish: 46, views: 10, followed: 188 } }).followers).toBe(188)
+    expect(parseUisdcStats({ error: 1 })).toEqual({ posts: undefined, views: undefined, followers: undefined })
+
+    // An article without 阅读 (the site shows none there), the exact time in the title, the author's follow button.
+    const article = `<span class="meta-item meta-time" title="2026-09-29 00:11:52">2026/09/29</span><span class="meta-item meta-author">阿青</span>
+      <span class="btn btn-orange2 btn-zan" data-count="17" data-original-count="17" data-component="zan" data-pid="600001"></span>
+      <span class="btn btn-orange follow" data-component="follow" data-count="12" data-uid="999"></span>
+      <span class="btn btn-orange follow" data-component="follow" data-count="188" data-original-count="188" data-login="need" data-uid="14"><i class="txt">+关注</i></span>`
+    expect(parseUisdcArticle(article, '14')).toEqual({ likes: 17, publishedAt: '2026-09-28T16:11:52.000Z', followers: 188 })
+    expect(parseUisdcArticle(article).followers).toBeUndefined()
   })
 })

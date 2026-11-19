@@ -3,10 +3,15 @@
  * several platforms, and the 今日简报's prompt and lines. Pure functions; the suite gathers the accounts and posts.
  */
 import { MediaLlmOutputError, type MediaPrompt } from './analysis.ts'
+import { counterLabel, POST_COUNTERS } from './dashboard.ts'
 import { briefLineSchema } from './schemas.ts'
 import type {
-  MediaAccountId, MediaBriefItem, MediaKpi, MediaKpiUnit, MediaNetworkAccount, MediaNetworkKey, MediaNetworkTotal, MediaPost, MediaSyncedWork,
+  MediaAccountId, MediaBriefItem, MediaKpi, MediaKpiUnit, MediaNetworkAccount, MediaNetworkKey, MediaNetworkTotal, MediaPlatformDescriptor, MediaPost,
+  MediaSyncedWork,
 } from './types.ts'
+
+/** Titles per account the 今日简报 sees, so it does not suggest a topic the account has already done. */
+const BRIEF_TITLES = 20
 
 // ---------------------------------------------------------------- 全网 totals
 
@@ -175,10 +180,30 @@ function changeText(change: number | undefined): string {
   return change === undefined ? '' : `（较上期 ${change >= 0 ? '+' : ''}${(change * 100).toFixed(0)}%）`
 }
 
-function postLine(post: MediaPost, platform: string): string {
-  const counters = [['播放/阅读', post.views], ['点赞', post.likes], ['评论', post.comments], ['分享', post.shares], ['收藏', post.collects]]
-    .flatMap(([label, value]) => value === undefined ? [] : [`${String(label)}${String(value)}`]).join(' ')
-  return `- [${platform}] ${post.publishedAt?.slice(0, 10) ?? '时间未知'}《${post.title.slice(0, 60)}》 ${counters}`
+/**
+ * Name a post's marks for the model, such as `首页推荐、日榜第 3 名`.
+ * @param post - the post.
+ * @returns the marks joined, or an empty string.
+ */
+export function badgeText(post: MediaPost): string {
+  return (post.badges ?? []).map(badge => badge.rank === undefined ? badge.label : `${badge.label}第 ${String(badge.rank)} 名`).join('、')
+}
+
+function postLine(post: MediaPost, platform: MediaPlatformDescriptor | undefined): string {
+  // Each platform's own names: 少数派's 充电 is not a 点赞, and a 阅读 is not a 播放.
+  const counters = POST_COUNTERS.flatMap(key => {
+    const label = platform === undefined ? DEFAULT_COUNTER_NAMES[key] : counterLabel(platform, key)
+    return label === undefined || post[key] === undefined ? [] : [`${label}${String(post[key])}`]
+  }).join(' ')
+  const marks = badgeText(post)
+  return `- [${platform?.displayName ?? '未知平台'}] ${post.publishedAt === undefined ? '时间未知' : chinaDayOf(post.publishedAt)}《${post.title.slice(0, 60)}》 ${counters}${marks === '' ? '' : ` ［平台标记：${marks}］`}`
+}
+
+const DEFAULT_COUNTER_NAMES: Readonly<Record<typeof POST_COUNTERS[number], string>> = { views: '播放/阅读', likes: '点赞', comments: '评论', shares: '分享', collects: '收藏' }
+
+/** The China day of an instant, as `2026-11-19`. */
+function chinaDayOf(iso: string): string {
+  return new Date(Date.parse(iso) + 8 * 3600_000).toISOString().slice(0, 10)
 }
 
 /** Everything the 今日简报 reads, and how to name a platform. */
@@ -207,14 +232,19 @@ export function buildBriefPrompt(input: BriefInput): MediaPrompt {
     for (const kpi of item.kpis) if (kpi.value !== undefined) lines.push(`- ${kpi.label}：${figure(kpi.value, kpi.unit)}${changeText(kpi.change)}`)
     const recent = input.posts.filter(post => post.accountId === item.account.id)
     const newest = recent[0]?.publishedAt
-    if (newest !== undefined) lines.push(`最近一次发布：${newest.slice(0, 10)}`)
+    if (newest !== undefined) lines.push(`最近一次发布：${chinaDayOf(newest)}`)
     const best = [...recent].sort((a, b) => (b.views ?? b.likes ?? 0) - (a.views ?? a.likes ?? 0)).slice(0, 3)
-    if (best.length > 0) lines.push('表现最好的作品：', ...best.map(post => postLine(post, item.platform.displayName)))
+    if (best.length > 0) lines.push('表现最好的作品：', ...best.map(post => postLine(post, item.platform)))
+    if (recent.length > 0) {
+      lines.push(`已发布作品的标题（最近 ${String(Math.min(recent.length, BRIEF_TITLES))} 条，新的在前；推荐选题前对照）：`)
+      lines.push(...recent.slice(0, BRIEF_TITLES).map(post => `- ${post.publishedAt === undefined ? '' : `${chinaDayOf(post.publishedAt).slice(5)} `}${post.title.slice(0, 40)}`))
+    }
     lines.push('')
   }
   lines.push('## 全网合计（各平台直接相加，不去重）', '')
   for (const total of input.totals) lines.push(`- ${total.label}：${figure(total.value, total.unit)}${changeText(total.change)}`)
-  lines.push('', '## 最近发布的作品', '', ...input.posts.slice(0, 12).map(post => postLine(post, input.platformName(post.accountId))))
+  const platformOf = new Map(input.accounts.map(item => [item.account.id as string, item.platform]))
+  lines.push('', '## 最近发布的作品', '', ...input.posts.slice(0, 12).map(post => postLine(post, platformOf.get(post.accountId))))
   if (input.synced.length > 0) {
     lines.push('', '## 多平台同步发布的作品（合计）', '')
     for (const work of input.synced) lines.push(`- 《${work.title.slice(0, 60)}》 ${work.posts.length} 个平台，合计播放/阅读 ${figure(work.views, 'count')}，点赞 ${figure(work.likes, 'count')}`)
@@ -231,6 +261,10 @@ export function buildBriefPrompt(input: BriefInput): MediaPrompt {
       'detail 是点开这一行看到的说明，60 到 120 个字，分两句：先写依据（引用上面的具体数字、日期或作品），再写具体怎么做（发什么、什么形式、标题怎么写、发在哪个平台、什么时候发）。',
       'account 照抄给出的账号名，platform 写平台名；work 照抄上面出现过的作品标题（不涉及具体作品就省略）；metric 是这一行说的指标，取 views（播放/阅读）、followers（粉丝）、fansNet（粉丝净增）、likes、comments、shares、posts（发布数）之一；没有的字段省略。',
       '至少 2 条 action、2 条 topic；alert 只写真有问题的。',
+      '说「停更」「掉量」之前，先核对这个账号的「最近一次发布」和统计周期里的发布数；周期里有新作品就不能说停更。',
+      'topic 不要推荐账号已经做过的题：先对照上面每个账号「已发布作品的标题」。同一主题已经发过的，要么换题，要么在 detail 里点明「已发过《原标题》（日期、数据），这次做续篇／复盘／换角度」，并说清和原作品的区别。',
+      '各平台的指标名照上面写的用（比如少数派的「充电」不是点赞、文章的「阅读」不是播放），不要换成别的平台的叫法。',
+      '原因只写数据直接支持的；推测要写「可能」，并说明还缺什么数据。插件读不到流量来源、观众画像和推荐曝光，平台标记只有上面写出来的那些。',
     ].join('\n'),
     input: lines.join('\n'),
   }

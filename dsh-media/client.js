@@ -1487,6 +1487,19 @@ select.$-input{cursor:pointer}
             return '—';
         return new Intl.DateTimeFormat(uiLocale(), { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(time);
     }
+    // 作品的发布时间：今年的写「11/18 14:30」，往年的带上年份「2025/11/18」；北京时间正好 0 点的只写日期——
+    // 有的平台（优设、人人都是产品经理的列表）只给到天，0 点是补出来的，不是真的半夜发的。
+    function formatPublished(iso) {
+        if (iso === undefined)
+            return '—';
+        const time = Date.parse(iso);
+        if (Number.isNaN(time))
+            return '—';
+        const china = new Date(time + 8 * 3600000);
+        const dayOnly = china.getUTCHours() === 0 && china.getUTCMinutes() === 0;
+        const thisYear = new Date(Date.now() + 8 * 3600000).getUTCFullYear() === china.getUTCFullYear();
+        return new Intl.DateTimeFormat(uiLocale(), { timeZone: 'Asia/Shanghai', ...(thisYear ? {} : { year: 'numeric' }), month: 'numeric', day: 'numeric', ...(dayOnly ? {} : { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }) }).format(time);
+    }
     // 一条作品的互动总数：赞 + 评 + 藏 + 转，缺的算 0。
     function interactions(post) {
         return (post.likes ?? 0) + (post.comments ?? 0) + (post.collects ?? 0) + (post.shares ?? 0);
@@ -2139,25 +2152,34 @@ select.$-input{cursor:pointer}
     }
     // 过了这么多秒还没出二维码，就说明是网慢，不是卡住了。
     const SLOW_STAGE_SECONDS = 8
+    // 输账号密码登录的平台（X）：网页「加载完」以后，登录表单还要再等它自己的脚本画出来，网慢时要一分钟。
+    // 这段时间里继续计时；过了这么多秒还空白，就给一个「刷新」。
+    const FORM_SETTLE_SECONDS = 90
+    const FORM_RELOAD_SECONDS = 30
 
-    function ConnectBar({ identity, qr, platformName, way = {}, stage, startedAt, loading, onIdentify, onConnect }) {
+    function ConnectBar({ identity, qr, platformName, way = {}, stage, startedAt, loading, onIdentify, onConnect, onReload }) {
       // 新开的登录页要先启动浏览器、再加载网页，网慢时要二三十秒；二维码出来之前每秒告诉用户到哪一步、过了几秒，
       // 页面一直在动，不会像卡住。二维码出现过、或网页已经加载完（比如改用密码登录），就不再计时，只留扫码提示。
       const [now, setNow] = useState(() => Date.now())
       const [seenQr, setSeenQr] = useState(false)
       useEffect(() => { if (qr) setSeenQr(true) }, [qr])
-      const waiting = identity.status === 'none' && !qr && !seenQr && (stage !== 'load' || loading)
+      const form = way.hint !== undefined && way.app === undefined
+      const seconds = Math.max(0, Math.floor((now - (startedAt ?? now)) / 1000))
+      const loadingPage = stage !== 'load' || loading
+      const waiting = identity.status === 'none' && !qr && !seenQr && (loadingPage || (form && seconds < FORM_SETTLE_SECONDS))
       useEffect(() => {
         if (!waiting) return undefined
         const timer = setInterval(() => setNow(Date.now()), 1000)
         return () => clearInterval(timer)
       }, [waiting])
-      const seconds = Math.max(0, Math.floor((now - (startedAt ?? now)) / 1000))
       const platform = platformName ?? ''
+      const stageText = form ? (loadingPage ? t(`connect.stage.${stage === 'load' ? 'loadForm' : stage}`, { platform }) : t('connect.stage.drawForm', { platform, hint: way.hint })) : t(`connect.stage.${stage}`, { platform })
       const body = {
         none: () => !waiting ? h('span', null, way.hint ?? (way.app ? t('connect.hintApp', { app: way.app }) : t('connect.hint'))) : h(Working, null,
-          t(`connect.stage.${stage}`, { platform }), h('span', { className: cls('bw-secs'), 'aria-hidden': true }, t('connect.seconds', { s: seconds })),
-          seconds >= SLOW_STAGE_SECONDS ? h('span', { className: cls('bw-slow') }, t('connect.slow', { platform })) : null),
+          stageText, h('span', { className: cls('bw-secs'), 'aria-hidden': true }, t('connect.seconds', { s: seconds })),
+          form && seconds >= FORM_RELOAD_SECONDS && onReload
+            ? h(Fragment, null, h('span', { className: cls('bw-slow') }, t('connect.blank')), h(Btn, { sm: true, onClick: onReload }, t('browser.reload')))
+            : (!form || loadingPage) && seconds >= SLOW_STAGE_SECONDS ? h('span', { className: cls('bw-slow') }, t('connect.slow', { platform })) : null),
         identifying: () => h(Working, null, t('connect.identifying')),
         failed: () => h(Fragment, null, h('span', { className: cls('down'), role: 'alert' }, identity.message ?? t('connect.identifyFailed', { reason: t(identity.reason) })), h(Btn, { sm: true, onClick: onIdentify }, t('connect.retry'))),
         identified: () => h(ConfirmIdentity, { key: identity.identity.profileUrl, identity: identity.identity, onConnect }),
@@ -2255,7 +2277,7 @@ select.$-input{cursor:pointer}
           h(LoginTag, { state: browser.login }),
           h(Btn, { kind: 'ghost', sm: true, icon: 'shrink', label: t('browser.minimize'), onClick: onMinimize }),
           h(Btn, { kind: 'ghost', sm: true, icon: 'x', label: t('browser.close'), onClick: onClose })),
-        browser.mode === 'connect' ? h(ConnectBar, { key: browser.view?.id, identity: browser.identity, qr: browser.qr !== undefined, platformName: browser.platformName, way: browser.loginWay, stage: loadingStage(browser), startedAt: browser.startedAt, loading: browser.picture?.loading !== false, onIdentify, onConnect }) : null,
+        browser.mode === 'connect' ? h(ConnectBar, { key: browser.view?.id, identity: browser.identity, qr: browser.qr !== undefined, platformName: browser.platformName, way: browser.loginWay, stage: loadingStage(browser), startedAt: browser.startedAt, loading: browser.picture?.loading !== false, onIdentify, onConnect, onReload: () => onInput({ kind: 'reload' }) }) : null,
         h('div', { ref: stageRef, className: cls('bw-stage') },
           // 网页还在加载时顶上一条细进度条（和普通浏览器一样）。
           browser.status === 'opening' || picture?.loading ? h('span', { className: cls('bw-progress'), role: 'progressbar', 'aria-label': t('browser.loading') }) : null,
@@ -2282,7 +2304,7 @@ select.$-input{cursor:pointer}
       if (browser.status === 'ended' || browser.status === 'failed') return line(h('span', { key: 't', className: cls('grow') }, t(browser.reason ?? 'error.unknown')), h(Btn, { key: 'b', sm: true, onClick: retry }, t('browser.reopen')))
       if (browser.mode !== 'connect') return null
       const { identity } = browser
-      if (identity.status === 'none') return line(t('mini.waiting'))
+      if (identity.status === 'none') return line(t(browser.loginWay?.hint !== undefined && browser.loginWay?.app === undefined ? 'mini.waitingLogin' : 'mini.waiting'))
       if (identity.status === 'identifying') return line(h(Spin, { key: 's', sm: true }), t('connect.identifying'))
       if (identity.status === 'failed') return line(h('span', { key: 't', className: cls('down', 'grow'), role: 'alert' }, t('mini.failed')), h(Btn, { key: 'b', sm: true, onClick: identify }, t('action.retry')))
       const confirm = async () => {
@@ -2859,17 +2881,45 @@ select.$-input{cursor:pointer}
       })])
       downloadCsv(`${name}.csv`, header, rows)
     }
-    /** 表格里的时间写全：2026-11-08 19:48（本机时区）。 */
+    /** 表格里的时间写全：2026-11-08 19:48（北京时间）；平台只给到天的（0 点整）只写日期。 */
     function sheetTime(iso) {
-      const d = new Date(iso)
+      const d = new Date(Date.parse(iso) + 8 * 3600000)
       const two = n => String(n).padStart(2, '0')
-      return `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())} ${two(d.getHours())}:${two(d.getMinutes())}`
+      const day = `${d.getUTCFullYear()}-${two(d.getUTCMonth() + 1)}-${two(d.getUTCDate())}`
+      return d.getUTCHours() === 0 && d.getUTCMinutes() === 0 ? day : `${day} ${two(d.getUTCHours())}:${two(d.getUTCMinutes())}`
     }
-    function exportPosts(name, posts, platform) {
-      const labels = platform?.metrics ?? DEFAULT_COUNTER_LABELS
-      const keys = ['views', 'likes', 'comments', 'shares', 'collects'].filter(key => labels[key] !== undefined)
-      downloadCsv(`${name}.csv`, [t('v2.export.title'), t('v2.export.published'), ...keys.map(key => labels[key]), t('v2.export.link')],
-        posts.map(post => [post.title, post.publishedAt ? sheetTime(post.publishedAt) : '', ...keys.map(key => post[key] ?? ''), post.url ?? '']))
+    /** 作品带的平台标记（首页推荐、日榜第 3 名…），一段文字。 */
+    const badgeLabel = badge => badge.rank === undefined ? badge.label : t('v2.badge.rank', { label: badge.label, rank: badge.rank })
+    const badgesText = post => (post.badges ?? []).map(badgeLabel).join('、')
+    /**
+     * 把作品存成表格。每行带平台、账号和这组数是什么时候读的，拿出插件也知道一行是谁的、哪一次的。
+     * 全是一个平台时，列名用平台自己的叫法（少数派的「充电」不写成「点赞」）；几个平台混在一起时用通用列名，
+     * 再加一列写清这一行的数在平台上叫什么。
+     */
+    function exportPosts(name, posts, whose) {
+      const owners = posts.map(post => whose(post))
+      const platforms = [...new Set(owners.map(owner => owner.platform))]
+      const single = platforms.length === 1 ? platforms[0] : undefined
+      const labels = single?.metrics ?? DEFAULT_COUNTER_LABELS
+      const keys = ['views', 'likes', 'comments', 'shares', 'collects'].filter(key => labels[key] !== undefined && posts.some(post => post[key] !== undefined))
+      const header = [t('v2.export.platform'), t('v2.export.account'), t('v2.export.title'), t('v2.export.published'),
+        ...keys.map(key => single ? labels[key] : t(`v2.list.${key}`)), ...single ? [] : [t('v2.export.names')], t('v2.export.badges'), t('v2.export.link'), t('v2.export.read')]
+      downloadCsv(`${name}.csv`, header, posts.map((post, index) => {
+        const { platform, account } = owners[index]
+        const own = platform?.metrics ?? DEFAULT_COUNTER_LABELS
+        return [platform?.displayName ?? '', account?.name ?? '', post.title, post.publishedAt ? sheetTime(post.publishedAt) : '',
+          ...keys.map(key => post[key] ?? ''), ...single ? [] : [keys.map(key => own[key] ? `${t(`v2.list.${key}`)}=${own[key]}` : `${t(`v2.list.${key}`)}=${t('v2.list.notReported')}`).join('；')],
+          badgesText(post), post.url ?? '', sheetTime(post.updatedAt)]
+      }))
+    }
+    /** 作品标题后面的小标签：平台给的标记。停上去看什么时候标的、插件什么时候看到的。 */
+    function PostBadges({ post }) {
+      const badges = post.badges ?? []
+      if (badges.length === 0) return null
+      return h('span', { className: cls('dy-badges') }, badges.map(badge => h('span', {
+        key: badge.key, className: cls('dy-badge'),
+        title: [badge.at ? t('v2.badge.at', { at: formatPublished(badge.at) }) : null, badge.seenAt ? t('v2.badge.seen', { at: formatPublished(badge.seenAt) }) : null].filter(Boolean).join(' · ') || undefined,
+      }, badgeLabel(badge))))
     }
 
     // ---- 3V.3 左边一列：总览、各平台和账号、添加平台
@@ -3082,13 +3132,15 @@ select.$-input{cursor:pointer}
         h('span', { className: cls('dy-bd-work-main') },
           h('span', { className: cls('dy-wl-title') }, post.title),
           h('span', { className: cls('dy-wl-meta') }, h(PlatformLogo, { platform: item?.platform, size: 14 }), h('span', { className: cls('dy-ellipsis') }, item?.account.name ?? ''),
-            post.publishedAt ? h('span', { className: cls('dy-wl-kind') }, formatInstant(post.publishedAt)) : null)),
+            post.publishedAt ? h('span', { className: cls('dy-wl-kind') }, formatPublished(post.publishedAt)) : null)),
         h('span', { className: cls('dy-bd-work-nums') }, counters.map(key => h('span', { key }, h('small', null, labels[key] ?? t(`v2.list.${key}`)), h('b', { className: cls('dy-num') }, dyNum(post[key]))))))
     }
 
     /** 打开的一条：说明（为什么、怎么做）→ 依据的数 → 相关作品 → 下一步。 */
-    function BriefDetail({ item, store, net, days, onOpenPost, onAsk }) {
+    function BriefDetail({ item, store, net, days, onOpenPost, onAsk, writtenAt, onRewrite }) {
       const entries = briefAccounts(item, store, net)
+      // 简报是写的时候按当时的数写的；之后账号又更新过，下面的依据就是新数，两边可能对不上，要说清楚。
+      const updatedAfter = writtenAt !== undefined && (entries.length > 0 ? entries : net?.accounts ?? []).some(entry => entry.health?.updatedAt !== undefined && entry.health.updatedAt > writtenAt)
       const metric = item.metric ?? 'views'
       const post = item.post && net ? net.posts.find(entry => entry.accountId === item.post.accountId && entry.postId === item.post.postId) : undefined
       const recent = post || !net ? [] : net.posts.filter(entry => entries.some(one => one.account.id === entry.accountId)).slice(0, 3)
@@ -3100,6 +3152,9 @@ select.$-input{cursor:pointer}
           h('span', { className: cls('dy-brief-tag', `dy-brief-${item.kind}`) }, t(`v2.brief.${item.kind}`)),
           h('h3', { className: cls('dy-bd-title') }, emphasize(item.text))),
         item.detail ? h('p', { className: cls('dy-bd-text') }, emphasize(item.detail)) : h('p', { className: cls('dy-bd-text', 'dy-bd-old') }, t('v2.brief.noDetail')),
+        updatedAfter ? h('div', { className: cls('dy-alert', 'dy-alert-warn') }, h(Icon, { name: 'info', size: 16 }),
+          h('span', { className: cls('grow') }, t('v2.brief.stale', { time: formatInstant(writtenAt) })),
+          onRewrite ? h(DyBtn, { kind: 'text', icon: 'refresh', onClick: onRewrite }, t('v2.brief.rewrite')) : null) : null,
         entries.length > 0 || total ? h('section', { className: cls('dy-bd-sec') },
           h('h4', { className: cls('dy-bd-label') }, t('v2.brief.evidence', { days })),
           entries.slice(0, 3).map(entry => h(BriefAccountFacts, { key: entry.account.id, entry, metric })),
@@ -3162,7 +3217,7 @@ select.$-input{cursor:pointer}
       else if (items.length === 0 && !running) body = h('p', { className: cls('dy-muted') }, t('v2.brief.empty', { at: scheduleAt }))
       else if (shown >= 0) {
         body = h('div', { className: cls('dy-brief-split') },
-          h(BriefDetail, { key: shown, item: items[shown], store, net, days, onOpenPost, onAsk }),
+          h(BriefDetail, { key: shown, item: items[shown], store, net, days, onOpenPost, onAsk, writtenAt: brief?.createdAt, onRewrite: start }),
           h('div', { ref: list, className: cls('dy-bd-list'), role: 'listbox', 'aria-label': t('v2.brief.title') },
             items.map((item, index) => {
               const account = item.accountId ? store.accounts.find(entry => entry.id === item.accountId) : undefined
@@ -3425,7 +3480,7 @@ select.$-input{cursor:pointer}
           h('span', { className: cls('dy-bento-who') }, h('b', { className: cls('dy-ellipsis') }, item.account.name), h('span', null, item.platform.displayName)),
           h(HealthDot, { health })),
         metric === undefined
-          ? h('span', { className: cls('dy-bento-none') }, t('v2.bento.none'))
+          ? h('span', { className: cls('dy-bento-none') }, t(item.platform.totals !== undefined ? 'v2.bento.noneLive' : 'v2.bento.none', { noun: item.platform.noun ?? t('v2.posts.noun') }))
           : h(Fragment, null,
             h('span', { className: cls('dy-bento-label') }, metric.label),
             h('span', { className: cls('dy-bento-value') }, h('b', { className: cls('dy-num') }, dyValue(metric.value, metric.unit)), h(Change, { change: metric.change })),
@@ -3449,6 +3504,8 @@ select.$-input{cursor:pointer}
     const LIST_KINDS = ['all', 'video', 'image', 'article']
     const LIST_COLUMNS = ['views', 'likes', 'comments', 'shares', 'collects']
     const LIST_PAGE = 20
+    /** 总览「最新作品」每个账号取最近几条（和后台 network() 一致）。 */
+    const NETWORK_POSTS_PER_ACCOUNT = 30
     function WorksList({ net, onOpenPost }) {
       const [kind, setKind] = useState('all')
       const [platformId, setPlatformId] = useState('all')
@@ -3460,23 +3517,33 @@ select.$-input{cursor:pointer}
       const counts = Object.fromEntries(LIST_KINDS.map(key => [key, key === 'all' ? ofPlatform.length : ofPlatform.filter(post => post.format === key).length]))
       const filtered = kind === 'all' ? ofPlatform : ofPlatform.filter(post => post.format === kind)
       const rows = sort === 'newest' ? filtered : [...filtered].sort((a, b) => (b[sort] ?? -1) - (a[sort] ?? -1))
+      // 只看一个平台时，列名和列都按那个平台（少数派是「阅读、充电、评论」）；全部平台时用通用列名，
+      // 某个平台的叫法不一样（充电放在「点赞」列）就在表下面写一句。
+      const only = platformId === 'all' ? undefined : platforms.find(platform => platform.id === platformId)
+      const columns = only ? LIST_COLUMNS.filter(key => (only.metrics ?? DEFAULT_COUNTER_LABELS)[key] !== undefined) : LIST_COLUMNS
+      const columnLabel = key => only ? (only.metrics ?? DEFAULT_COUNTER_LABELS)[key] : t(`v2.list.${key}`)
+      const renamed = only ? [] : platforms.flatMap(platform => LIST_COLUMNS.flatMap(key => {
+        const own = platform.metrics?.[key]
+        return own !== undefined && own !== DEFAULT_COUNTER_LABELS[key] && !t(`v2.list.${key}`).includes(own) ? [t('v2.list.renamed', { platform: platform.displayName, own, column: t(`v2.list.${key}`) })] : []
+      }))
       const head = (key, label) => h('button', { key, type: 'button', role: 'columnheader', className: cls('dy-wl-sort'), 'aria-sort': sort === key ? 'descending' : 'none', onClick: () => setSort(sort === key ? 'newest' : key) }, label, sort === key ? h(Icon, { name: 'down', size: 12 }) : null)
+      const exportName = only ? `${t('v2.feed.title')}-${only.displayName}` : t('v2.feed.title')
       return h(DyCard, {
-        title: t('v2.feed.title'), note: t('v2.posts.count', { count: rows.length }),
+        title: t('v2.feed.title'), tip: t('v2.feed.tip', { count: NETWORK_POSTS_PER_ACCOUNT }), note: t('v2.feed.note', { count: rows.length, per: NETWORK_POSTS_PER_ACCOUNT }),
         tools: [
           h(DySeg, { key: 'kind', value: kind, onChange: value => { setKind(value); setLimit(LIST_PAGE) }, label: t('v2.feed.kind'), options: LIST_KINDS.filter(key => key === 'all' || counts[key] > 0 || key === kind).map(key => ({ value: key, label: `${t(`v2.feed.${key}`)} ${counts[key]}` })) }),
-          h(DyBtn, { key: 'export', icon: 'download', disabled: rows.length === 0, onClick: () => exportPosts(t('v2.feed.title'), rows, undefined) }, t('v2.export.button')),
+          h(DyBtn, { key: 'export', icon: 'download', disabled: rows.length === 0, onClick: () => exportPosts(exportName, rows, post => ({ platform: itemOf(post)?.platform, account: itemOf(post)?.account })) }, t('v2.export.button')),
         ],
       },
       platforms.length > 1 ? h('div', { className: cls('dy-wl-platforms'), role: 'group', 'aria-label': t('v2.list.platform') },
         [{ id: 'all' }, ...platforms].map(platform => h('button', { key: platform.id, type: 'button', className: cls('dy-wl-chip'), 'aria-pressed': platformId === platform.id, onClick: () => { setPlatformId(platform.id); setLimit(LIST_PAGE) } },
           platform.id === 'all' ? null : h(PlatformLogo, { platform, size: 14 }), platform.id === 'all' ? t('v2.list.allPlatforms') : platform.displayName))) : null,
-      rows.length === 0 ? h('p', { className: cls('dy-muted') }, t('v2.feed.none')) : h(Fragment, null,
-        h('div', { className: cls('dy-wl'), role: 'table' },
+      rows.length === 0 ? h('p', { className: cls('dy-muted') }, t(only ? 'v2.feed.nonePlatform' : 'v2.feed.none', { platform: only?.displayName ?? '' })) : h(Fragment, null,
+        h('div', { className: cls('dy-wl'), role: 'table', style: { '--wl-cols': columns.length } },
           h('div', { className: cls('dy-wl-row', 'dy-wl-head'), role: 'row' },
             h('span', { role: 'columnheader' }, t('v2.list.work')),
             head('newest', t('v2.list.published')),
-            LIST_COLUMNS.map(key => head(key, t(`v2.list.${key}`)))),
+            columns.map(key => head(key, columnLabel(key)))),
           rows.slice(0, limit).map(post => {
             const item = itemOf(post)
             const labels = item?.platform.metrics ?? DEFAULT_COUNTER_LABELS
@@ -3484,13 +3551,14 @@ select.$-input{cursor:pointer}
               h('span', { className: cls('dy-wl-work'), role: 'cell' },
                 h(PostCover, { post, width: 42 }),
                 h('span', { className: cls('dy-wl-main') },
-                  h('span', { className: cls('dy-wl-title') }, post.title),
+                  h('span', { className: cls('dy-wl-title') }, post.title, h(PostBadges, { post })),
                   h('span', { className: cls('dy-wl-meta') }, h(PlatformLogo, { platform: item?.platform, size: 14 }), h('span', { className: cls('dy-ellipsis') }, item?.account.name ?? ''), h('span', { className: cls('dy-wl-kind') }, t(`v2.feed.${LIST_KINDS.includes(post.format) ? post.format : 'all'}`)),
-                    post.publishedAt ? h('span', { className: cls('dy-wl-date') }, formatInstant(post.publishedAt)) : null))),
-              h('span', { role: 'cell', className: cls('dy-wl-time') }, post.publishedAt ? formatInstant(post.publishedAt) : '—'),
-              LIST_COLUMNS.map(key => h('span', { key, role: 'cell', className: cls('dy-num', 'dy-wl-num'), title: labels[key] ? `${labels[key]}` : t('v2.list.notReported') },
+                    post.publishedAt ? h('span', { className: cls('dy-wl-date') }, formatPublished(post.publishedAt)) : null))),
+              h('span', { role: 'cell', className: cls('dy-wl-time') }, post.publishedAt ? formatPublished(post.publishedAt) : '—'),
+              columns.map(key => h('span', { key, role: 'cell', className: cls('dy-num', 'dy-wl-num'), title: labels[key] ? (post[key] === undefined ? t('v2.posts.missing', { label: labels[key] }) : `${labels[key]} ${dyNum(post[key])}`) : t('v2.list.notReported') },
                 post[key] === undefined ? '—' : dyNum(post[key]))))
           })),
+        renamed.length > 0 ? h('p', { className: cls('dy-note') }, t('v2.list.renamedNote', { list: renamed.join('；') })) : null,
         rows.length > limit ? h('div', { className: cls('dy-feed-more') }, h(DyBtn, { onClick: () => setLimit(limit + LIST_PAGE) }, t('v2.feed.more', { count: Math.min(LIST_PAGE, rows.length - limit) }))) : null))
     }
 
@@ -3598,7 +3666,7 @@ select.$-input{cursor:pointer}
 .$-dy-wl-chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:0;border-radius:999px;background:var(--$-dy-seg);color:var(--$-dy-text-2);font-size:13px;cursor:pointer}
 .$-dy-wl-chip[aria-pressed=true]{background:var(--$-dy-primary);color:var(--$-dy-on-primary)}
 .$-dy-wl{display:flex;flex-direction:column;overflow-x:auto;overscroll-behavior-x:contain}
-.$-dy-wl-row{display:grid;grid-template-columns:minmax(260px,1fr) 108px repeat(5,minmax(56px,76px));align-items:center;gap:12px;padding:10px 8px;border:0;border-bottom:1px solid var(--$-dy-line);background:none;color:var(--$-dy-text);text-align:right;cursor:pointer}
+.$-dy-wl-row{display:grid;grid-template-columns:minmax(260px,1fr) 108px repeat(var(--wl-cols,5),minmax(56px,76px));align-items:center;gap:12px;padding:10px 8px;border:0;border-bottom:1px solid var(--$-dy-line);background:none;color:var(--$-dy-text);text-align:right;cursor:pointer}
 .$-dy-wl-row>*:first-child{text-align:left}
 .$-dy-wl-row:not(.$-dy-wl-head):hover{background:var(--$-dy-tile)}
 .$-dy-wl-head{cursor:default;padding-top:8px;padding-bottom:8px;border-radius:8px 8px 0 0;background:var(--$-dy-tile);color:var(--$-dy-text-2);font-size:12px;border-bottom:0}
@@ -3613,7 +3681,7 @@ select.$-input{cursor:pointer}
 .$-dy-wl-date{display:none;flex:none;white-space:nowrap}
 .$-dy-wl-num{font-size:14px}
 /* 窄的时候一列不少：发布时间收进标题下面那行，数字列左右滑，「作品」那列钉在左边。 */
-@container $-dypage (max-width:820px){.$-dy-wl-row{grid-template-columns:minmax(200px,1fr) repeat(5,56px);gap:10px;min-width:546px}.$-dy-wl-row>:nth-child(2){display:none}.$-dy-wl-date{display:inline}.$-dy-wl-row>:first-child{position:sticky;left:0;z-index:1;background:var(--$-dy-card);box-shadow:8px 0 8px -8px rgba(0,0,0,.18)}.$-dy-wl-head>:first-child{background:var(--$-dy-tile)}.$-dy-wl-row:not(.$-dy-wl-head):hover>:first-child{background:var(--$-dy-tile)}}
+@container $-dypage (max-width:820px){.$-dy-wl-row{grid-template-columns:minmax(200px,1fr) repeat(var(--wl-cols,5),56px);gap:10px;min-width:calc(200px + var(--wl-cols,5) * 66px)}.$-dy-wl-row>:nth-child(2){display:none}.$-dy-wl-date{display:inline}.$-dy-wl-row>:first-child{position:sticky;left:0;z-index:1;background:var(--$-dy-card);box-shadow:8px 0 8px -8px rgba(0,0,0,.18)}.$-dy-wl-head>:first-child{background:var(--$-dy-tile)}.$-dy-wl-row:not(.$-dy-wl-head):hover>:first-child{background:var(--$-dy-tile)}}
 
 .$-dy-net-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px}
 .$-dy-net-tile{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;padding:14px 16px 16px;border:0;border-radius:10px;background:var(--$-dy-tile);color:var(--$-dy-text);text-align:left;cursor:pointer;overflow:hidden}
@@ -3737,7 +3805,7 @@ select.$-input{cursor:pointer}
     const rangeOptions = () => RANGES.map(days => ({ value: days, label: days === 1 ? t('v2.range.yesterday') : t('v2.range.days', { days }) }))
 
     /** 作品数据、粉丝数据：右上角时间范围、日期、导出；中间一排指标卡；下面是选中那项的走势。 */
-    function SeriesBoard({ title, tip, note, account, days, onDays, dash, pick, prefer, exportName, after }) {
+    function SeriesBoard({ title, tip, note, account, days, onDays, dash, pick, prefer, exportName, after, live }) {
       const kpis = dash === undefined ? [] : pick(dash)
       const [selected, setSelected] = useState(undefined)
       const current = kpis.find(kpi => kpi.key === selected) ?? kpis.find(kpi => kpi.key === prefer) ?? kpis[0]
@@ -3747,12 +3815,15 @@ select.$-input{cursor:pointer}
         tools: [
           h(DySeg, { key: 'range', value: days, onChange: onDays, label: t('v2.range.label'), options: rangeOptions() }),
           dash ? h('span', { key: 'date', className: cls('dy-date') }, h(Icon, { name: 'calendar', size: 14 }), rangeText(dash.from, dash.to)) : null,
-          h(DyBtn, { key: 'export', icon: 'download', disabled: kpis.length === 0, onClick: () => exportKpis(`${account.name}-${exportName}-${dash.from}至${dash.to}`, kpis) }, t('v2.export.button')),
+          // 这段时间一天的记录都没有时，导出来只有表头：按钮先灰掉，停上去说为什么。
+          h(DyBtn, { key: 'export', icon: 'download', disabled: kpis.every(kpi => kpi.daily.length === 0), title: kpis.length > 0 && kpis.every(kpi => kpi.daily.length === 0) ? t('v2.export.empty') : undefined, onClick: () => exportKpis(`${account.name}-${exportName}-${dash.from}至${dash.to}`, kpis) }, t('v2.export.button')),
         ],
       },
       dash === undefined ? h(Waiting) : h(Fragment, null,
         h(MetricCards, { kpis, value: current?.key, onChange: setSelected }),
         current ? h(DyLine, { key: current.key, points: current.daily, unit: current.unit, label: current.label, color: kpis.indexOf(current), zero: current.key !== 'followers' && !current.key.startsWith('total:') }) : null,
+        // 只有总数的平台：记录从添加账号那天开始，记满两天才有线；「昨天」在开始记录那天还没有数。
+        live && current && (current.value === undefined || (days > 1 && current.daily.length < 2)) ? h('p', { className: cls('dy-note') }, t(current.value === undefined ? 'v2.board.liveNone' : 'v2.board.liveSince', { day: chinaDate(account.createdAt).slice(5).replace('-', '.') })) : null,
         after))
     }
 
@@ -3764,20 +3835,24 @@ select.$-input{cursor:pointer}
       const sorts = POST_SORTS.filter(key => key === 'newest' || keys.includes(key))
       const rows = sort === 'newest' ? dash.posts : [...dash.posts].sort((a, b) => (b[sort] ?? -1) - (a[sort] ?? -1))
       const noun = dash.platform.noun ?? t('v2.posts.noun')
+      // 列表比平台显示的总数少时说清楚：读到几条、平台说一共几条。
+      const coverage = dash.coverage ?? { read: dash.posts.length }
+      const short = coverage.total !== undefined && coverage.total > coverage.read
+      const note = short ? t('v2.posts.coverage', { read: coverage.read, total: coverage.total, noun }) : t('v2.posts.count', { count: dash.posts.length })
       return h(DyCard, {
-        id: 'dy-posts', title: t('v2.posts.title', { noun }), note: t('v2.posts.count', { count: dash.posts.length }),
+        id: 'dy-posts', title: t('v2.posts.title', { noun }), tip: [dash.platform.marks, short ? t('v2.posts.coverageTip', { noun }) : null].filter(Boolean).join(' ') || undefined, note,
         tools: [
           h(DySeg, { key: 'sort', value: sort, onChange: setSort, label: t('v2.posts.sort'), options: sorts.map(key => ({ value: key, label: key === 'newest' ? t('v2.posts.newest') : labels[key] })) }),
-          h(DyBtn, { key: 'export', icon: 'download', disabled: rows.length === 0, onClick: () => exportPosts(`${dash.account.name}-${t('v2.posts.title', { noun })}`, rows, dash.platform) }, t('v2.export.button')),
+          h(DyBtn, { key: 'export', icon: 'download', disabled: rows.length === 0, onClick: () => exportPosts(`${dash.account.name}-${t('v2.posts.title', { noun })}`, rows, () => ({ platform: dash.platform, account: dash.account })) }, t('v2.export.button')),
         ],
       },
-      rows.length === 0 ? h('p', { className: cls('dy-muted') }, t('v2.posts.none')) : h('div', { className: cls('dy-table'), role: 'table', style: { '--cols': keys.length } },
+      rows.length === 0 ? h('p', { className: cls('dy-muted') }, (coverage.total ?? 0) > 0 ? t('v2.posts.noneButTotal', { total: coverage.total, noun }) : t('v2.posts.none')) : h('div', { className: cls('dy-table'), role: 'table', style: { '--cols': keys.length } },
         h('div', { className: cls('dy-tr', 'dy-th'), role: 'row' },
           h('span', { role: 'columnheader' }, t('v2.posts.info', { noun })), keys.map(key => h('span', { key, role: 'columnheader' }, labels[key]))),
         rows.map(post => h('button', { key: post.postId, type: 'button', className: cls('dy-tr'), role: 'row', onClick: () => onOpenPost(post) },
           h('span', { className: cls('dy-td-post'), role: 'cell' }, h(PostCover, { post, width: 54 }),
-            h('span', { className: cls('dy-list-main') }, h('span', { className: cls('dy-list-title') }, post.title), h('span', { className: cls('dy-list-meta') }, post.publishedAt ? t('v2.posts.published', { at: formatInstant(post.publishedAt) }) : t('v2.posts.noTime')))),
-          keys.map(key => h('span', { key, role: 'cell', className: cls('dy-num', 'dy-td-num') }, post[key] === undefined ? '—' : dyNum(post[key])))))))
+            h('span', { className: cls('dy-list-main') }, h('span', { className: cls('dy-list-title') }, post.title), h('span', { className: cls('dy-list-meta') }, post.publishedAt ? t('v2.posts.published', { at: formatPublished(post.publishedAt) }) : t('v2.posts.noTime'), h(PostBadges, { post })))),
+          keys.map(key => h('span', { key, role: 'cell', className: cls('dy-num', 'dy-td-num'), title: post[key] === undefined ? t('v2.posts.missing', { label: labels[key] }) : undefined }, post[key] === undefined ? '—' : dyNum(post[key])))))))
     }
 
     function AccountView({ account, store, onLogin, onOpenPost, tools }) {
@@ -3790,6 +3865,7 @@ select.$-input{cursor:pointer}
       const totals = useDashboard(account.id, totalsDays, store.version)
       const dash = week.data
       const platform = store.platforms.find(item => item.id === account.platform)
+      const live = platform?.totals !== undefined
       const health = healthOf(store.summary, account.id) ?? dash?.health
       const busy = store.busy[account.id] === true
       return h('div', { className: cls('dy-page') },
@@ -3806,9 +3882,10 @@ select.$-input{cursor:pointer}
           dash.headline.length < 3 && health?.state === 'ok' ? h('div', { className: cls('dy-alert', 'dy-alert-muted') }, h(Icon, { name: 'info', size: 16 }), h('span', { className: cls('grow') }, t('v2.board.limited', { platform: platform?.displayName ?? '' }))) : null,
           h(OverviewBoard, { dash, onOpenPost }),
           // 不给每天数据的平台（人人都是产品经理、少数派、优设、X）：平台主页上的总数，每天记一次。
-          (dash.totals ?? []).length > 0 ? h(SeriesBoard, { title: t('v2.board.totals'), tip: t('v2.board.totalsTip'), note: t('v2.board.totalsNote'), account, days: totalsDays, onDays: setTotalsDays, dash: totals.data, pick: d => d.totals ?? [], prefer: (dash.totals[0] ?? {}).key, exportName: t('v2.board.totals') }) : null,
-          h(SeriesBoard, { title: t('v2.board.works'), tip: t('v2.board.worksTip'), account, days: worksDays, onDays: setWorksDays, dash: works.data, pick: d => d.works, prefer: 'views', exportName: t('v2.board.works') }),
-          h(SeriesBoard, { title: t('v2.board.fans'), tip: t('v2.board.fansTip'), account, days: fansDays, onDays: setFansDays, dash: fans.data, pick: d => d.fans, prefer: 'followers', exportName: t('v2.board.fans') }),
+          (dash.totals ?? []).length > 0 ? h(SeriesBoard, { title: t('v2.board.totals'), tip: t('v2.board.totalsTip'), note: t('v2.board.totalsNote'), account, days: totalsDays, onDays: setTotalsDays, dash: totals.data, pick: d => d.totals ?? [], prefer: (dash.totals[0] ?? {}).key, exportName: t('v2.board.totals'), live: true }) : null,
+          // 不给每天数据的平台，作品和粉丝两块也不是「平台每天报告的」：是插件读到的发布时间和主页上的粉丝总数。
+          h(SeriesBoard, { title: t('v2.board.works'), tip: live ? t('v2.board.worksTipLive', { noun: platform?.noun ?? t('v2.posts.noun') }) : t('v2.board.worksTip'), note: live ? t('v2.board.worksNoteLive') : undefined, account, days: worksDays, onDays: setWorksDays, dash: works.data, pick: d => d.works, prefer: 'views', exportName: t('v2.board.works') }),
+          h(SeriesBoard, { title: t('v2.board.fans'), tip: live ? t('v2.board.fansTipLive') : t('v2.board.fansTip'), note: live ? t('v2.board.totalsNote') : undefined, account, days: fansDays, onDays: setFansDays, dash: fans.data, pick: d => d.fans, prefer: 'followers', exportName: t('v2.board.fans'), live }),
           h(PostsBoard, { dash, onOpenPost })))
     }
 
@@ -3824,7 +3901,8 @@ select.$-input{cursor:pointer}
       return h(Modal, {
         title: t('v2.work.title'), onClose, width: 880,
         footer: [
-          post?.url ? h(DyBtn, { key: 'open', icon: 'link', onClick: () => face.openPost(d.account, post.url) }, t('v2.work.open')) : null,
+          // 原文在内置浏览器里打开；详情弹窗先关掉，不然它压在原文上面。
+          post?.url ? h(DyBtn, { key: 'open', icon: 'link', onClick: () => { onClose(); face.openPost(d.account, post.url) } }, t('v2.work.open')) : null,
           h(DyBtn, { key: 'ai', kind: 'primary', icon: 'spark', disabled: post === undefined, onClick: () => { onAsk(d); onClose() } }, t('v2.work.ask')),
         ].filter(Boolean),
       },
@@ -3833,13 +3911,15 @@ select.$-input{cursor:pointer}
           h(PostCover, { post, width: 84 }),
           h('div', { className: cls('dy-work-info') },
             h('p', { className: cls('dy-work-title') }, post.title),
-            h('p', { className: cls('dy-list-meta') }, h(PlatformLogo, { platform: d.platform, size: 14 }), [d.account.name, post.publishedAt ? t('v2.work.published', { at: formatInstant(post.publishedAt) }) : null].filter(Boolean).join(' · ')),
+            (post.badges ?? []).length > 0 ? h('p', { className: cls('dy-list-meta') }, t('v2.work.badges'), h(PostBadges, { post })) : null,
+            h('p', { className: cls('dy-list-meta') }, h(PlatformLogo, { platform: d.platform, size: 14 }), [d.account.name, post.publishedAt ? t('v2.work.published', { at: formatPublished(post.publishedAt) }) : null].filter(Boolean).join(' · ')),
             h('p', { className: cls('dy-work-status') }, h('span', { className: cls('dy-ok') }, h(Icon, { name: 'check', size: 12 })), t('v2.work.updated', { at: agoText(post.updatedAt, Date.now()) }),
               d.rank ? h('span', { className: cls('dy-tag', 'dy-tag-info') }, t('v2.work.rank', { by: d.rank.by, of: d.rank.of, position: d.rank.position })) : null))),
         h('div', { className: cls('dy-tabs') }, h('span', { className: cls('dy-tab'), 'aria-selected': true }, t('v2.work.tabOverview'))),
         d.metrics.length === 0 ? h('p', { className: cls('dy-muted') }, t('v2.work.noData')) : h('section', { className: cls('dy-work-card') },
           h('h3', { className: cls('dy-sub-title') }, t('v2.work.traffic'), h(Tip, { text: t('v2.work.trafficTip', { count: d.baselinePosts }) })),
-          h('div', { className: cls('dy-work-tiles') }, d.metrics.map(item => h('div', { key: item.key, className: cls('dy-work-tile') },
+          d.coverage?.total !== undefined && d.coverage.total > d.coverage.read ? h('p', { className: cls('dy-note') }, t('v2.work.coverage', { read: d.coverage.read, total: d.coverage.total, noun: d.platform.noun ?? t('v2.posts.noun') })) : null,
+        h('div', { className: cls('dy-work-tiles') }, d.metrics.map(item => h('div', { key: item.key, className: cls('dy-work-tile') },
           h('span', { className: cls('dy-work-tile-label') }, t('v2.work.metric', { label: item.label })),
           h('b', { className: cls('dy-num') }, dyNum(item.value)),
           versusMedian(item.value, item.median))))),
@@ -3877,15 +3957,24 @@ select.$-input{cursor:pointer}
 
     /** 右边缘「数据指标说明」抽屉（照抖音）：数据什么时候更新、每个指标怎么算。 */
     function MetricsDrawer({ dash, onClose }) {
-      const kpis = dash === undefined ? [] : [...dash.works, ...dash.fans]
+      const kpis = dash === undefined ? [] : [...dash.works, ...dash.fans, ...dash.totals ?? []]
+      const platform = dash?.platform
+      // 只有总数的平台（人人都是产品经理、少数派、优设、X）：数据不是平台每天报的，是插件读到的。
+      const live = platform?.totals !== undefined
+      const noun = platform?.noun ?? t('v2.posts.noun')
+      const counters = platform === undefined ? [] : Object.entries(platform.metrics ?? DEFAULT_COUNTER_LABELS)
       return h(Drawer, { title: t('v2.help.title'), onClose, width: 380 },
         h('div', { className: cls('dy-help') },
           h('h3', { className: cls('dy-sub-title') }, t('v2.help.when')),
-          h('p', null, t('v2.help.whenBody')),
+          h('p', null, live ? t('v2.help.whenBodyLive', { platform: platform.displayName }) : t('v2.help.whenBody')),
           h('h3', { className: cls('dy-sub-title') }, t('v2.help.what')),
           kpis.length === 0 ? h('p', null, t('v2.help.pick')) : h('dl', null, kpis.map(kpi => [h('dt', { key: `${kpi.key}-t` }, kpi.label), h('dd', { key: `${kpi.key}-d` }, kpi.hint)])),
+          counters.length > 0 ? h(Fragment, null,
+            h('h3', { className: cls('dy-sub-title') }, t('v2.help.postNumbers', { noun })),
+            h('dl', null, counters.map(([key, label]) => [h('dt', { key: `${key}-t` }, label), h('dd', { key: `${key}-d` }, t(live ? 'v2.help.postNumberLive' : 'v2.help.postNumber', { label, noun }))]))) : null,
+          platform?.marks ? h(Fragment, null, h('h3', { className: cls('dy-sub-title') }, t('v2.help.marks')), h('p', null, platform.marks)) : null,
           h('h3', { className: cls('dy-sub-title') }, t('v2.help.missing')),
-          h('p', null, t('v2.help.missingBody'))))
+          h('p', null, t(live ? 'v2.help.missingBodyLive' : 'v2.help.missingBody', { noun }))))
     }
 
     // ---- 3V.9 AI 助手：右边一栏放 DSH 自己的对话；输入框上方放几个固定的快捷模块（找选题、最新作品分析、导出数据）
@@ -4040,6 +4129,8 @@ select.$-input{cursor:pointer}
 .$-dy-tag{display:inline-flex;align-items:center;height:20px;margin-left:8px;padding:0 6px;border-radius:4px;font-size:12px;line-height:20px;font-weight:500;white-space:nowrap;vertical-align:middle}
 .$-dy-tag-good{background:var(--$-dy-blue-soft);color:var(--$-dy-blue)}
 .$-dy-tag-info{background:var(--$-dy-blue-soft);color:var(--$-dy-blue)}
+.$-dy-badges{display:inline-flex;flex-wrap:wrap;gap:4px;margin-left:6px;vertical-align:middle}
+.$-dy-badge{display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:4px;background:var(--$-dy-orange-soft,rgba(255,138,0,.12));color:var(--$-dy-orange,#D46B08);font-size:11px;line-height:18px;font-weight:500;white-space:nowrap}
 .$-dy-tag-danger{background:var(--$-dy-red-soft);color:var(--$-dy-red)}
 .$-dy-tag-warn{background:var(--$-dy-orange-soft);color:var(--$-dy-orange)}
 .$-dy-tag-muted{background:var(--$-dy-seg);color:var(--$-dy-text-2)}
@@ -4412,6 +4503,9 @@ select.$-input{cursor:pointer}
         'connect.stage.launch': '正在启动浏览器…',
         'connect.stage.connect': '正在连接{platform}…',
         'connect.stage.load': '{platform}登录页加载中，二维码出来就能扫…',
+        'connect.stage.loadForm': '{platform}登录页加载中，出来后在窗口里输入账号和密码…',
+        'connect.stage.drawForm': '{hint}；网慢时{platform}的登录框要一分钟左右才出来',
+        'connect.blank': '页面一直空白的话，刷新一下再等等',
         'connect.seconds': '{s} 秒',
         'connect.slow': '网络慢时要二三十秒，页面一直在加载，不是卡住了',
         'browser.reopen': '重新打开',
@@ -4444,6 +4538,7 @@ select.$-input{cursor:pointer}
         'browser.minimize': '缩小',
         'browser.expand': '展开',
         'mini.waiting': '等待扫码',
+        'mini.waitingLogin': '等待登录',
         'mini.identified': '已识别：{name}',
         'mini.failed': '识别失败',
         'mini.qrCaption': '用{platform} App 扫码登录',
@@ -4824,6 +4919,9 @@ select.$-input{cursor:pointer}
         'connect.stage.launch': 'Starting the browser…',
         'connect.stage.connect': 'Connecting to {platform}…',
         'connect.stage.load': 'Loading the {platform} login page; scan once the QR code shows…',
+        'connect.stage.loadForm': 'Loading the {platform} login page; then type your account and password in the window…',
+        'connect.stage.drawForm': '{hint}; on a slow network the {platform} form takes about a minute to show',
+        'connect.blank': 'Still blank? Reload and give it a moment',
         'connect.seconds': '{s}s',
         'connect.slow': 'on a slow network this takes 20–30 seconds; it is still loading, not stuck',
         'browser.reopen': 'Reopen',
@@ -4856,6 +4954,7 @@ select.$-input{cursor:pointer}
         'browser.minimize': 'Minimize',
         'browser.expand': 'Expand',
         'mini.waiting': 'Waiting for scan',
+        'mini.waitingLogin': 'Waiting for login',
         'mini.identified': 'Recognized: {name}',
         'mini.failed': 'Recognition failed',
         'mini.qrCaption': 'Scan with the {platform} app to log in',
@@ -5102,6 +5201,7 @@ select.$-input{cursor:pointer}
         'v2.brief.rewrite': '重新生成',
         'v2.brief.empty': '还没有简报，每天 {at} 自动生成，也可以点「重新生成」现在写一份。',
         'v2.brief.failed': '没写成：{reason}',
+        'v2.brief.stale': '这条是 {time} 按当时的数写的，之后账号数据更新过；下面是现在的数，可能和上面的说法对不上。点「重新生成」按最新的数重写。',
         'v2.chart.trend': '{label}走势',
         'v2.chart.drag': '左右拖动看更早，最多 90 天',
         'v2.chart.group': '分组',
@@ -5120,6 +5220,8 @@ select.$-input{cursor:pointer}
         'v2.list.shares': '分享',
         'v2.list.collects': '收藏',
         'v2.list.notReported': '这个平台不提供',
+        'v2.list.renamed': '{platform}的「{own}」在「{column}」列',
+        'v2.list.renamedNote': '几个平台放在一起时用通用列名：{list}。筛出一个平台时，列名用平台自己的叫法。',
         'v2.ask.briefDetail': '（简报里的说明：{detail}）',
         'v2.ask.briefTopic': '今日简报里有个选题：「{text}」，适合发在{platform}。{detail}先用 media_accounts、media_posts 看看相关账号最近的数据，再把它展开成一条可以直接做的内容：标题、开头 3 秒、结构、配图或画面建议、发布时间。',
         'v2.ask.briefItem': '今日简报里说：「{text}」。{detail}结合各平台最近的数据（先用 media_accounts 和 media_overview 看一下），说说为什么、具体该怎么做。',
@@ -5140,6 +5242,7 @@ select.$-input{cursor:pointer}
         'v2.bento.tip': '按选中的维度从高到低排，最大的那个放最大格；点一格进入账号看板。热度就是平台的播放 / 观看 / 阅读量。',
         'v2.bento.dimension': '维度',
         'v2.bento.none': '这个平台不提供这个数',
+        'v2.bento.noneLive': '这个平台不给每天的数，总数和每篇{noun}的数在账号页',
         'v2.dim.views': '热度',
         'v2.dim.followers': '粉丝',
         'v2.dim.fansNet': '粉丝净增',
@@ -5155,6 +5258,9 @@ select.$-input{cursor:pointer}
         'v2.feed.article': '文章',
         'v2.feed.more': '再看 {count} 条',
         'v2.feed.none': '这一类还没有作品',
+        'v2.feed.nonePlatform': '还没有读到{platform}的作品',
+        'v2.feed.tip': '每个账号最近 {count} 条作品，按发布时间排；筛某个平台时看的也是这些。一个账号的全部作品在它自己的看板里。',
+        'v2.feed.note': '共 {count} 条 · 每个账号最近 {per} 条',
         'v2.ask.anyPlatform': '各个平台',
         'v2.error.limit': '这个平台已经有 3 个账号了，先删掉一个再添加',
         'v2.notice.refreshed': '已更新',
@@ -5201,6 +5307,15 @@ select.$-input{cursor:pointer}
         'v2.export.published': '发布时间',
         'v2.export.link': '链接',
         'v2.export.button': '导出数据',
+        'v2.export.platform': '平台',
+        'v2.export.account': '账号',
+        'v2.export.names': '这一行的数在平台上的叫法',
+        'v2.export.badges': '平台标记',
+        'v2.export.read': '数据读取时间',
+        'v2.export.empty': '这段时间还没有记录，导出来会是空表',
+        'v2.badge.rank': '{label}第 {rank} 名',
+        'v2.badge.at': '平台标记于 {at}',
+        'v2.badge.seen': '插件 {at} 看到',
         'v2.nav.label': '自媒体账号',
         'v2.nav.overview': '总览',
         'v2.nav.add': '添加账号',
@@ -5233,6 +5348,10 @@ select.$-input{cursor:pointer}
         'v2.posts.none': '还没有读到作品',
         'v2.posts.published': '发布于 {at}',
         'v2.posts.noTime': '发布时间未知',
+        'v2.posts.missing': '{label}：平台没给出这个数（有的平台只对部分作品显示），或这次没读到',
+        'v2.posts.coverage': '读到 {read} 条 · 平台上共 {total} 条{noun}',
+        'v2.posts.coverageTip': '列表比平台上的总数少：插件每次更新读最新的一批（文章类平台读全部，最多 100 条），没公开的读不到。排名和中位数只在读到的这些里算。',
+        'v2.posts.noneButTotal': '平台显示有 {total} 条{noun}，但还没读到列表。点右上角「立即更新」再读一次；还是空的话，把看板顶上的提示截图发给开发者。',
         'v2.top.total': '{label}量',
         'v2.top.engagement': '互动率',
         'v2.board.overview': '数据总览',
@@ -5252,6 +5371,11 @@ select.$-input{cursor:pointer}
         'v2.board.worksTip': '平台每天报告的作品数据，包含历史作品在这段时间里新增的播放、点赞等。',
         'v2.board.fans': '粉丝数据',
         'v2.board.fansTip': '平台每天报告的粉丝数据。',
+        'v2.board.worksTipLive': '按平台上的发布时间数的{noun}条数。这个平台不给每天的作品数据，所以这里只有发布数；每篇的数在下面的列表里。',
+        'v2.board.worksNoteLive': '按发布时间数',
+        'v2.board.fansTipLive': '平台主页上显示的粉丝总数。插件每次更新读一次，每天记最后一次读到的，所以走势从开始记录那天算起。',
+        'v2.board.liveSince': '走势从 {day} 开始记录，记满两天才画得出线。',
+        'v2.board.liveNone': '这段时间还没有记录：插件从 {day} 开始记录。',
         'v2.sentence.only': '近 7 天{label}为',
         'v2.sentence.higher': '，比前 7 天高',
         'v2.sentence.lower': '，比前 7 天低',
@@ -5259,6 +5383,8 @@ select.$-input{cursor:pointer}
         'v2.work.title': '作品数据',
         'v2.work.tabOverview': '总览',
         'v2.work.open': '在平台上打开',
+        'v2.work.badges': '平台标记',
+        'v2.work.coverage': '排名和中位数只在插件读到的 {read} 条{noun}里算（平台上共 {total} 条）。',
         'v2.work.ask': '让 AI 分析这条',
         'v2.work.published': '发布于 {at}',
         'v2.work.updated': '数据更新于{at}',
@@ -5286,6 +5412,12 @@ select.$-input{cursor:pointer}
         'v2.help.pick': '打开某个账号后，这里会列出它每个指标怎么算。',
         'v2.help.missing': '为什么有的指标没有',
         'v2.help.missingBody': '这里只显示平台自己给出的数。平台不提供的指标（比如小红书公开主页没有阅读量和粉丝变化），整块不出现，不拿估算的数凑。',
+        'v2.help.missingBodyLive': '「—」是平台没给出这个数：比如优设有的文章页不显示阅读数。插件只显示平台给出的数，不拿估算补。列表比平台上的{noun}总数少时，列表上方会写读到了几条。',
+        'v2.help.whenBodyLive': '{platform}不提供每天的数据。插件按设定的间隔（默认 6 小时）读一次平台上显示的总数和每篇的数：卡片上是选定那段时间最后一次读到的数，走势从开始记录那天算起。账号页右上角的「立即更新」可以马上读一次。',
+        'v2.help.postNumbers': '每篇{noun}的数',
+        'v2.help.postNumber': '{noun}的{label}：平台报的数，插件每次更新读一次。',
+        'v2.help.postNumberLive': '{noun}页上显示的{label}，插件每次更新读一次；平台没显示的写「—」。',
+        'v2.help.marks': '平台标记',
         'v2.edge.ai': 'AI 助手',
         'v2.edge.help': '数据指标说明',
         'v2.chat.title': 'AI 助手',
@@ -5305,12 +5437,12 @@ select.$-input{cursor:pointer}
         'v2.dock.for': '对「{name}」：',
         'v2.dock.all': '对全部账号：',
         'v2.ask.topics': '帮「{account}」（{platform}，账号 id {account_id}）找选题：先用 media_overview 和 media_posts 看最近的数据，再调用 media_topics 生成，最后挑最值得做的 3 个讲清楚为什么。我想要的方向：',
-        'v2.ask.latest': '分析「{account}」（{platform}，账号 id {account_id}）最新发布的{noun}：用 media_post 读 latest，和账号近期中位数比，说清楚表现好或差在哪、可能的原因，再给下一条 3 条以内的改进建议。',
+        'v2.ask.latest': '分析「{account}」（{platform}，账号 id {account_id}）最新发布的{noun}：用 media_post 读 latest，和账号近期中位数比，说清楚表现好或差在哪，再给下一条 3 条以内的改进建议。说原因时分开写：数据能直接说明的，和推测的（推测写「可能」，并说要验证还缺什么数据）；按工具结果里的「数据边界」来，不要从几条作品推出全账号的结论。',
         'v2.ask.export': '把「{account}」（{platform}，账号 id {account_id}）最近的{noun}数据整理成 Excel 表格，保存到当前文件夹：用 media_posts 取最近 50 条，列出标题、发布时间和各项数据，再告诉我文件放在哪。',
         'v2.ask.all.topics': '帮我找选题：先用 media_accounts 列出我的账号，问我给哪个账号找，再用 media_topics 生成。',
         'v2.ask.all.latest': '看一下我所有账号最新发布的作品（先用 media_accounts，再对每个账号用 media_post 读 latest），哪条表现最好、哪条最差，为什么？',
         'v2.ask.all.export': '把我所有账号近 30 天的数据汇总成一张 Excel 表格，保存到当前文件夹：每个账号用 media_overview（days 30）和 media_posts。',
-        'v2.ask.post': '分析「{account}」（{platform}，账号 id {account_id}）的这条作品《{title}》（作品 id {post}）：用 media_post 读它，和账号近期中位数比，说清楚好在哪、差在哪，给出下一条可以怎么改。',
+        'v2.ask.post': '分析「{account}」（{platform}，账号 id {account_id}）的这条作品《{title}》（作品 id {post}）：用 media_post 读它，和账号近期中位数比，说清楚好在哪、差在哪，给出下一条可以怎么改。数据能说明的和推测的分开写，推测写「可能」，按工具结果里的「数据边界」来。',
         'v2.remove.title': '删除「{name}」？',
         'v2.remove.body': '这个账号存下来的数据（每天的数字、作品、AI 报告）会一起删掉，删了找不回来。平台上的账号本身不受影响。',
         'v2.remove.ok': '删除',
@@ -5344,6 +5476,7 @@ select.$-input{cursor:pointer}
         'v2.brief.rewrite': 'Rewrite',
         'v2.brief.empty': 'No brief yet. One is written daily at {at}; click Rewrite for one now.',
         'v2.brief.failed': 'Could not write it: {reason}',
+        'v2.brief.stale': 'Written at {time} from the numbers then; the account has updated since, so the numbers below are newer and may not match. Rewrite to use the latest.',
         'v2.chart.trend': '{label} trend',
         'v2.chart.drag': 'Drag sideways for earlier days, up to 90',
         'v2.chart.group': 'Group',
@@ -5362,6 +5495,8 @@ select.$-input{cursor:pointer}
         'v2.list.shares': 'Shares',
         'v2.list.collects': 'Saves',
         'v2.list.notReported': 'Not reported by this platform',
+        'v2.list.renamed': '{platform}\'s "{own}" is in the {column} column',
+        'v2.list.renamedNote': 'With several platforms the columns use common names: {list}. Filter one platform to see its own names.',
         'v2.ask.briefDetail': '(The brief explains: {detail}) ',
         'v2.ask.briefTopic': 'Today\'s brief has a topic: "{text}", for {platform}. {detail}Check the related accounts with media_accounts and media_posts, then turn it into a piece I can make: title, first 3 seconds, structure, visuals and when to publish.',
         'v2.ask.briefItem': 'Today\'s brief says: "{text}". {detail}Check recent data of every platform (media_accounts, media_overview) and tell me why and what exactly to do.',
@@ -5382,6 +5517,7 @@ select.$-input{cursor:pointer}
         'v2.bento.tip': 'Sorted by the chosen dimension, the largest in the biggest box; open a box for the account. Reach is the platform\'s views or reads.',
         'v2.bento.dimension': 'Dimension',
         'v2.bento.none': 'Not reported by this platform',
+        'v2.bento.noneLive': 'No daily numbers on this platform; totals and per-{noun} numbers are on the account page',
         'v2.dim.views': 'Reach',
         'v2.dim.followers': 'Followers',
         'v2.dim.fansNet': 'Net followers',
@@ -5397,6 +5533,9 @@ select.$-input{cursor:pointer}
         'v2.feed.article': 'Article',
         'v2.feed.more': 'Show {count} more',
         'v2.feed.none': 'No posts of this type yet',
+        'v2.feed.nonePlatform': 'No posts read from {platform} yet',
+        'v2.feed.tip': 'The newest {count} posts of each account, by publish time; a platform filter shows these too. All of an account\'s posts are on its own board.',
+        'v2.feed.note': '{count} in all · newest {per} per account',
         'v2.ask.anyPlatform': 'any platform',
         'v2.error.limit': 'This platform already has 3 accounts; remove one first',
         'v2.notice.refreshed': 'Updated',
@@ -5443,6 +5582,15 @@ select.$-input{cursor:pointer}
         'v2.export.published': 'Published',
         'v2.export.link': 'Link',
         'v2.export.button': 'Export',
+        'v2.export.platform': 'Platform',
+        'v2.export.account': 'Account',
+        'v2.export.names': 'What the platform calls these numbers',
+        'v2.export.badges': 'Platform marks',
+        'v2.export.read': 'Read at',
+        'v2.export.empty': 'Nothing recorded in this range yet; the file would be empty',
+        'v2.badge.rank': '{label} #{rank}',
+        'v2.badge.at': 'Marked {at}',
+        'v2.badge.seen': 'Seen by the plugin {at}',
         'v2.nav.label': 'Media accounts',
         'v2.nav.overview': 'Overview',
         'v2.nav.add': 'Add',
@@ -5475,6 +5623,10 @@ select.$-input{cursor:pointer}
         'v2.posts.none': 'No posts fetched yet',
         'v2.posts.published': 'Published {at}',
         'v2.posts.noTime': 'Publish time unknown',
+        'v2.posts.missing': '{label}: the platform gave no number (some show it on some posts only), or it was not read this time',
+        'v2.posts.coverage': '{read} read · {total} {noun} on the platform',
+        'v2.posts.coverageTip': 'Fewer than the platform\'s total: each update reads the newest batch (all, up to 100, on article sites); private posts cannot be read. Ranks and medians use the posts read.',
+        'v2.posts.noneButTotal': 'The platform shows {total} {noun}, but no list was read yet. Click Update now to read again; if it stays empty, send a screenshot of the notice on top of the board to the developer.',
         'v2.top.total': '{label}',
         'v2.top.engagement': 'Engagement rate',
         'v2.board.overview': 'Overview',
@@ -5494,6 +5646,11 @@ select.$-input{cursor:pointer}
         'v2.board.worksTip': 'Daily numbers reported by the platform, including new views and likes on older posts.',
         'v2.board.fans': 'Followers',
         'v2.board.fansTip': 'Daily follower numbers reported by the platform.',
+        'v2.board.worksTipLive': '{noun} counted by their publish time. This platform reports no daily post numbers, so only the count is here; each one\'s numbers are in the list below.',
+        'v2.board.worksNoteLive': 'By publish time',
+        'v2.board.fansTipLive': 'The follower total shown on the profile. Read on every update; each day keeps its last reading, so trends start the day recording began.',
+        'v2.board.liveSince': 'Recorded since {day}; a line needs two days.',
+        'v2.board.liveNone': 'Nothing recorded in this range: recording began {day}.',
         'v2.sentence.only': '{label} in the last 7 days:',
         'v2.sentence.higher': ', up',
         'v2.sentence.lower': ', down',
@@ -5501,6 +5658,8 @@ select.$-input{cursor:pointer}
         'v2.work.title': 'Post data',
         'v2.work.tabOverview': 'Overview',
         'v2.work.open': 'Open on the platform',
+        'v2.work.badges': 'Platform marks',
+        'v2.work.coverage': 'Ranks and medians use the {read} {noun} the plugin read ({total} on the platform).',
         'v2.work.ask': 'Ask AI about this post',
         'v2.work.published': 'published {at}',
         'v2.work.updated': 'updated {at}',
@@ -5528,6 +5687,12 @@ select.$-input{cursor:pointer}
         'v2.help.pick': 'Open an account to see how each of its numbers is counted.',
         'v2.help.missing': 'Why some numbers are missing',
         'v2.help.missingBody': 'Only numbers the platform itself reports are shown. A number the platform does not give (Xiaohongshu public pages have no views or follower changes) leaves its module out instead of an estimate.',
+        'v2.help.missingBodyLive': '"—" means the platform gave no number: some UISDC articles show no reads, for one. Only numbers the platform gives are shown, never estimates. When the list holds fewer {noun} than the platform\'s total, the list says how many were read.',
+        'v2.help.whenBodyLive': '{platform} reports no daily numbers. The plugin reads the totals and each post\'s numbers on its interval (6 hours by default): cards show the last reading in the chosen range, and trends start the day recording began. Update now on the account page reads at once.',
+        'v2.help.postNumbers': 'Numbers of each {noun}',
+        'v2.help.postNumber': '{label} of a {noun}: as the platform reports it, read on every update.',
+        'v2.help.postNumberLive': '{label} as shown on the {noun}\'s page, read on every update; "—" where the platform shows none.',
+        'v2.help.marks': 'Platform marks',
         'v2.edge.ai': 'AI',
         'v2.edge.help': 'Help',
         'v2.chat.title': 'AI assistant',
@@ -5547,12 +5712,12 @@ select.$-input{cursor:pointer}
         'v2.dock.for': 'For "{name}":',
         'v2.dock.all': 'For all accounts:',
         'v2.ask.topics': 'Find topics for "{account}" ({platform}, account id {account_id}): read recent data with media_overview and media_posts, then run media_topics, and explain the 3 best ones. The direction I want:',
-        'v2.ask.latest': 'Review the latest {noun} of "{account}" ({platform}, account id {account_id}): read it with media_post latest, compare it with the account median, explain what worked or not and why, and give up to 3 changes for the next one.',
+        'v2.ask.latest': 'Review the latest {noun} of "{account}" ({platform}, account id {account_id}): read it with media_post latest, compare it with the account median, explain what worked or not, and give up to 3 changes for the next one. Keep what the data shows apart from guesses (say "maybe" and what data would confirm it), following the data bounds in the tool result.',
         'v2.ask.export': 'Export the recent {noun} data of "{account}" ({platform}, account id {account_id}) to an Excel sheet in the current folder: take the last 50 with media_posts, with title, publish time and every counter, and tell me where the file is.',
         'v2.ask.all.topics': 'Help me find topics: list my accounts with media_accounts, ask which one, then run media_topics.',
         'v2.ask.all.latest': 'Look at the latest post of each of my accounts (media_accounts, then media_post latest for each): which did best, which worst, and why?',
         'v2.ask.all.export': 'Put the last 30 days of all my accounts into one Excel sheet in the current folder, using media_overview (days 30) and media_posts for each account.',
-        'v2.ask.post': 'Analyze the post "{title}" (post id {post}) of "{account}" ({platform}, account id {account_id}): read it with media_post, compare with the account median, explain what worked and what did not, and suggest changes for the next one.',
+        'v2.ask.post': 'Analyze the post "{title}" (post id {post}) of "{account}" ({platform}, account id {account_id}): read it with media_post, compare with the account median, explain what worked and what did not, and suggest changes for the next one. Keep facts apart from guesses, following the data bounds in the tool result.',
         'v2.remove.title': 'Remove "{name}"?',
         'v2.remove.body': 'The data stored for this account (daily numbers, posts, AI reports) is deleted too and cannot be recovered. The account on the platform is not affected.',
         'v2.remove.ok': 'Remove',

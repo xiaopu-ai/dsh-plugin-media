@@ -64,6 +64,11 @@ export interface MediaPlatformDescriptor {
    * `totalViews`; the order is the card's.
    */
   readonly totals?: Readonly<Record<string, string>> | undefined
+  /**
+   * What the platform's post marks mean and how the plugin learns them, such as 「首页推荐和 Matrix 精选由平台标在文章上」
+   * or that a ranking is only seen while the post is on it; shown beside the posts list. Omitted when there are no marks.
+   */
+  readonly marks?: string | undefined
 }
 
 /** Display names of the post counters a platform reports. */
@@ -154,9 +159,28 @@ export interface MediaPost {
   /** Cover image URL as the platform served it; platform CDNs sign these URLs, so old ones may stop loading. */
   readonly coverUrl?: string | undefined
   readonly extra: Readonly<Record<string, number>>
+  /** Marks the platform gave the post (recommended, featured, on a ranking), accumulated over updates. */
+  readonly badges?: readonly MediaPostBadge[] | undefined
   readonly source: MediaDataSource
   /** ISO-8601 instant of the last write. */
   readonly updatedAt: string
+}
+
+/**
+ * A mark the platform gave a post, such as 首页推荐, 精选 or a place on a daily ranking. Marks are kept once seen: a
+ * ranking only lists a post for a while, and the board answers whether the post ever got the mark.
+ */
+export interface MediaPostBadge {
+  /** Stable key per kind of mark, such as `home`, `featured` or `rank:daily`. */
+  readonly key: string
+  /** The platform's name for it, such as `首页推荐` or `日榜`. */
+  readonly label: string
+  /** Best place on a ranking, 1 first. */
+  readonly rank?: number | undefined
+  /** ISO-8601 instant the platform gives for the mark, when it gives one. */
+  readonly at?: string | undefined
+  /** ISO-8601 instant an update first saw the mark. */
+  readonly seenAt?: string | undefined
 }
 
 /** Counters of one post at one capture; the store keeps one row per scrape or import that changed them. */
@@ -252,6 +276,19 @@ export interface MediaDashboard {
   readonly top: readonly MediaRankedPost[]
   /** Newest posts with their latest counters. */
   readonly posts: readonly MediaPost[]
+  /** How many posts the plugin has read, against the count the platform shows. */
+  readonly coverage: MediaPostCoverage
+}
+
+/**
+ * How many of an account's posts the plugin has read: the posts list may hold fewer than the platform's own count
+ * (an update reads the newest ones; some posts are not public).
+ */
+export interface MediaPostCoverage {
+  /** Posts stored for the account. */
+  readonly read: number
+  /** The account's post count as the platform last showed it, when it shows one. */
+  readonly total?: number | undefined
 }
 
 /** One account on the 总览 page. */
@@ -409,6 +446,8 @@ export interface MediaPostDetail {
   readonly baselinePosts: number
   /** Rank of the post among the account's recent posts by views, or by likes when views are unknown; 1 is best. */
   readonly rank?: { readonly by: string; readonly position: number; readonly of: number } | undefined
+  /** How many of the account's posts the plugin has read, against the platform's count. */
+  readonly coverage?: MediaPostCoverage | undefined
 }
 
 /** Login state of one persistent browser profile. */

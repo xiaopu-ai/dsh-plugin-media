@@ -8,7 +8,7 @@
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type {
   MediaAccount, MediaAccountId, MediaAnalysisReport, MediaDraft, MediaDraftId, MediaMetricSnapshot, MediaPlatformId, MediaPost,
-  MediaPostFormat, MediaReportId, MediaRunRecord, MediaTopicReport,
+  MediaPostBadge, MediaPostFormat, MediaReportId, MediaRunRecord, MediaTopicReport,
 } from './types.ts'
 
 /** Everything one demonstration loads. */
@@ -115,6 +115,8 @@ interface AccountPlan {
   readonly hidden?: readonly ('views' | 'likes' | 'comments' | 'collects' | 'shares')[] | undefined
   /** Account totals the platform reports, as snapshot `extra` keys: `totalViews` grows with the posts' views. */
   readonly totals?: readonly string[] | undefined
+  /** Marks the platform gave the hit posts, such as 首页推荐. */
+  readonly marks?: readonly MediaPostBadge[] | undefined
   readonly urlOf: (index: number) => string
 }
 
@@ -164,7 +166,8 @@ function buildPlan(plan: AccountPlan, now: number, random: () => number): { snap
     posts.push({
       accountId: acct.id, postId: `demo-${acct.id}-${String(index)}`, title, url: plan.urlOf(index), coverUrl: demoCover(title, index + acct.id.length),
       publishedAt: new Date(now - publishedAgo * DAY_MS).toISOString(), format: plan.format, ...counters,
-      extra: {}, source: 'scrape', updatedAt: capturedAt(now, stop),
+      extra: {}, ...hit && plan.marks !== undefined ? { badges: plan.marks.map(mark => ({ ...mark, seenAt: new Date(now - (publishedAgo - 1) * DAY_MS).toISOString() })) } : {},
+      source: 'scrape', updatedAt: capturedAt(now, stop),
     })
   })
   const snapshots: MediaMetricSnapshot[] = []
@@ -244,18 +247,21 @@ export function demoData(now: number): MediaDemoData {
       account: account('acct-demo-woshipm', 'woshipm', '演示 · 产品手记', '产品方法', created),
       titles: WOSHIPM_TITLES, format: 'article', views: 1800, likes: 0, followers: 2_300, totalLikes: 1_900, every: 6,
       hits: [1], reports: [], totals: ['totalViews'], hidden: ['likes', 'comments', 'shares'],
+      marks: [{ key: 'rank:daily', label: '日榜', rank: 3 }, { key: 'rank:weekly', label: '周榜', rank: 12 }],
       stoppedDaysAgo: 0, urlOf: index => `https://www.woshipm.com/pd/demo${String(index)}.html`,
     },
     {
       account: account('acct-demo-sspai', 'sspai', '演示 · 效率派', '效率工具', created),
       titles: SSPAI_TITLES, format: 'article', views: 0, likes: 45, followers: 900, totalLikes: 1_200, every: 9,
       hits: [3], reports: [], totals: [], hidden: ['views', 'collects', 'shares'],
+      marks: [{ key: 'home', label: '首页推荐' }, { key: 'corner:Matrix精选', label: 'Matrix精选' }],
       stoppedDaysAgo: 0, urlOf: index => `https://sspai.com/post/demo${String(index)}`,
     },
     {
       account: account('acct-demo-uisdc', 'uisdc', '演示 · 设计小站', 'AI 设计', created),
       titles: UISDC_TITLES, format: 'article', views: 3000, likes: 0, followers: 0, every: 8, noFollowers: true,
       hits: [0], reports: [], totals: ['totalViews'], hidden: ['shares'],
+      marks: [{ key: 'featured', label: '精选' }],
       stoppedDaysAgo: 0, urlOf: index => `https://www.uisdc.com/demo-${String(index)}`,
     },
     {

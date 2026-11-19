@@ -5,9 +5,10 @@
 import type { Context } from '@deepseek-ai/cordis'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import { counterLabel, POST_COUNTERS } from './dashboard.ts'
+import { badgeText } from './network.ts'
 import type {
   MediaAccount, MediaAccountHealth, MediaAccountId, MediaAccountOverview, MediaAnalysisReport, MediaDashboard, MediaKpi, MediaPlatformDescriptor,
-  MediaPost, MediaPostDetail, MediaTopicReport,
+  MediaPost, MediaPostCoverage, MediaPostDetail, MediaTopicReport,
 } from './types.ts'
 
 /** Suite operations the tools call. */
@@ -65,10 +66,33 @@ function kpiLines(kpis: readonly MediaKpi[]): string[] {
 }
 
 function counters(post: MediaPost, platform: MediaPlatformDescriptor): string {
-  return POST_COUNTERS.flatMap(key => {
+  const text = POST_COUNTERS.flatMap(key => {
     const label = counterLabel(platform, key)
     return label === undefined || post[key] === undefined ? [] : [`${label} ${figure(post[key])}`]
   }).join('，')
+  const marks = badgeText(post)
+  return marks === '' ? text : `${text}${text === '' ? '' : '，'}平台标记：${marks}`
+}
+
+/**
+ * What the numbers cover and what the plugin cannot see, so a diagnosis keeps facts and guesses apart.
+ * @param platform - the account's platform.
+ * @param coverage - posts read against the platform's count.
+ * @returns Markdown lines.
+ */
+export function renderBounds(platform: MediaPlatformDescriptor, coverage: MediaPostCoverage | undefined): string[] {
+  const noun = platform.noun ?? '作品'
+  const lines = ['## 数据边界（解释原因时必须遵守）']
+  if (coverage !== undefined) {
+    lines.push(coverage.total !== undefined && coverage.total > coverage.read
+      ? `- 插件读到 ${String(coverage.read)} 条${noun}，平台显示账号共 ${String(coverage.total)} 条；排名、中位数只在读到的这些里算，不能当成全账号的结论。`
+      : `- 插件读到 ${String(coverage.read)} 条${noun}${coverage.total === undefined ? '' : `（平台显示共 ${String(coverage.total)} 条）`}。`)
+  }
+  lines.push(
+    `- 插件只有平台公开给作者的数：${Object.values(platform.metrics ?? {}).join('、') || '播放、点赞、评论等'}。读不到流量来源、推荐曝光、观众画像；平台标记只有列出来的那些${platform.marks === undefined ? '（这个平台没有接入推荐和榜单标记）' : ''}。`,
+    '- 只把数据直接支持的写成结论；原因若是推测，写「可能」，并说明要验证还缺什么数据。不要从几条作品推出「全账号」「已经失效」「决定了七成」这类断言。',
+  )
+  return lines
 }
 
 /**
@@ -88,6 +112,7 @@ export function renderDashboard(dashboard: MediaDashboard): string {
     '## 近 30 天发布、数据最好的作品',
     ...dashboard.top.map((item, index) => `${index + 1}. 《${item.post.title}》 ${item.label} ${figure(item.value)}（id ${item.post.postId}）`),
     dashboard.top.length === 0 ? '暂无' : '',
+    ...renderBounds(platform, dashboard.coverage),
   ].filter(line => line !== '').join('\n')
 }
 
@@ -120,8 +145,10 @@ export function renderPostDetail(detail: MediaPostDetail): string {
     '## 数据',
     ...detail.metrics.map(metric => `- ${metric.label}：${figure(metric.value)}${versus(metric.value, metric.median)}`),
     ...detail.rates.length === 0 ? [] : ['## 比率', ...detail.rates.map(rate => `- ${rate.label}：${figure(rate.value, 'percent')}${versus(rate.value, rate.median, 'percent')}`)],
-    detail.rank === undefined ? '' : `按${detail.rank.by}在近期 ${detail.rank.of} 条作品里排第 ${detail.rank.position}。`,
+    badgeText(post) === '' ? '' : `平台标记：${badgeText(post)}`,
+    detail.rank === undefined ? '' : `按${detail.rank.by}在插件读到的近期 ${detail.rank.of} 条作品里排第 ${detail.rank.position}。`,
     `对比基准：同账号最近 ${detail.baselinePosts} 条其他作品。`,
+    ...renderBounds(detail.platform, detail.coverage),
   ].filter(line => line !== '').join('\n')
 }
 

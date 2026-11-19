@@ -925,7 +925,8 @@ const _xiaopuai_dsh_media_mediaSuite_dashboard_result$schema = () => _xiaopuai_d
 		]).readonly().optional().describe("Set while the adapter has not been checked against a real logged-in account; the page marks the platform as a trial."),
 		"scanApp": union([_undefined(), string$1()]).readonly().optional().describe("The phone App that scans the login QR code, when it is not the platform's own, such as `微信`."),
 		"loginHint": union([_undefined(), string$1()]).readonly().optional().describe("How to log in, for platforms whose login view shows no QR code by default, such as typing a name and password."),
-		"totals": union([_undefined(), record(string$1(), string$1()).readonly()]).readonly().optional().describe("Account totals the platform shows, in its own words, for platforms that report no daily values: the board's 账号总数 card follows them day by day as read. Keys are `posts`, `likes`, `following` or a snapshot `extra` key such as `totalViews`; the order is the card's.")
+		"totals": union([_undefined(), record(string$1(), string$1()).readonly()]).readonly().optional().describe("Account totals the platform shows, in its own words, for platforms that report no daily values: the board's 账号总数 card follows them day by day as read. Keys are `posts`, `likes`, `following` or a snapshot `extra` key such as `totalViews`; the order is the card's."),
+		"marks": union([_undefined(), string$1()]).readonly().optional().describe("What the platform's post marks mean and how the plugin learns them, such as 「首页推荐和 Matrix 精选由平台标在文章上」 or that a ranking is only seen while the post is on it; shown beside the posts list. Omitted when there are no marks.")
 	}).readonly(),
 	"health": object({
 		"state": union([
@@ -1032,6 +1033,13 @@ const _xiaopuai_dsh_media_mediaSuite_dashboard_result$schema = () => _xiaopuai_d
 			"shares": union([_undefined(), number$1()]).readonly().optional(),
 			"coverUrl": union([_undefined(), string$1()]).readonly().optional().describe("Cover image URL as the platform served it; platform CDNs sign these URLs, so old ones may stop loading."),
 			"extra": record(string$1(), number$1()).readonly().readonly(),
+			"badges": union([_undefined(), array(object({
+				"key": string$1().readonly().describe("Stable key per kind of mark, such as `home`, `featured` or `rank:daily`."),
+				"label": string$1().readonly().describe("The platform's name for it, such as `首页推荐` or `日榜`."),
+				"rank": union([_undefined(), number$1()]).readonly().optional().describe("Best place on a ranking, 1 first."),
+				"at": union([_undefined(), string$1()]).readonly().optional().describe("ISO-8601 instant the platform gives for the mark, when it gives one."),
+				"seenAt": union([_undefined(), string$1()]).readonly().optional().describe("ISO-8601 instant an update first saw the mark.")
+			}))]).readonly().optional().describe("Marks the platform gave the post (recommended, featured, on a ranking), accumulated over updates."),
 			"source": union([literal("scrape"), literal("import")]).readonly(),
 			"updatedAt": string$1().readonly().describe("ISO-8601 instant of the last write.")
 		}).readonly(),
@@ -1057,9 +1065,20 @@ const _xiaopuai_dsh_media_mediaSuite_dashboard_result$schema = () => _xiaopuai_d
 		"shares": union([_undefined(), number$1()]).readonly().optional(),
 		"coverUrl": union([_undefined(), string$1()]).readonly().optional().describe("Cover image URL as the platform served it; platform CDNs sign these URLs, so old ones may stop loading."),
 		"extra": record(string$1(), number$1()).readonly().readonly(),
+		"badges": union([_undefined(), array(object({
+			"key": string$1().readonly().describe("Stable key per kind of mark, such as `home`, `featured` or `rank:daily`."),
+			"label": string$1().readonly().describe("The platform's name for it, such as `首页推荐` or `日榜`."),
+			"rank": union([_undefined(), number$1()]).readonly().optional().describe("Best place on a ranking, 1 first."),
+			"at": union([_undefined(), string$1()]).readonly().optional().describe("ISO-8601 instant the platform gives for the mark, when it gives one."),
+			"seenAt": union([_undefined(), string$1()]).readonly().optional().describe("ISO-8601 instant an update first saw the mark.")
+		}))]).readonly().optional().describe("Marks the platform gave the post (recommended, featured, on a ranking), accumulated over updates."),
 		"source": union([literal("scrape"), literal("import")]).readonly(),
 		"updatedAt": string$1().readonly().describe("ISO-8601 instant of the last write.")
-	})).readonly().describe("Newest posts with their latest counters.")
+	})).readonly().describe("Newest posts with their latest counters."),
+	"coverage": object({
+		"read": number$1().readonly().describe("Posts stored for the account."),
+		"total": union([_undefined(), number$1()]).readonly().optional().describe("The account's post count as the platform last showed it, when it shows one.")
+	}).readonly().describe("How many posts the plugin has read, against the count the platform shows.")
 });
 let _xiaopuai_dsh_media_mediaSuite_deleteAccount_parameter_0$schema$value;
 const _xiaopuai_dsh_media_mediaSuite_deleteAccount_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_deleteAccount_parameter_0$schema$value ??= string$1();
@@ -1482,7 +1501,8 @@ const _xiaopuai_dsh_media_mediaSuite_network_result$schema = () => _xiaopuai_dsh
 			]).readonly().optional().describe("Set while the adapter has not been checked against a real logged-in account; the page marks the platform as a trial."),
 			"scanApp": union([_undefined(), string$1()]).readonly().optional().describe("The phone App that scans the login QR code, when it is not the platform's own, such as `微信`."),
 			"loginHint": union([_undefined(), string$1()]).readonly().optional().describe("How to log in, for platforms whose login view shows no QR code by default, such as typing a name and password."),
-			"totals": union([_undefined(), record(string$1(), string$1()).readonly()]).readonly().optional().describe("Account totals the platform shows, in its own words, for platforms that report no daily values: the board's 账号总数 card follows them day by day as read. Keys are `posts`, `likes`, `following` or a snapshot `extra` key such as `totalViews`; the order is the card's.")
+			"totals": union([_undefined(), record(string$1(), string$1()).readonly()]).readonly().optional().describe("Account totals the platform shows, in its own words, for platforms that report no daily values: the board's 账号总数 card follows them day by day as read. Keys are `posts`, `likes`, `following` or a snapshot `extra` key such as `totalViews`; the order is the card's."),
+			"marks": union([_undefined(), string$1()]).readonly().optional().describe("What the platform's post marks mean and how the plugin learns them, such as 「首页推荐和 Matrix 精选由平台标在文章上」 or that a ranking is only seen while the post is on it; shown beside the posts list. Omitted when there are no marks.")
 		}).readonly(),
 		"health": object({
 			"state": union([
@@ -1574,6 +1594,13 @@ const _xiaopuai_dsh_media_mediaSuite_network_result$schema = () => _xiaopuai_dsh
 			"shares": union([_undefined(), number$1()]).readonly().optional(),
 			"coverUrl": union([_undefined(), string$1()]).readonly().optional().describe("Cover image URL as the platform served it; platform CDNs sign these URLs, so old ones may stop loading."),
 			"extra": record(string$1(), number$1()).readonly().readonly(),
+			"badges": union([_undefined(), array(object({
+				"key": string$1().readonly().describe("Stable key per kind of mark, such as `home`, `featured` or `rank:daily`."),
+				"label": string$1().readonly().describe("The platform's name for it, such as `首页推荐` or `日榜`."),
+				"rank": union([_undefined(), number$1()]).readonly().optional().describe("Best place on a ranking, 1 first."),
+				"at": union([_undefined(), string$1()]).readonly().optional().describe("ISO-8601 instant the platform gives for the mark, when it gives one."),
+				"seenAt": union([_undefined(), string$1()]).readonly().optional().describe("ISO-8601 instant an update first saw the mark.")
+			}))]).readonly().optional().describe("Marks the platform gave the post (recommended, featured, on a ranking), accumulated over updates."),
 			"source": union([literal("scrape"), literal("import")]).readonly(),
 			"updatedAt": string$1().readonly().describe("ISO-8601 instant of the last write.")
 		})).readonly(),
@@ -1601,6 +1628,13 @@ const _xiaopuai_dsh_media_mediaSuite_network_result$schema = () => _xiaopuai_dsh
 		"shares": union([_undefined(), number$1()]).readonly().optional(),
 		"coverUrl": union([_undefined(), string$1()]).readonly().optional().describe("Cover image URL as the platform served it; platform CDNs sign these URLs, so old ones may stop loading."),
 		"extra": record(string$1(), number$1()).readonly().readonly(),
+		"badges": union([_undefined(), array(object({
+			"key": string$1().readonly().describe("Stable key per kind of mark, such as `home`, `featured` or `rank:daily`."),
+			"label": string$1().readonly().describe("The platform's name for it, such as `首页推荐` or `日榜`."),
+			"rank": union([_undefined(), number$1()]).readonly().optional().describe("Best place on a ranking, 1 first."),
+			"at": union([_undefined(), string$1()]).readonly().optional().describe("ISO-8601 instant the platform gives for the mark, when it gives one."),
+			"seenAt": union([_undefined(), string$1()]).readonly().optional().describe("ISO-8601 instant an update first saw the mark.")
+		}))]).readonly().optional().describe("Marks the platform gave the post (recommended, featured, on a ranking), accumulated over updates."),
 		"source": union([literal("scrape"), literal("import")]).readonly(),
 		"updatedAt": string$1().readonly().describe("ISO-8601 instant of the last write.")
 	})).readonly().describe("Newest posts of every own account, newest first.")
@@ -1704,7 +1738,8 @@ const _xiaopuai_dsh_media_mediaSuite_platforms_result$schema = () => _xiaopuai_d
 	]).readonly().optional().describe("Set while the adapter has not been checked against a real logged-in account; the page marks the platform as a trial."),
 	"scanApp": union([_undefined(), string$1()]).readonly().optional().describe("The phone App that scans the login QR code, when it is not the platform's own, such as `微信`."),
 	"loginHint": union([_undefined(), string$1()]).readonly().optional().describe("How to log in, for platforms whose login view shows no QR code by default, such as typing a name and password."),
-	"totals": union([_undefined(), record(string$1(), string$1()).readonly()]).readonly().optional().describe("Account totals the platform shows, in its own words, for platforms that report no daily values: the board's 账号总数 card follows them day by day as read. Keys are `posts`, `likes`, `following` or a snapshot `extra` key such as `totalViews`; the order is the card's.")
+	"totals": union([_undefined(), record(string$1(), string$1()).readonly()]).readonly().optional().describe("Account totals the platform shows, in its own words, for platforms that report no daily values: the board's 账号总数 card follows them day by day as read. Keys are `posts`, `likes`, `following` or a snapshot `extra` key such as `totalViews`; the order is the card's."),
+	"marks": union([_undefined(), string$1()]).readonly().optional().describe("What the platform's post marks mean and how the plugin learns them, such as 「首页推荐和 Matrix 精选由平台标在文章上」 or that a ranking is only seen while the post is on it; shown beside the posts list. Omitted when there are no marks.")
 }));
 let _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_0$schema$value;
 const _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_postDetail_parameter_0$schema$value ??= string$1();
@@ -1755,7 +1790,8 @@ const _xiaopuai_dsh_media_mediaSuite_postDetail_result$schema = () => _xiaopuai_
 		]).readonly().optional().describe("Set while the adapter has not been checked against a real logged-in account; the page marks the platform as a trial."),
 		"scanApp": union([_undefined(), string$1()]).readonly().optional().describe("The phone App that scans the login QR code, when it is not the platform's own, such as `微信`."),
 		"loginHint": union([_undefined(), string$1()]).readonly().optional().describe("How to log in, for platforms whose login view shows no QR code by default, such as typing a name and password."),
-		"totals": union([_undefined(), record(string$1(), string$1()).readonly()]).readonly().optional().describe("Account totals the platform shows, in its own words, for platforms that report no daily values: the board's 账号总数 card follows them day by day as read. Keys are `posts`, `likes`, `following` or a snapshot `extra` key such as `totalViews`; the order is the card's.")
+		"totals": union([_undefined(), record(string$1(), string$1()).readonly()]).readonly().optional().describe("Account totals the platform shows, in its own words, for platforms that report no daily values: the board's 账号总数 card follows them day by day as read. Keys are `posts`, `likes`, `following` or a snapshot `extra` key such as `totalViews`; the order is the card's."),
+		"marks": union([_undefined(), string$1()]).readonly().optional().describe("What the platform's post marks mean and how the plugin learns them, such as 「首页推荐和 Matrix 精选由平台标在文章上」 or that a ranking is only seen while the post is on it; shown beside the posts list. Omitted when there are no marks.")
 	}).readonly(),
 	"post": object({
 		"accountId": string$1().readonly(),
@@ -1776,6 +1812,13 @@ const _xiaopuai_dsh_media_mediaSuite_postDetail_result$schema = () => _xiaopuai_
 		"shares": union([_undefined(), number$1()]).readonly().optional(),
 		"coverUrl": union([_undefined(), string$1()]).readonly().optional().describe("Cover image URL as the platform served it; platform CDNs sign these URLs, so old ones may stop loading."),
 		"extra": record(string$1(), number$1()).readonly().readonly(),
+		"badges": union([_undefined(), array(object({
+			"key": string$1().readonly().describe("Stable key per kind of mark, such as `home`, `featured` or `rank:daily`."),
+			"label": string$1().readonly().describe("The platform's name for it, such as `首页推荐` or `日榜`."),
+			"rank": union([_undefined(), number$1()]).readonly().optional().describe("Best place on a ranking, 1 first."),
+			"at": union([_undefined(), string$1()]).readonly().optional().describe("ISO-8601 instant the platform gives for the mark, when it gives one."),
+			"seenAt": union([_undefined(), string$1()]).readonly().optional().describe("ISO-8601 instant an update first saw the mark.")
+		}))]).readonly().optional().describe("Marks the platform gave the post (recommended, featured, on a ranking), accumulated over updates."),
 		"source": union([literal("scrape"), literal("import")]).readonly(),
 		"updatedAt": string$1().readonly().describe("ISO-8601 instant of the last write.")
 	}).readonly(),
@@ -1802,7 +1845,11 @@ const _xiaopuai_dsh_media_mediaSuite_postDetail_result$schema = () => _xiaopuai_
 		"by": string$1().readonly(),
 		"position": number$1().readonly(),
 		"of": number$1().readonly()
-	})]).readonly().optional().describe("Rank of the post among the account's recent posts by views, or by likes when views are unknown; 1 is best.")
+	})]).readonly().optional().describe("Rank of the post among the account's recent posts by views, or by likes when views are unknown; 1 is best."),
+	"coverage": union([_undefined(), object({
+		"read": number$1().readonly().describe("Posts stored for the account."),
+		"total": union([_undefined(), number$1()]).readonly().optional().describe("The account's post count as the platform last showed it, when it shows one.")
+	})]).readonly().optional().describe("How many of the account's posts the plugin has read, against the platform's count.")
 });
 let _xiaopuai_dsh_media_mediaSuite_posts_parameter_0$schema$value;
 const _xiaopuai_dsh_media_mediaSuite_posts_parameter_0$schema = () => _xiaopuai_dsh_media_mediaSuite_posts_parameter_0$schema$value ??= string$1();
@@ -1828,6 +1875,13 @@ const _xiaopuai_dsh_media_mediaSuite_posts_result$schema = () => _xiaopuai_dsh_m
 	"shares": union([_undefined(), number$1()]).readonly().optional(),
 	"coverUrl": union([_undefined(), string$1()]).readonly().optional().describe("Cover image URL as the platform served it; platform CDNs sign these URLs, so old ones may stop loading."),
 	"extra": record(string$1(), number$1()).readonly().readonly(),
+	"badges": union([_undefined(), array(object({
+		"key": string$1().readonly().describe("Stable key per kind of mark, such as `home`, `featured` or `rank:daily`."),
+		"label": string$1().readonly().describe("The platform's name for it, such as `首页推荐` or `日榜`."),
+		"rank": union([_undefined(), number$1()]).readonly().optional().describe("Best place on a ranking, 1 first."),
+		"at": union([_undefined(), string$1()]).readonly().optional().describe("ISO-8601 instant the platform gives for the mark, when it gives one."),
+		"seenAt": union([_undefined(), string$1()]).readonly().optional().describe("ISO-8601 instant an update first saw the mark.")
+	}))]).readonly().optional().describe("Marks the platform gave the post (recommended, featured, on a ranking), accumulated over updates."),
 	"source": union([literal("scrape"), literal("import")]).readonly(),
 	"updatedAt": string$1().readonly().describe("ISO-8601 instant of the last write.")
 }));
@@ -2007,7 +2061,8 @@ const _xiaopuai_dsh_media_mediaSuite_summary_result$schema = () => _xiaopuai_dsh
 			]).readonly().optional().describe("Set while the adapter has not been checked against a real logged-in account; the page marks the platform as a trial."),
 			"scanApp": union([_undefined(), string$1()]).readonly().optional().describe("The phone App that scans the login QR code, when it is not the platform's own, such as `微信`."),
 			"loginHint": union([_undefined(), string$1()]).readonly().optional().describe("How to log in, for platforms whose login view shows no QR code by default, such as typing a name and password."),
-			"totals": union([_undefined(), record(string$1(), string$1()).readonly()]).readonly().optional().describe("Account totals the platform shows, in its own words, for platforms that report no daily values: the board's 账号总数 card follows them day by day as read. Keys are `posts`, `likes`, `following` or a snapshot `extra` key such as `totalViews`; the order is the card's.")
+			"totals": union([_undefined(), record(string$1(), string$1()).readonly()]).readonly().optional().describe("Account totals the platform shows, in its own words, for platforms that report no daily values: the board's 账号总数 card follows them day by day as read. Keys are `posts`, `likes`, `following` or a snapshot `extra` key such as `totalViews`; the order is the card's."),
+			"marks": union([_undefined(), string$1()]).readonly().optional().describe("What the platform's post marks mean and how the plugin learns them, such as 「首页推荐和 Matrix 精选由平台标在文章上」 or that a ranking is only seen while the post is on it; shown beside the posts list. Omitted when there are no marks.")
 		}).readonly(),
 		"health": object({
 			"state": union([
@@ -2060,6 +2115,13 @@ const _xiaopuai_dsh_media_mediaSuite_summary_result$schema = () => _xiaopuai_dsh
 			"shares": union([_undefined(), number$1()]).readonly().optional(),
 			"coverUrl": union([_undefined(), string$1()]).readonly().optional().describe("Cover image URL as the platform served it; platform CDNs sign these URLs, so old ones may stop loading."),
 			"extra": record(string$1(), number$1()).readonly().readonly(),
+			"badges": union([_undefined(), array(object({
+				"key": string$1().readonly().describe("Stable key per kind of mark, such as `home`, `featured` or `rank:daily`."),
+				"label": string$1().readonly().describe("The platform's name for it, such as `首页推荐` or `日榜`."),
+				"rank": union([_undefined(), number$1()]).readonly().optional().describe("Best place on a ranking, 1 first."),
+				"at": union([_undefined(), string$1()]).readonly().optional().describe("ISO-8601 instant the platform gives for the mark, when it gives one."),
+				"seenAt": union([_undefined(), string$1()]).readonly().optional().describe("ISO-8601 instant an update first saw the mark.")
+			}))]).readonly().optional().describe("Marks the platform gave the post (recommended, featured, on a ranking), accumulated over updates."),
 			"source": union([literal("scrape"), literal("import")]).readonly(),
 			"updatedAt": string$1().readonly().describe("ISO-8601 instant of the last write.")
 		})]).readonly().optional()
@@ -2083,6 +2145,13 @@ const _xiaopuai_dsh_media_mediaSuite_summary_result$schema = () => _xiaopuai_dsh
 		"shares": union([_undefined(), number$1()]).readonly().optional(),
 		"coverUrl": union([_undefined(), string$1()]).readonly().optional().describe("Cover image URL as the platform served it; platform CDNs sign these URLs, so old ones may stop loading."),
 		"extra": record(string$1(), number$1()).readonly().readonly(),
+		"badges": union([_undefined(), array(object({
+			"key": string$1().readonly().describe("Stable key per kind of mark, such as `home`, `featured` or `rank:daily`."),
+			"label": string$1().readonly().describe("The platform's name for it, such as `首页推荐` or `日榜`."),
+			"rank": union([_undefined(), number$1()]).readonly().optional().describe("Best place on a ranking, 1 first."),
+			"at": union([_undefined(), string$1()]).readonly().optional().describe("ISO-8601 instant the platform gives for the mark, when it gives one."),
+			"seenAt": union([_undefined(), string$1()]).readonly().optional().describe("ISO-8601 instant an update first saw the mark.")
+		}))]).readonly().optional().describe("Marks the platform gave the post (recommended, featured, on a ranking), accumulated over updates."),
 		"source": union([literal("scrape"), literal("import")]).readonly(),
 		"updatedAt": string$1().readonly().describe("ISO-8601 instant of the last write.")
 	})).readonly().describe("Newest posts of all own accounts, newest first.")
@@ -2444,7 +2513,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 429,
+				"line": 430,
 				"column": 3
 			}
 		},
@@ -2541,7 +2610,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1372,
+				"line": 1380,
 				"column": 3
 			}
 		},
@@ -2636,7 +2705,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1346,
+				"line": 1354,
 				"column": 9
 			}
 		},
@@ -2813,7 +2882,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 778,
+				"line": 779,
 				"column": 3
 			}
 		},
@@ -2847,7 +2916,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1565,
+				"line": 1573,
 				"column": 9
 			}
 		},
@@ -3000,7 +3069,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1481,
+				"line": 1489,
 				"column": 10
 			}
 		},
@@ -3368,7 +3437,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1494,
+				"line": 1502,
 				"column": 9
 			}
 		},
@@ -3479,7 +3548,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1455,
+				"line": 1463,
 				"column": 9
 			}
 		},
@@ -3497,7 +3566,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 637,
+				"line": 638,
 				"column": 3
 			}
 		},
@@ -3547,7 +3616,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 857,
+				"line": 858,
 				"column": 3
 			}
 		},
@@ -3580,7 +3649,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 523,
+				"line": 524,
 				"column": 3
 			}
 		},
@@ -3654,7 +3723,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 565,
+				"line": 566,
 				"column": 3
 			}
 		},
@@ -3967,7 +4036,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1199,
+				"line": 1207,
 				"column": 9
 			}
 		},
@@ -4280,7 +4349,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1030,
+				"line": 1038,
 				"column": 9
 			}
 		},
@@ -4609,7 +4678,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1045,
+				"line": 1053,
 				"column": 9
 			}
 		},
@@ -4671,7 +4740,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1519,
+				"line": 1527,
 				"column": 9
 			}
 		},
@@ -4758,7 +4827,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 979,
+				"line": 987,
 				"column": 9
 			}
 		},
@@ -4845,7 +4914,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 617,
+				"line": 618,
 				"column": 3
 			}
 		},
@@ -4903,7 +4972,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1437,
+				"line": 1445,
 				"column": 3
 			}
 		},
@@ -5006,7 +5075,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 576,
+				"line": 577,
 				"column": 3
 			}
 		},
@@ -5040,7 +5109,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 749,
+				"line": 750,
 				"column": 3
 			}
 		},
@@ -5090,7 +5159,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 652,
+				"line": 653,
 				"column": 3
 			}
 		},
@@ -5108,7 +5177,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 420,
+				"line": 421,
 				"column": 3
 			}
 		},
@@ -5158,7 +5227,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 878,
+				"line": 886,
 				"column": 3
 			}
 		},
@@ -5208,7 +5277,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 678,
+				"line": 679,
 				"column": 3
 			}
 		},
@@ -5273,7 +5342,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 893,
+				"line": 901,
 				"column": 9
 			}
 		},
@@ -5306,7 +5375,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 593,
+				"line": 594,
 				"column": 3
 			}
 		},
@@ -5339,7 +5408,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 602,
+				"line": 603,
 				"column": 3
 			}
 		},
@@ -5563,7 +5632,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 442,
+				"line": 443,
 				"column": 3
 			}
 		},
@@ -5740,7 +5809,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 793,
+				"line": 794,
 				"column": 3
 			}
 		},
@@ -5759,7 +5828,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1285,
+				"line": 1293,
 				"column": 9
 			}
 		},
@@ -5810,7 +5879,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1307,
+				"line": 1315,
 				"column": 9
 			}
 		},
@@ -5828,7 +5897,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 726,
+				"line": 727,
 				"column": 3
 			}
 		},
@@ -6143,7 +6212,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 1333,
+				"line": 1341,
 				"column": 3
 			}
 		},
@@ -6237,7 +6306,7 @@ const $remote = createTypertRemoteInfo({
 			},
 			sourceLocation: {
 				"file": "packages/experimental/media-suite/src/index.ts",
-				"line": 534,
+				"line": 535,
 				"column": 3
 			}
 		}
@@ -6629,7 +6698,7 @@ const TYPERT = {
 				},
 				{
 					"name": "MediaDashboard",
-					"declaration": "export interface MediaDashboard {\n    readonly account: MediaAccount;\n    readonly platform: MediaPlatformDescriptor;\n    readonly health: MediaAccountHealth;\n    readonly days: number;\n    readonly from: string;\n    readonly to: string;\n    readonly headline: readonly MediaKpi[];\n    readonly works: readonly MediaKpi[];\n    readonly fans: readonly MediaKpi[];\n    readonly totals: readonly MediaKpi[];\n    readonly top: readonly MediaRankedPost[];\n    readonly posts: readonly MediaPost[];\n}"
+					"declaration": "export interface MediaDashboard {\n    readonly account: MediaAccount;\n    readonly platform: MediaPlatformDescriptor;\n    readonly health: MediaAccountHealth;\n    readonly days: number;\n    readonly from: string;\n    readonly to: string;\n    readonly headline: readonly MediaKpi[];\n    readonly works: readonly MediaKpi[];\n    readonly fans: readonly MediaKpi[];\n    readonly totals: readonly MediaKpi[];\n    readonly top: readonly MediaRankedPost[];\n    readonly posts: readonly MediaPost[];\n    readonly coverage: MediaPostCoverage;\n}"
 				},
 				{
 					"name": "MediaDataSource",
@@ -6753,11 +6822,11 @@ const TYPERT = {
 				},
 				{
 					"name": "MediaPlatformAdapter",
-					"declaration": "export interface MediaPlatformAdapter {\n    readonly descriptor: MediaPlatformDescriptor;\n    readonly importProfile: MediaImportProfile;\n    readonly scrapableRoles?: readonly MediaAccountRole[];\n    readonly detectLogin: (page: Page) => Promise<MediaLoginState>;\n    readonly scrape?: (page: Page, account: MediaAccount, limits: MediaScrapeLimits) => Promise<MediaScrapeResult>;\n    readonly identify?: (page: Page, signal: AbortSignal) => Promise<MediaIdentityFields | undefined>;\n    readonly identityMatch?: 'profile-url' | 'platform';\n    readonly history?: (page: Page, account: MediaAccount, limits: MediaHistoryLimits) => Promise<readonly MediaHistoryDay[]>;\n    readonly search?: (page: Page, keyword: string, limits: MediaSearchLimits) => Promise<readonly MediaRelatedPost[]>;\n    readonly trending?: (page: Page, signal: AbortSignal) => Promise<readonly MediaTrendingTopic[]>;\n    readonly qrSelectors?: readonly string[];\n    readonly qrExpired?: string;\n    readonly openLogin?: string;\n    readonly keepAlive?: { readonly url: string; readonly everyMinutes: number; };\n}"
+					"declaration": "export interface MediaPlatformAdapter {\n    readonly descriptor: MediaPlatformDescriptor;\n    readonly importProfile: MediaImportProfile;\n    readonly scrapableRoles?: readonly MediaAccountRole[];\n    readonly maxPosts?: number;\n    readonly detectLogin: (page: Page) => Promise<MediaLoginState>;\n    readonly scrape?: (page: Page, account: MediaAccount, limits: MediaScrapeLimits) => Promise<MediaScrapeResult>;\n    readonly identify?: (page: Page, signal: AbortSignal) => Promise<MediaIdentityFields | undefined>;\n    readonly identityMatch?: 'profile-url' | 'platform';\n    readonly history?: (page: Page, account: MediaAccount, limits: MediaHistoryLimits) => Promise<readonly MediaHistoryDay[]>;\n    readonly search?: (page: Page, keyword: string, limits: MediaSearchLimits) => Promise<readonly MediaRelatedPost[]>;\n    readonly trending?: (page: Page, signal: AbortSignal) => Promise<readonly MediaTrendingTopic[]>;\n    readonly qrSelectors?: readonly string[];\n    readonly qrExpired?: string;\n    readonly openLogin?: string;\n    readonly keepAlive?: { readonly url: string; readonly everyMinutes: number; };\n}"
 				},
 				{
 					"name": "MediaPlatformDescriptor",
-					"declaration": "export interface MediaPlatformDescriptor {\n    readonly search?: boolean;\n    readonly id: MediaPlatformId;\n    readonly displayName: string;\n    readonly loginUrl: string;\n    readonly scrape: boolean;\n    readonly import: boolean;\n    readonly importHint: string;\n    readonly profileUrlExample: string;\n    readonly metrics?: MediaMetricLabels | undefined;\n    readonly noun?: string | undefined;\n    readonly color?: string | undefined;\n    readonly beta?: boolean | undefined;\n    readonly scanApp?: string | undefined;\n    readonly loginHint?: string | undefined;\n    readonly totals?: Readonly<Record<string, string>> | undefined;\n}"
+					"declaration": "export interface MediaPlatformDescriptor {\n    readonly search?: boolean;\n    readonly id: MediaPlatformId;\n    readonly displayName: string;\n    readonly loginUrl: string;\n    readonly scrape: boolean;\n    readonly import: boolean;\n    readonly importHint: string;\n    readonly profileUrlExample: string;\n    readonly metrics?: MediaMetricLabels | undefined;\n    readonly noun?: string | undefined;\n    readonly color?: string | undefined;\n    readonly beta?: boolean | undefined;\n    readonly scanApp?: string | undefined;\n    readonly loginHint?: string | undefined;\n    readonly totals?: Readonly<Record<string, string>> | undefined;\n    readonly marks?: string | undefined;\n}"
 				},
 				{
 					"name": "MediaPlatformId",
@@ -6765,11 +6834,19 @@ const TYPERT = {
 				},
 				{
 					"name": "MediaPost",
-					"declaration": "export interface MediaPost {\n    readonly accountId: MediaAccountId;\n    readonly postId: string;\n    readonly title: string;\n    readonly url?: string | undefined;\n    readonly publishedAt?: string | undefined;\n    readonly format: MediaPostFormat;\n    readonly views?: number | undefined;\n    readonly likes?: number | undefined;\n    readonly comments?: number | undefined;\n    readonly collects?: number | undefined;\n    readonly shares?: number | undefined;\n    readonly coverUrl?: string | undefined;\n    readonly extra: Readonly<Record<string, number>>;\n    readonly source: MediaDataSource;\n    readonly updatedAt: string;\n}"
+					"declaration": "export interface MediaPost {\n    readonly accountId: MediaAccountId;\n    readonly postId: string;\n    readonly title: string;\n    readonly url?: string | undefined;\n    readonly publishedAt?: string | undefined;\n    readonly format: MediaPostFormat;\n    readonly views?: number | undefined;\n    readonly likes?: number | undefined;\n    readonly comments?: number | undefined;\n    readonly collects?: number | undefined;\n    readonly shares?: number | undefined;\n    readonly coverUrl?: string | undefined;\n    readonly extra: Readonly<Record<string, number>>;\n    readonly badges?: readonly MediaPostBadge[] | undefined;\n    readonly source: MediaDataSource;\n    readonly updatedAt: string;\n}"
+				},
+				{
+					"name": "MediaPostBadge",
+					"declaration": "export interface MediaPostBadge {\n    readonly key: string;\n    readonly label: string;\n    readonly rank?: number | undefined;\n    readonly at?: string | undefined;\n    readonly seenAt?: string | undefined;\n}"
+				},
+				{
+					"name": "MediaPostCoverage",
+					"declaration": "export interface MediaPostCoverage {\n    readonly read: number;\n    readonly total?: number | undefined;\n}"
 				},
 				{
 					"name": "MediaPostDetail",
-					"declaration": "export interface MediaPostDetail {\n    readonly account: MediaAccount;\n    readonly platform: MediaPlatformDescriptor;\n    readonly post: MediaPost;\n    readonly metrics: readonly MediaPostMetric[];\n    readonly rates: readonly MediaPostRate[];\n    readonly baselinePosts: number;\n    readonly rank?: { readonly by: string; readonly position: number; readonly of: number; } | undefined;\n}"
+					"declaration": "export interface MediaPostDetail {\n    readonly account: MediaAccount;\n    readonly platform: MediaPlatformDescriptor;\n    readonly post: MediaPost;\n    readonly metrics: readonly MediaPostMetric[];\n    readonly rates: readonly MediaPostRate[];\n    readonly baselinePosts: number;\n    readonly rank?: { readonly by: string; readonly position: number; readonly of: number; } | undefined;\n    readonly coverage?: MediaPostCoverage | undefined;\n}"
 				},
 				{
 					"name": "MediaPostFields",

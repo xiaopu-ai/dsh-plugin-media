@@ -328,15 +328,22 @@ function worksKpis(source: Sources, window: Window): MediaKpi[] {
   return kpis.filter((kpi): kpi is MediaKpi => kpi !== undefined)
 }
 
+/** Whether a platform's numbers are readings of its page rather than daily reports: it reports no daily values. */
+function isLive(platform: MediaPlatformDescriptor): boolean {
+  return platform.totals !== undefined
+}
+
 function fansKpis(source: Sources, window: Window): MediaKpi[] {
   const kpis: (MediaKpi | undefined)[] = []
   const followers = source.latestFollowers
   if (followers !== undefined) {
     const at = (day: string): number | undefined => [...source.followers].filter(([item]) => item <= day).sort(([a], [b]) => a.localeCompare(b)).pop()?.[1]
     const previous = at(window.previousTo)
+    // A live platform's total is the one read by the window's end, so 昨天 shows yesterday's, not today's.
+    const value = isLive(source.platform) ? at(window.to) : followers
     kpis.push({
-      key: 'followers', label: source.platform.id === 'douyin' ? '总粉丝量' : '粉丝总数', unit: 'count', value: followers, previous,
-      change: relative(followers, previous),
+      key: 'followers', label: source.platform.id === 'douyin' ? '总粉丝量' : '粉丝总数', unit: 'count', value, previous,
+      change: relative(value, previous),
       daily: inRange(source.followers, window.from, window.to).map(([day, value]) => ({ day, value })),
       hint: '平台上显示的粉丝总数；每天的值是当天最后一次读到的总数',
     })
@@ -361,8 +368,11 @@ function totalsKpis(input: DashboardInput, window: Window): MediaKpi[] {
       if (value !== undefined) days.set(chinaDay(snapshot.capturedAt), value)
     }
     const latest = input.latest === undefined ? undefined : totalOf(input.latest, key)
-    const value = latest ?? [...days].sort(([a], [b]) => a.localeCompare(b)).pop()?.[1]
-    if (value === undefined) continue
+    if (latest === undefined && days.size === 0) continue
+    // The total as read by the window's end: today's reading for a window ending today, nothing yet for 昨天 on the
+    // day recording began (the card then shows —, not today's number under yesterday's date).
+    const byEnd = [...days].filter(([day]) => day <= window.to).sort(([a], [b]) => a.localeCompare(b)).pop()?.[1]
+    const value = window.to >= chinaDay(new Date(input.now).toISOString()) ? latest ?? byEnd : byEnd
     const previous = [...days].filter(([day]) => day <= window.previousTo).sort(([a], [b]) => a.localeCompare(b)).pop()?.[1]
     kpis.push({
       key: `total:${key}`, label, unit: 'count', value, previous, change: relative(value, previous),
@@ -424,7 +434,10 @@ export interface DashboardSections {
  */
 export function buildDashboard(input: DashboardInput, days: number): DashboardSections {
   const source = sources(input)
-  const window = windowOf(input.now, days, lastReportedDay(source, input.now))
+  // Platforms that report no daily values (their totals are read off the page) have readings up to now: their windows
+  // end today, and 昨天 ends yesterday as for the others.
+  const today = chinaDay(new Date(input.now).toISOString())
+  const window = windowOf(input.now, days, isLive(input.platform) ? (days === 1 ? addDays(today, -1) : today) : lastReportedDay(source, input.now))
   return {
     days, from: window.from, to: window.to,
     headline: headlineKpis(source, input.now),

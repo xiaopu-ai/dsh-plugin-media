@@ -1,13 +1,14 @@
 /**
  * 少数派 adapter: own accounts read through the site's JSON API from a logged-in page. `user/slug/info/get` answers the
  * account totals (关注者, 文章, 充电 received, total reads) and `article/user/public/page/get` the articles with their
- * 充电 and comment counts. Article reads are hidden from the public (always 0); they are kept only when the API gives
- * the logged-in author real numbers.
+ * 充电 and comment counts, and the marks the site gave them: `recommend_to_home_at` (首页推荐, with its time) and the
+ * `corner` badge such as Matrix精选. Article reads are hidden from the public (always 0); they are kept only when the API
+ * gives the logged-in author real numbers.
  */
 import type { Page } from 'playwright-core'
 import { parseCount, parseDate } from '../counters.ts'
 import { MediaScrapeError } from '../errors.ts'
-import type { MediaAccount, MediaLoginState } from '../types.ts'
+import type { MediaAccount, MediaLoginState, MediaPostBadge } from '../types.ts'
 import { asRecord, evaluateScript, gotoPage, sleep, stringField } from './page.ts'
 import type { MediaIdentityFields, MediaPlatformAdapter, MediaPostFields, MediaScrapeLimits, MediaScrapeResult, MediaSnapshotFields } from './types.ts'
 
@@ -100,6 +101,13 @@ export function parseSspaiPosts(json: unknown): SspaiPostPage {
     const extra: Record<string, number> = {}
     const words = parseCount(article.words_count)
     if (words !== undefined) extra.words = words
+    const badges: MediaPostBadge[] = []
+    const home = parseCount(article.recommend_to_home_at)
+    if (article.is_recommend_to_home === true || (home !== undefined && home > 0)) {
+      badges.push({ key: 'home', label: '首页推荐', ...home === undefined || home <= 0 ? {} : { at: parseDate(home) } })
+    }
+    const corner = stringField(asRecord(article.corner), 'name')
+    if (corner !== undefined) badges.push({ key: `corner:${corner}`, label: corner })
     posts.push({
       postId: id,
       title,
@@ -111,6 +119,7 @@ export function parseSspaiPosts(json: unknown): SspaiPostPage {
       comments: parseCount(article.comment_count),
       ...cover === undefined ? {} : { coverUrl: cover },
       extra,
+      badges,
     })
   }
   return { posts, total: parseCount(body?.total) }
@@ -196,9 +205,11 @@ export const sspaiAdapter: MediaPlatformAdapter = {
     beta: true,
     loginHint: '输入手机号收验证码登录，或点下方的微信图标扫码',
     totals: { posts: '文章数', likes: '获得充电', totalViews: '总阅读' },
+    marks: '首页推荐（带推荐时间）和 Matrix 精选这类角标，是少数派在文章数据里标出来的，每次更新都会读到。',
   },
   importProfile: { defaultFormat: 'article', columns: [] },
   scrapableRoles: ['own'],
+  maxPosts: 100,
   detectLogin,
   scrape,
   identify,
